@@ -59,7 +59,7 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 
 **Status**: ✅ PASSED - All principles satisfied by research and planned architecture
 
-**Constitution Version**: 1.0.0 (Ratified: 2025-10-17)
+**Constitution Version**: 1.1.0 (Ratified: 2025-10-17, Amended: 2025-10-18)
 
 ### Principle Compliance
 
@@ -161,9 +161,7 @@ src/                              # Frontend React application (existing)
 │   │   ├── BillingHistory.tsx
 │   │   ├── ClaimsList.tsx
 │   │   └── FileClaim.tsx
-│   └── auth/                     # Authentication pages
-│       ├── Login.tsx
-│       └── Register.tsx
+│   # Note: No authentication pages - portal access is URL-based via policy number
 ├── components/                   # Shared React components
 │   ├── forms/                    # Form components
 │   ├── layout/                   # Layout components
@@ -175,12 +173,11 @@ src/                              # Frontend React application (existing)
 │   ├── api-client.ts             # HTTP client configuration
 │   ├── quote-service.ts          # Quote API calls
 │   ├── policy-service.ts         # Policy API calls
-│   ├── portal-service.ts         # Portal API calls
-│   └── auth-service.ts           # Authentication API calls
+│   └── portal-service.ts         # Portal API calls (URL-based access)
 ├── hooks/                        # Custom React hooks
 │   ├── useQuote.ts
 │   ├── usePolicy.ts
-│   └── useAuth.ts
+│   └── usePortal.ts              # Portal data access
 ├── types/                        # TypeScript type definitions
 │   ├── omg-entities.ts           # OMG entity types
 │   ├── api-types.ts              # API request/response types
@@ -210,5 +207,5 @@ database/                         # Database schema and migrations
 
 *Fill ONLY if Constitution Check has violations that must be justified*
 
-**Status**: N/A - Constitution file contains no enforced principles, therefore no violations to justify.
+**Status**: ✅ NO VIOLATIONS - All constitutional principles satisfied per v1.1.0 (Principle III auth waiver approved for demo mode). Production migration path documented in quickstart.md.
 

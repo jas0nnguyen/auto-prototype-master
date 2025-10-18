@@ -73,7 +73,6 @@ After successfully binding a policy, a user account is automatically created, al
 ### Edge Cases
 
 **Quote Flow Edge Cases:**
-- What happens when a user starts a quote but abandons it before completion? (Quote should be saved with "draft" status for 30 days)
 - How does the system handle a quote that expires before payment? (System prevents binding and prompts user to generate new quote)
 - How does system handle duplicate quote submissions? (Detect duplicate requests within 5 minutes and return existing quote)
 - How does system handle concurrent quote generations by the same user? (Allow multiple quotes, each with unique reference number)
@@ -106,7 +105,7 @@ After successfully binding a policy, a user account is automatically created, al
 
 - **FR-001**: System MUST capture and store quote requests with vehicle details (make, model, year, VIN), driver details (age, driving history, location), and requested coverage levels, enriching vehicle data through simulated third-party vehicle information services
 - **FR-002**: System MUST generate a unique quote reference number for each quote request
-- **FR-003**: System MUST calculate insurance premium using a realistic rating engine based on industry-standard rating factors including vehicle characteristics, driver profile, location, coverage selections, and risk scoring
+- **FR-003**: System MUST calculate insurance premium using a realistic rating engine based on industry-standard rating factors including vehicle characteristics, driver profile, location, coverage selections, and risk scoring. The rating engine MUST persist complete calculation audit trail (all rating factors, weights, discounts, surcharges, intermediate values) to Premium Calculation entity with timestamp and quote_id FK for transparency and regulatory compliance.
 - **FR-004**: System MUST assign a quote expiration date of 30 days from quote creation
 - **FR-005**: System MUST validate all input data (vehicle information, driver information, payment details) before processing
 - **FR-006**: System MUST allow users to retrieve and view previously generated quotes using the quote reference number
@@ -116,14 +115,14 @@ After successfully binding a policy, a user account is automatically created, al
 - **FR-010**: System MUST store policy effective date, expiration date, coverage details, and premium amount
 - **FR-011**: System MUST automatically create a user account when a policy is successfully bound
 - **FR-012**: System MUST generate and display account credentials and welcome information after account creation (via in-app preview, notification center, or demo email service)
-- **FR-013**: System MUST provide authentication capability for users to access the self-service portal
+- **FR-013**: System MUST provide URL-based portal access using policy number (demo mode - no authentication required)
 - **FR-014**: System MUST allow authenticated users to view all their active and historical policies
 - **FR-015**: System MUST allow authenticated users to view their quote history (active, expired, and converted quotes)
 - **FR-016**: System MUST persist all data (quotes, policies, user accounts) in the database with appropriate relationships
 - **FR-017**: System MUST track the status of each quote (draft, active, expired, converted)
 - **FR-018**: System MUST track the status of each policy (pending, active, cancelled, expired)
-- **FR-019**: System MUST prevent binding of expired quotes
-- **FR-020**: System MUST link multiple policies to the same user account if the user binds additional policies using the same email address
+- **FR-019**: System MUST prevent binding of expired quotes and display user-friendly message indicating quote expiration with link to generate new quote
+- **FR-020**: System MUST link multiple policies to the same portal access token if the user binds additional policies using the same email address
 
 **OMG P&C Data Model Compliance Requirements:**
 
@@ -149,7 +148,7 @@ After successfully binding a policy, a user account is automatically created, al
 - **FR-037**: System MUST simulate VIN decoder service integration to retrieve vehicle specifications from VIN (year, make, model, body style, engine type, trim level)
 - **FR-038**: System MUST simulate vehicle valuation service (e.g., JD Power, Kelley Blue Book) to retrieve estimated market value for rating purposes
 - **FR-039**: System MUST simulate vehicle safety rating service (e.g., NHTSA, IIHS) to retrieve safety scores and crash test ratings
-- **FR-040**: System MUST provide realistic response times for simulated third-party API calls (500ms-2s with loading states)
+- **FR-040**: System MUST provide realistic response times for simulated third-party API calls (500ms-2s at 95th percentile, with loading states and timeout handling)
 - **FR-041**: System MUST handle simulated API failure scenarios (timeout, service unavailable, invalid VIN) with appropriate fallback behavior
 - **FR-042**: System MUST cache simulated vehicle data responses to demonstrate production caching patterns
 - **FR-043**: System MUST validate VIN format (17 characters, alphanumeric excluding I, O, Q) before simulated lookup
@@ -259,6 +258,22 @@ The system implements the following OMG P&C core entities to ensure industry sta
 - Person and Organization are subtypes of Party (is-a relationship)
 - Policy Event and Claim Event are subtypes of Event (is-a relationship)
 
+### Terminology Clarifications
+
+To avoid confusion between similar terms used throughout this specification:
+
+- **Account**: OMG entity representing the customer relationship container that holds Agreements (policies). Links Party to their insurance contracts through Account Party Role relationships. (Business concept)
+
+- **User Account**: Authentication entity for portal access. In this demo application, User Accounts are created automatically upon policy binding and linked to Party, but access is via URL-based policy number rather than traditional username/password login. (Technical implementation)
+
+- **Policy Number**: Business identifier displayed to customers (format: POL-XXXXXXXX). This is what customers use to access the portal via URL: `/portal/{policyNumber}`. (User-facing)
+
+- **Policy ID**: UUID primary key in the database for internal entity relationships. Not displayed to customers. (Technical implementation)
+
+- **Quote Reference Number**: Business identifier for quotes (format: QT-XXXXXXXX). Used for quote retrieval and customer service. (User-facing)
+
+- **Portal Access**: URL-based access to self-service portal using policy number. No traditional authentication (username/password) required in demo mode. Production implementation would add authentication while maintaining policy number as primary identifier. (Demo vs Production)
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
@@ -288,7 +303,7 @@ The system implements the following OMG P&C core entities to ensure industry sta
 
 **Performance Metrics:**
 
-- **SC-015**: System handles at least 100 concurrent quote generations without performance degradation
+- **SC-015**: System handles at least 100 concurrent quote calculation requests (simultaneous premium calculations) without performance degradation (response times remain within SC-003 threshold)
 - **SC-016**: Database queries for policy retrieval complete within 500 milliseconds for 95% of requests
 - **SC-017**: System uptime maintains 99.9% availability
 
