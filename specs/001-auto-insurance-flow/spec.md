@@ -318,6 +318,17 @@ The system implements the following OMG P&C core entities to ensure industry sta
 - **SC-033**: Policy document downloads (PDF) complete within 5 seconds for 95% of requests
 - **SC-034**: Users can successfully access portal features (policies, billing, claims) on first login without additional setup for 90% of new accounts
 
+**Rating Engine Accuracy Metrics:**
+
+- **SC-035**: Premium calculations produce market-realistic rates within industry ranges ($800-$3000/year for standard risk profiles)
+- **SC-036**: Rating engine applies all relevant rating factors (vehicle, driver, location, coverage) for 100% of quotes
+- **SC-037**: Discount calculations are accurate and cumulative (max 50% cap enforced) for 100% of quotes
+- **SC-038**: Surcharge calculations correctly apply risk-based increases for 100% of applicable scenarios
+- **SC-039**: Premium recalculation completes within 2 seconds when user changes coverage selections (limits, deductibles)
+- **SC-040**: Itemized premium breakdown displays all rating factors, discounts, surcharges, taxes, and fees for 100% of quotes
+- **SC-041**: Rating engine validates that liability coverage meets state minimum requirements for 100% of quotes
+- **SC-042**: Premium calculation audit trail stores all inputs and intermediate values for regulatory compliance and debugging
+
 ### Assumptions
 
 **OMG Data Model Compliance:**

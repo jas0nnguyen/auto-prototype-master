@@ -73,11 +73,20 @@ All validation checks passed. The specification has been updated to include full
 - Added Claim, Claim Party Role, and Claim Event entities to OMG data model
 - Updated scope boundaries to clarify claims filing is IN SCOPE (claims processing/adjudication OUT OF SCOPE)
 - Added 6 portal-specific edge cases (claim validation, upload failures, document generation)
+- Implemented realistic auto insurance rating engine with industry-standard actuarial principles
+- Added 14 rating engine requirements (FR-055 through FR-068)
+- Added 8 rating engine success criteria (SC-035 through SC-042)
+- Added 5 rating engine entities (Rating Factor, Rating Table, Discount, Surcharge, Premium Calculation)
+- Documented comprehensive rating methodology with vehicle, driver, location, and coverage factors
+- Specified discount types with percentages (good driver 15-25%, multi-car 5-15%, low mileage 5-15%, etc.)
+- Specified surcharge types with percentages (young driver +30-100%, DUI +50-100%, high-performance vehicle +25-75%, etc.)
+- Defined premium ranges ($800-3000 standard, $500 floor, $10,000 cap)
+- Implemented multiplicative rating model with factor transparency and audit trails
 
 **Clarifications Resolved**:
 - Quote expiration period: Set to 30 days from quote creation (industry standard)
 
-**OMG Entities Implemented** (20 core entities + extensions):
+**OMG Entities Implemented** (25 core entities + extensions):
 1. Party (with Person subtype)
 2. Communication Identity
 3. Geographic Location
@@ -100,6 +109,11 @@ All validation checks passed. The specification has been updated to include full
 20. Payment (extension)
 21. User Account (extension)
 22. Document (extension)
+23. **Rating Factor** (rating engine)
+24. **Rating Table** (rating engine)
+25. **Discount** (rating engine)
+26. **Surcharge** (rating engine)
+27. **Premium Calculation** (rating engine)
 
 **Next Steps**:
 - Ready for `/speckit.plan` to begin OMG-compliant implementation planning
