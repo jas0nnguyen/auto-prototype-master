@@ -1,0 +1,50 @@
+# Canary Design System - MCP-First Enforcement Rules
+
+<critical_enforcement>
+  <rule type="mandatory" consequence="code_rejection">
+    MUST use MCP tools before any component/layout implementation
+  </rule>
+  <rule type="validation" consequence="process_restart">
+    IF MCP tool usage skipped, restart from Step 1
+  </rule>
+  <rule type="architecture" consequence="code_rejection">
+    MCP server is the ONLY source of component knowledge - no hardcoded assumptions
+  </rule>
+</critical_enforcement>
+
+## MCP-First Workflow
+
+<mandatory_mcp_usage>
+  <building_pages>MUST call `learn_layout_patterns` first - MCP will guide you to the right approach</building_pages>
+  <unknown_components>MUST call `search_components` - MCP will find what you need</unknown_components>
+  <component_details>MUST call `get_component_details` for props/API info - MCP has current data</component_details>
+  <enforcement>Skipping required MCP calls = automatic code rejection</enforcement>
+</mandatory_mcp_usage>
+
+## Design System Purity
+
+<import_requirements>
+  <mandatory>import { ComponentName } from '@sureapp/canary-design-system'</mandatory>
+  <mandatory>import '@sureapp/canary-design-system/global.css'</mandatory>
+  <forbidden>NO imports from other UI libraries</forbidden>
+</import_requirements>
+
+<styling_rules>
+  <forbidden>NO custom CSS files</forbidden>
+  <forbidden>NO inline styles</forbidden>
+  <forbidden>NO style props or className overrides</forbidden>
+  <enforcement>ANY custom styling = immediate code rejection and restart</enforcement>
+</styling_rules>
+
+## Error Handling
+
+<mcp_unavailable>
+  <action>Fail fast - do not attempt to implement without MCP</action>
+  <message>MCP server required for design system compliance - please resolve MCP connection</message>
+</mcp_unavailable>
+
+<validation>
+  <rule>All implementations must match MCP guidance exactly</rule>
+  <rule>When in doubt, call additional MCP tools for clarification</rule>
+  <rule>Trust MCP over any other source of component information</rule>
+</validation> 
