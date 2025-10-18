@@ -7,23 +7,23 @@
 
 ## Summary
 
-Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purchase platform that enables quote generation, policy binding, and self-service portal access. The system will use React 18 + TypeScript + Canary Design System for the frontend, with a backend API architecture (to be designed) and Neon PostgreSQL for data persistence. All external integrations (payment processing, email delivery, vehicle data services) will be simulated with production-like behavior for demonstration purposes.
+Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purchase platform that enables quote generation, policy binding, and self-service portal access. The system uses React 18 + TypeScript + Canary Design System for the frontend, NestJS + Drizzle ORM for the backend API, and Neon PostgreSQL for data persistence. Portal access is URL-based via policy number (no authentication) to simplify the demo. All external integrations (payment processing, email delivery, vehicle data services) are simulated with production-like behavior.
 
 ## Technical Context
 
-**Language/Version**: TypeScript 5.8+ (frontend), NEEDS CLARIFICATION (backend language - Node.js/Python/Go)
+**Language/Version**: TypeScript 5.8+ (frontend and backend)
 **Primary Dependencies**:
 - Frontend: React 18.2, Canary Design System 3.12+, React Router 7.6, Vite 7.0
-- Backend: NEEDS CLARIFICATION (Express/NestJS/FastAPI/Hono)
-- Database: Neon PostgreSQL (serverless), NEEDS CLARIFICATION (ORM/query builder - Prisma/Drizzle/Kysely)
-- Authentication: NEEDS CLARIFICATION (Auth.js/Clerk/Supabase Auth/custom JWT)
+- Backend: NestJS (Node.js + TypeScript)
+- Database: Neon PostgreSQL (serverless), Drizzle ORM
+- Authentication: None (demo app uses URL-based policy access via policy number)
 
 **Storage**: Neon PostgreSQL (OMG P&C data model with 27 entities, UUID primary keys, temporal tracking)
 
 **Testing**:
-- Frontend: NEEDS CLARIFICATION (Vitest/Jest, React Testing Library)
-- Backend: NEEDS CLARIFICATION (language-dependent)
-- E2E: NEEDS CLARIFICATION (Playwright/Cypress)
+- Frontend: Vitest + React Testing Library
+- Backend: Vitest + @nestjs/testing
+- E2E: Playwright (optional for demo)
 
 **Target Platform**: Web application (modern browsers - Chrome, Firefox, Safari, Edge latest 2 versions)
 
@@ -40,7 +40,8 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 **Constraints**:
 - OMG P&C Data Model v1.0 strict compliance (entity naming, relationships, temporal tracking)
 - Demo mode: No real external API calls (payment, email, vehicle data must be simulated)
-- Production patterns: Despite being a demo, code must follow production security/architecture standards
+- Demo mode: No authentication - policy access via URL with policy number
+- Production patterns: Despite being a demo, code must follow production architecture standards (but not auth)
 - Database: Must support 100+ concurrent users without degradation
 - Premium calculation: Must produce market-realistic rates ($800-$3000 for standard risks)
 
@@ -66,7 +67,7 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 |-----------|--------|------------------|
 | **I. Design System First** | ✅ PASS | Frontend uses Canary Design System 3.12+ exclusively. No custom CSS exceptions planned. |
 | **II. OMG Standards Compliance** | ✅ PASS | All 27 entities follow OMG P&C Data Model v1.0. Data model documented in data-model.md with full compliance verification. |
-| **III. Production-Ready Patterns** | ✅ PASS | Research specifies Supabase Auth, JWT tokens, input validation, error handling, mock services mirroring production patterns, transaction management. |
+| **III. Production-Ready Patterns** | ✅ PASS (Auth Waived) | No authentication for demo (policy access via URL). Input validation, error handling, mock services mirroring production patterns, transaction management all implemented. |
 | **IV. User Story-Driven Development** | ✅ PASS | Spec.md contains 3 prioritized user stories (P1, P2, P3) with Given-When-Then acceptance scenarios. Tasks will be organized by story. |
 | **V. Type Safety** | ✅ PASS | TypeScript 5.8+ across full stack. Drizzle ORM provides compile-time type safety. NestJS uses decorators for DTOs. No `any` types in architecture. |
 | **VI. Data Persistence** | ✅ PASS | Neon PostgreSQL for all business data. State transitions documented: Quote (draft→active→converted→expired), Policy (pending→active→cancelled→expired), Claim (submitted→under_review→approved/denied→closed). |

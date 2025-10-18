@@ -1,6 +1,27 @@
 <!--
 SYNC IMPACT REPORT
 ==================
+Version Change: 1.0.0 → 1.1.0
+Type: MINOR (Demo exception added to Principle III)
+Rationale: Allow URL-based policy access for demo applications while maintaining NON-NEGOTIABLE production patterns
+
+Modified Principles:
+- [UPDATED] III. Production-Ready Patterns (NON-NEGOTIABLE) - Added demo exception for authentication
+
+Template Consistency Status:
+✅ plan-template.md - No changes required (already supports demo mode)
+✅ spec-template.md - No changes required
+✅ tasks-template.md - No changes required
+
+Follow-up TODOs:
+- Document production migration path for authentication in quickstart.md
+
+Generated: 2025-10-18
+-->
+
+<!--
+SYNC IMPACT REPORT (Historical)
+==================
 Version Change: [Initial] → 1.0.0
 Type: MINOR (New constitution initialization)
 Rationale: First formal constitution for the Auto Insurance Prototype project
@@ -70,12 +91,13 @@ All insurance domain entities MUST conform to OMG Property & Casualty Data Model
 Even as a prototype, all implemented features MUST follow production-ready patterns for security, error handling, and user experience.
 
 **Rules:**
-- Authentication and authorization implemented with industry-standard patterns
+- Authentication and authorization implemented with industry-standard patterns (exception: demo applications may use URL-based access with explicit justification and security disclaimers)
 - Sensitive data (payment info, PII) handled with encryption and masking
 - Error messages user-friendly with technical details logged separately
 - Loading states, validation feedback, and edge cases handled gracefully
 - Database transactions ensure data consistency (quotes, policies, payments)
 - Simulated integrations mirror real-world API behavior and error modes
+- Demo applications MUST document production migration path for waived patterns
 
 **Rationale:** This prototype serves as a reference implementation and demonstration of best practices. Cutting corners on security or UX patterns would undermine its credibility and educational value. Production-ready patterns from the start prevent technical debt.
 
@@ -206,4 +228,4 @@ For development workflow and implementation details, developers should:
 3. Follow tasks.md for execution order and dependencies
 4. Validate against constitution principles throughout development
 
-**Version**: 1.0.0 | **Ratified**: 2025-10-17 | **Last Amended**: 2025-10-17
+**Version**: 1.1.0 | **Ratified**: 2025-10-17 | **Last Amended**: 2025-10-18

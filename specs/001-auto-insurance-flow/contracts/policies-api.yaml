@@ -1,0 +1,1017 @@
+openapi: 3.0.3
+info:
+  title: Auto Insurance Policies API
+  description: |
+    Policy binding and management endpoints for the auto insurance purchase flow.
+    Handles policy binding from quotes, policy retrieval, and document management.
+    All endpoints follow OMG P&C Data Model v1.0 standards.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@autoinsurance.demo
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.autoinsurance.demo
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Policies
+    description: Policy binding and management operations
+
+paths:
+  /api/v1/policies:
+    post:
+      tags:
+        - Policies
+      summary: Bind policy from quote
+      description: |
+        Converts a quote to a bound policy after successful payment processing.
+        Creates Policy with status='BOUND', processes payment via mock gateway,
+        and automatically creates user account for portal access.
+        Transitions quote through: QUOTED → BINDING → BOUND.
+      operationId: bindPolicy
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BindPolicyRequest'
+            examples:
+              credit_card:
+                summary: Bind with credit card payment
+                value:
+                  quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                  effectiveDate: "2025-11-01"
+                  payment:
+                    method: "CREDIT_CARD"
+                    cardNumber: "4242424242424242"
+                    expiryMonth: 12
+                    expiryYear: 2025
+                    cvv: "123"
+                    cardholderName: "John Doe"
+                    billingAddress:
+                      line1Address: "123 Main St"
+                      municipalityName: "Los Angeles"
+                      stateCode: "CA"
+                      postalCode: "90001"
+                  accountInfo:
+                    email: "john.doe@email.com"
+                    password: "SecureP@ssw0rd"
+                    acceptTerms: true
+              bank_account:
+                summary: Bind with bank account (ACH)
+                value:
+                  quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                  effectiveDate: "2025-11-01"
+                  payment:
+                    method: "BANK_ACCOUNT"
+                    accountNumber: "000123456789"
+                    routingNumber: "110000000"
+                    accountType: "CHECKING"
+                    accountHolderName: "John Doe"
+                  accountInfo:
+                    email: "john.doe@email.com"
+                    password: "SecureP@ssw0rd"
+                    acceptTerms: true
+      responses:
+        '201':
+          description: Policy bound successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyResponse'
+              example:
+                policyId: "550e8400-e29b-41d4-a716-446655440000"
+                policyNumber: "P-2025-789012"
+                status: "BOUND"
+                effectiveDate: "2025-11-01"
+                expirationDate: "2026-11-01"
+                premium:
+                  totalPremium: 854.80
+                  paymentSchedule: "FULL_PAY"
+                payment:
+                  paymentId: "880g0733-h5ce-74g7-d049-779988773333"
+                  status: "COMPLETED"
+                  amount: 854.80
+                  method: "CREDIT_CARD"
+                  last4: "4242"
+                  transactionId: "txn_mock_1234567890"
+                  processedAt: "2025-10-17T11:00:00Z"
+                account:
+                  accountId: "990h1844-i6df-85h8-e150-88aa99884444"
+                  email: "john.doe@email.com"
+                  welcomeEmailSent: true
+                vehicle:
+                  vin: "1HGCM82633A123456"
+                  make: "Honda"
+                  model: "Accord"
+                  year: 2023
+                documents:
+                  - documentId: "aa0i2955-j7eg-96i9-f261-99bb00995555"
+                    type: "POLICY_DOC"
+                    url: "/documents/P-2025-789012/policy.pdf"
+                  - documentId: "bb1j3066-k8fh-07j0-g372-00cc11006666"
+                    type: "ID_CARD"
+                    url: "/documents/P-2025-789012/id-card.pdf"
+                  - documentId: "cc2k4177-l9gi-18k1-h483-11dd22117777"
+                    type: "DECLARATION"
+                    url: "/documents/P-2025-789012/declarations.pdf"
+                createdAt: "2025-10-17T11:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '402':
+          description: Payment failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "PAYMENT_FAILED"
+                  message: "Payment processing failed"
+                  details:
+                    - field: "payment"
+                      message: "Card declined - insufficient funds"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags:
+        - Policies
+      summary: List user policies
+      description: |
+        Retrieves all policies for the authenticated user.
+        Includes active, cancelled, and expired policies.
+      operationId: listPolicies
+      parameters:
+        - name: status
+          in: query
+          description: Filter by policy status
+          required: false
+          schema:
+            type: string
+            enum: [BOUND, ACTIVE, CANCELLED, EXPIRED]
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Policies retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  policies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PolicySummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              example:
+                policies:
+                  - policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    policyNumber: "P-2025-789012"
+                    status: "ACTIVE"
+                    effectiveDate: "2025-11-01"
+                    expirationDate: "2026-11-01"
+                    totalPremium: 854.80
+                    vehicleMake: "Honda"
+                    vehicleModel: "Accord"
+                    vehicleYear: 2023
+                    createdAt: "2025-10-17T11:00:00Z"
+                  - policyId: "660e9511-f3ac-52e5-b827-557766551111"
+                    policyNumber: "P-2024-456789"
+                    status: "EXPIRED"
+                    effectiveDate: "2024-11-01"
+                    expirationDate: "2025-11-01"
+                    totalPremium: 920.50
+                    vehicleMake: "Toyota"
+                    vehicleModel: "Camry"
+                    vehicleYear: 2022
+                    createdAt: "2024-10-15T09:30:00Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 2
+                  totalPages: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/policies/{policyId}:
+    get:
+      tags:
+        - Policies
+      summary: Get policy details
+      description: |
+        Retrieves detailed information for a specific policy including coverage details,
+        premium breakdown, vehicle information, and policyholder details.
+      operationId: getPolicy
+      parameters:
+        - name: policyId
+          in: path
+          description: Policy UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Policy details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PolicyDetailsResponse'
+              example:
+                policyId: "550e8400-e29b-41d4-a716-446655440000"
+                policyNumber: "P-2025-789012"
+                status: "ACTIVE"
+                effectiveDate: "2025-11-01"
+                expirationDate: "2026-11-01"
+                premium:
+                  basePremium: 950.00
+                  totalDiscounts: 142.50
+                  totalSurcharges: 0.00
+                  subtotal: 807.50
+                  taxes: 32.30
+                  fees: 15.00
+                  totalPremium: 854.80
+                  paymentSchedule: "FULL_PAY"
+                coverages:
+                  - coveragePart: "LIABILITY"
+                    coverageName: "Bodily Injury Liability"
+                    limits:
+                      - type: "PER_PERSON"
+                        amount: 100000
+                      - type: "PER_ACCIDENT"
+                        amount: 300000
+                    premium: 425.25
+                  - coveragePart: "COLLISION"
+                    coverageName: "Collision Coverage"
+                    deductible: 500
+                    premium: 312.50
+                  - coveragePart: "COMPREHENSIVE"
+                    coverageName: "Comprehensive Coverage"
+                    deductible: 500
+                    premium: 69.75
+                vehicle:
+                  vin: "1HGCM82633A123456"
+                  make: "Honda"
+                  model: "Accord"
+                  year: 2023
+                  marketValue: 28500.00
+                policyholder:
+                  firstName: "John"
+                  lastName: "Doe"
+                  email: "john.doe@email.com"
+                  phone: "5551234567"
+                  address:
+                    line1Address: "123 Main St"
+                    municipalityName: "Los Angeles"
+                    stateCode: "CA"
+                    postalCode: "90001"
+                documents:
+                  - documentId: "aa0i2955-j7eg-96i9-f261-99bb00995555"
+                    type: "POLICY_DOC"
+                    url: "/documents/P-2025-789012/policy.pdf"
+                    createdAt: "2025-10-17T11:00:00Z"
+                  - documentId: "bb1j3066-k8fh-07j0-g372-00cc11006666"
+                    type: "ID_CARD"
+                    url: "/documents/P-2025-789012/id-card.pdf"
+                    createdAt: "2025-10-17T11:00:00Z"
+                events:
+                  - eventType: "NEW_BUSINESS"
+                    eventDate: "2025-10-17"
+                    effectiveDate: "2025-11-01"
+                  - eventType: "ACTIVATION"
+                    eventDate: "2025-11-01"
+                    effectiveDate: "2025-11-01"
+                createdAt: "2025-10-17T11:00:00Z"
+                updatedAt: "2025-11-01T00:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/policies/{policyId}/documents:
+    get:
+      tags:
+        - Policies
+      summary: Get policy documents
+      description: |
+        Retrieves all documents associated with a policy including policy documents,
+        insurance ID cards, and declarations pages.
+      operationId: getPolicyDocuments
+      parameters:
+        - name: policyId
+          in: path
+          description: Policy UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: type
+          in: query
+          description: Filter by document type
+          required: false
+          schema:
+            type: string
+            enum: [POLICY_DOC, ID_CARD, DECLARATION, ENDORSEMENT]
+      responses:
+        '200':
+          description: Documents retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  documents:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Document'
+              example:
+                documents:
+                  - documentId: "aa0i2955-j7eg-96i9-f261-99bb00995555"
+                    policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    type: "POLICY_DOC"
+                    fileName: "policy-P-2025-789012.pdf"
+                    url: "/documents/P-2025-789012/policy.pdf"
+                    downloadUrl: "/api/v1/policies/550e8400-e29b-41d4-a716-446655440000/documents/aa0i2955-j7eg-96i9-f261-99bb00995555/download"
+                    fileSize: 245678
+                    mimeType: "application/pdf"
+                    createdAt: "2025-10-17T11:00:00Z"
+                  - documentId: "bb1j3066-k8fh-07j0-g372-00cc11006666"
+                    policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    type: "ID_CARD"
+                    fileName: "id-card-P-2025-789012.pdf"
+                    url: "/documents/P-2025-789012/id-card.pdf"
+                    downloadUrl: "/api/v1/policies/550e8400-e29b-41d4-a716-446655440000/documents/bb1j3066-k8fh-07j0-g372-00cc11006666/download"
+                    fileSize: 89012
+                    mimeType: "application/pdf"
+                    createdAt: "2025-10-17T11:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/policies/{policyId}/documents/{documentId}/download:
+    get:
+      tags:
+        - Policies
+      summary: Download policy document
+      description: Downloads a specific policy document as PDF
+      operationId: downloadDocument
+      parameters:
+        - name: policyId
+          in: path
+          description: Policy UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: documentId
+          in: path
+          description: Document UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Document downloaded successfully
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT token
+
+  schemas:
+    BindPolicyRequest:
+      type: object
+      required:
+        - quoteId
+        - effectiveDate
+        - payment
+        - accountInfo
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+          description: Quote ID to convert to policy
+        effectiveDate:
+          type: string
+          format: date
+          description: Policy effective date (cannot be more than 60 days in past)
+          example: "2025-11-01"
+        payment:
+          oneOf:
+            - $ref: '#/components/schemas/CreditCardPayment'
+            - $ref: '#/components/schemas/BankAccountPayment'
+          discriminator:
+            propertyName: method
+            mapping:
+              CREDIT_CARD: '#/components/schemas/CreditCardPayment'
+              BANK_ACCOUNT: '#/components/schemas/BankAccountPayment'
+        accountInfo:
+          $ref: '#/components/schemas/AccountInfo'
+
+    CreditCardPayment:
+      type: object
+      required:
+        - method
+        - cardNumber
+        - expiryMonth
+        - expiryYear
+        - cvv
+        - cardholderName
+      properties:
+        method:
+          type: string
+          enum: [CREDIT_CARD]
+        cardNumber:
+          type: string
+          pattern: '^[0-9]{13,19}$'
+          description: Credit card number (validated via Luhn algorithm)
+          example: "4242424242424242"
+        expiryMonth:
+          type: integer
+          minimum: 1
+          maximum: 12
+          description: Card expiry month
+          example: 12
+        expiryYear:
+          type: integer
+          minimum: 2025
+          maximum: 2035
+          description: Card expiry year
+          example: 2025
+        cvv:
+          type: string
+          pattern: '^[0-9]{3,4}$'
+          description: Card security code
+          example: "123"
+        cardholderName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Name on card
+          example: "John Doe"
+        billingAddress:
+          $ref: '#/components/schemas/Address'
+
+    BankAccountPayment:
+      type: object
+      required:
+        - method
+        - accountNumber
+        - routingNumber
+        - accountType
+        - accountHolderName
+      properties:
+        method:
+          type: string
+          enum: [BANK_ACCOUNT]
+        accountNumber:
+          type: string
+          pattern: '^[0-9]{4,17}$'
+          description: Bank account number
+          example: "000123456789"
+        routingNumber:
+          type: string
+          pattern: '^[0-9]{9}$'
+          description: Bank routing number
+          example: "110000000"
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS]
+          description: Type of bank account
+          example: "CHECKING"
+        accountHolderName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Name on bank account
+          example: "John Doe"
+
+    AccountInfo:
+      type: object
+      required:
+        - email
+        - password
+        - acceptTerms
+      properties:
+        email:
+          type: string
+          format: email
+          description: Email for user account (must match quote email)
+          example: "john.doe@email.com"
+        password:
+          type: string
+          minLength: 8
+          maxLength: 100
+          pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$'
+          description: Password (min 8 chars, upper, lower, number, special char)
+          example: "SecureP@ssw0rd"
+        acceptTerms:
+          type: boolean
+          description: User must accept terms and conditions
+          example: true
+
+    Address:
+      type: object
+      required:
+        - line1Address
+        - municipalityName
+        - stateCode
+        - postalCode
+      properties:
+        line1Address:
+          type: string
+          minLength: 1
+          maxLength: 255
+          example: "123 Main St"
+        line2Address:
+          type: string
+          maxLength: 255
+          example: "Apt 4B"
+        municipalityName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "Los Angeles"
+        stateCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          example: "CA"
+        postalCode:
+          type: string
+          pattern: '^[0-9]{5}(-[0-9]{4})?$'
+          example: "90001"
+
+    PolicyResponse:
+      type: object
+      properties:
+        policyId:
+          type: string
+          format: uuid
+          description: OMG Policy.policy_identifier
+        policyNumber:
+          type: string
+          description: OMG Policy.policy_number
+          example: "P-2025-789012"
+        status:
+          type: string
+          enum: [BOUND, ACTIVE, CANCELLED, EXPIRED]
+          description: OMG Policy.status_code
+        effectiveDate:
+          type: string
+          format: date
+          description: OMG Policy.effective_date
+        expirationDate:
+          type: string
+          format: date
+          description: OMG Policy.expiration_date
+        premium:
+          type: object
+          properties:
+            totalPremium:
+              type: number
+              format: decimal
+            paymentSchedule:
+              type: string
+              enum: [FULL_PAY, MONTHLY, QUARTERLY]
+              default: FULL_PAY
+        payment:
+          $ref: '#/components/schemas/PaymentResult'
+        account:
+          type: object
+          properties:
+            accountId:
+              type: string
+              format: uuid
+              description: OMG Account.account_identifier
+            email:
+              type: string
+              format: email
+            welcomeEmailSent:
+              type: boolean
+        vehicle:
+          type: object
+          properties:
+            vin:
+              type: string
+            make:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentReference'
+        createdAt:
+          type: string
+          format: date-time
+
+    PolicySummary:
+      type: object
+      properties:
+        policyId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+          example: "P-2025-789012"
+        status:
+          type: string
+          enum: [BOUND, ACTIVE, CANCELLED, EXPIRED]
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        totalPremium:
+          type: number
+          format: decimal
+          example: 854.80
+        vehicleMake:
+          type: string
+          example: "Honda"
+        vehicleModel:
+          type: string
+          example: "Accord"
+        vehicleYear:
+          type: integer
+          example: 2023
+        createdAt:
+          type: string
+          format: date-time
+
+    PolicyDetailsResponse:
+      type: object
+      properties:
+        policyId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+        status:
+          type: string
+          enum: [BOUND, ACTIVE, CANCELLED, EXPIRED]
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        premium:
+          type: object
+          properties:
+            basePremium:
+              type: number
+              format: decimal
+            totalDiscounts:
+              type: number
+              format: decimal
+            totalSurcharges:
+              type: number
+              format: decimal
+            subtotal:
+              type: number
+              format: decimal
+            taxes:
+              type: number
+              format: decimal
+            fees:
+              type: number
+              format: decimal
+            totalPremium:
+              type: number
+              format: decimal
+            paymentSchedule:
+              type: string
+              enum: [FULL_PAY, MONTHLY, QUARTERLY]
+        coverages:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverageDetail'
+        vehicle:
+          type: object
+          properties:
+            vin:
+              type: string
+            make:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer
+            marketValue:
+              type: number
+              format: decimal
+        policyholder:
+          $ref: '#/components/schemas/Policyholder'
+        documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/DocumentReference'
+        events:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicyEvent'
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CoverageDetail:
+      type: object
+      description: OMG Policy Coverage Detail
+      properties:
+        coveragePart:
+          type: string
+          enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+        coverageName:
+          type: string
+        limits:
+          type: array
+          items:
+            type: object
+            properties:
+              type:
+                type: string
+                enum: [PER_PERSON, PER_ACCIDENT, PROPERTY_DAMAGE, AGGREGATE]
+              amount:
+                type: number
+                format: decimal
+        deductible:
+          type: number
+          format: decimal
+        premium:
+          type: number
+          format: decimal
+
+    Policyholder:
+      type: object
+      description: OMG Person entity
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+
+    PaymentResult:
+      type: object
+      description: OMG Payment entity
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+          description: OMG Payment.payment_identifier
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+          description: OMG Payment.status
+        amount:
+          type: number
+          format: decimal
+        method:
+          type: string
+          enum: [CREDIT_CARD, BANK_ACCOUNT]
+        last4:
+          type: string
+          description: Last 4 digits of payment method
+          example: "4242"
+        transactionId:
+          type: string
+          description: Mock payment gateway transaction ID
+          example: "txn_mock_1234567890"
+        processedAt:
+          type: string
+          format: date-time
+
+    DocumentReference:
+      type: object
+      properties:
+        documentId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [POLICY_DOC, ID_CARD, DECLARATION, ENDORSEMENT]
+        url:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+
+    Document:
+      type: object
+      description: OMG Document entity
+      properties:
+        documentId:
+          type: string
+          format: uuid
+          description: OMG Document.document_identifier
+        policyId:
+          type: string
+          format: uuid
+        type:
+          type: string
+          enum: [POLICY_DOC, ID_CARD, DECLARATION, ENDORSEMENT]
+          description: OMG Document.document_type
+        fileName:
+          type: string
+        url:
+          type: string
+          description: File storage URL
+        downloadUrl:
+          type: string
+          description: API endpoint to download document
+        fileSize:
+          type: integer
+          description: File size in bytes
+        mimeType:
+          type: string
+          example: "application/pdf"
+        createdAt:
+          type: string
+          format: date-time
+
+    PolicyEvent:
+      type: object
+      description: OMG Policy Event entity
+      properties:
+        eventType:
+          type: string
+          enum: [QUOTE, BINDING, NEW_BUSINESS, ACTIVATION, ENDORSEMENT, CANCEL, REINSTATE]
+          description: OMG Policy Event.event_type_code
+        eventDate:
+          type: string
+          format: date
+          description: OMG Policy Event.event_date
+        effectiveDate:
+          type: string
+          format: date
+          description: OMG Policy Event.effective_date
+        description:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 3
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+lets        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            quote_expired:
+              summary: Quote expired
+              value:
+                error:
+                  code: "QUOTE_EXPIRED"
+                  message: "Quote has expired"
+                  details:
+                    - field: "quoteId"
+                      message: "Quote expired on 2025-10-10. Please generate a new quote."
+            validation_error:
+              summary: Validation error
+              value:
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Validation failed"
+                  details:
+                    - field: "payment.cardNumber"
+                      message: "Invalid card number"
+                    - field: "accountInfo.password"
+                      message: "Password must contain uppercase, lowercase, number, and special character"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            policy_not_found:
+              summary: Policy not found
+              value:
+                error:
+                  code: "NOT_FOUND"
+                  message: "Policy not found"
+            document_not_found:
+              summary: Document not found
+              value:
+                error:
+                  code: "NOT_FOUND"
+                  message: "Document not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

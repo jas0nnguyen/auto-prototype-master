@@ -39,13 +39,13 @@ This document consolidates research findings for all technology decisions and im
 - **Serverless-First**: Minimal bundle size (~7.4KB) and zero runtime dependencies
 - **Developer Experience**: Drizzle Studio (GUI) visualizes 27 entities and relationships
 
-**Authentication: Supabase Auth**
-- **Database Integration**: Seamlessly integrates with PostgreSQL (Neon) using Row Level Security (RLS) for authorization
-- **Cost-Effective**: Free tier supports 50,000 MAU/month - far exceeding 100-user demo needs
-- **JWT-Based**: Industry-standard JSON Web Tokens, compatible with NestJS guards
-- **Feature Complete**: Email/password, magic links, OAuth, MFA, session management out-of-box
-- **TypeScript SDK**: Official `@supabase/supabase-js` library with full type safety
-- **Open Source**: Self-hostable if on-premise deployment needed later
+**Authentication: None (URL-Based Policy Access)**
+- **Demo Simplification**: No authentication layer - users access policies directly via URL with policy number
+- **Access Pattern**: Portal accessible at `/portal/{policyNumber}` - e.g., `/portal/POL-2025-123456`
+- **Rationale**: Demo application doesn't require user management complexity; simplified flow focuses on insurance business logic
+- **Security Note**: Production apps would require authentication; this is intentionally simplified for demonstration
+- **User Experience**: After binding policy, user receives confirmation page with direct portal link
+- **Implementation**: Simple policy number validation against database, no session management needed
 
 **Testing: Vitest**
 - **Performance**: 10-20x faster than Jest in watch mode, critical for TDD with complex premium calculation logic
@@ -72,24 +72,104 @@ This document consolidates research findings for all technology decisions and im
 - **Rejected Because**: Performance overhead (20-40% slower), type safety gaps (validates results not queries), schema language less flexible than TypeScript
 - **Best For**: Teams prioritizing DX over performance, mature migration tooling
 
-**Clerk Auth**
-- **Rejected Because**: Pricing ($25/month for production), vendor lock-in, overkill features for demo
-- **Best For**: Funded startups needing polished pre-built UI components
-
-**Custom JWT**
-- **Rejected Because**: Security risks (token refresh, secret rotation, XSS/CSRF), 2-4 weeks development time, missing features (MFA, OAuth)
-- **Best For**: Unique compliance requirements or custom claims
+**Authentication Systems (All Rejected for Demo)**
+- **Supabase Auth / Clerk / Auth.js**: Unnecessary complexity for demo; adds development time without showcasing insurance domain logic
+- **Custom JWT**: Security risks, development overhead, not needed when access is URL-based
+- **Best For Production**: Any of these would be appropriate, but demo focuses on insurance features not auth flows
 
 #### Trade-offs
 
 - **NestJS Bundle Size**: ~7MB vs Express's ~500KB (negligible for demo)
 - **Learning Curve**: NestJS decorators and DI take 1-2 weeks to master
 - **Drizzle Migration Maturity**: Newer than Prisma but improving rapidly
-- **Supabase Ecosystem Dependency**: Tied to Supabase architecture (though it's PostgreSQL underneath)
+- **No Authentication**: Simplified for demo; production would need full auth system
 
 ---
 
-## 2. Rating Engine Architecture
+## 2. Portal Access Pattern (No Authentication)
+
+### Decision: URL-Based Policy Access via Policy Number
+
+#### Rationale
+
+**Demo Simplification**
+- **No User Management**: Eliminates need for user registration, login, password reset, session management
+- **Instant Access**: After binding policy, user receives direct link to portal (e.g., `/portal/POL-2025-123456`)
+- **Focus on Insurance Logic**: Development time dedicated to quote generation, rating engine, and policy management rather than auth flows
+- **Demonstration Clarity**: Reviewers can instantly access any policy by policy number without creating accounts
+
+**Implementation Pattern**:
+```typescript
+// Portal Access Route
+GET /portal/{policyNumber}
+
+// Backend Validation
+async function getPolicyPortal(policyNumber: string) {
+  // 1. Validate policy number format (e.g., POL-YYYY-XXXXXX)
+  if (!isValidPolicyNumber(policyNumber)) {
+    throw new BadRequestException('Invalid policy number format');
+  }
+
+  // 2. Look up policy in database
+  const policy = await db.query.policies.findFirst({
+    where: eq(policies.policyNumber, policyNumber),
+    with: {
+      coverages: true,
+      vehicle: true,
+      party: true,
+      payments: true,
+      claims: true
+    }
+  });
+
+  // 3. Return 404 if not found
+  if (!policy) {
+    throw new NotFoundException('Policy not found');
+  }
+
+  // 4. Return policy data (no auth check needed)
+  return policy;
+}
+
+// User Flow After Policy Binding
+1. User completes payment and binds policy
+2. System displays confirmation page with:
+   - Policy number: POL-2025-123456
+   - Direct portal link: https://demo.com/portal/POL-2025-123456
+   - Downloadable policy documents
+3. User bookmarks portal link or saves policy number
+4. User can return anytime by entering policy number or using bookmarked link
+```
+
+**Production Considerations**:
+- **Security Note**: Production applications MUST have authentication. This pattern is intentionally simplified for demo purposes.
+- **PII Exposure**: Policy number alone shouldn't grant access in production; would need multi-factor verification (email + DOB, SSN last 4, etc.)
+- **Session Management**: Production would use JWT tokens, refresh tokens, session expiration
+- **Authorization**: Production would implement role-based access (policyholder, agent, admin)
+- **Audit Trail**: Production would log all portal access attempts
+
+**Advantages for Demo**:
+- ✅ Instant access without signup friction
+- ✅ Shareable policy links for demos/reviews
+- ✅ No password reset complexity
+- ✅ Faster development (2-3 weeks saved)
+- ✅ Simpler testing (no auth token management)
+
+**Disadvantages (Acceptable for Demo)**:
+- ❌ Not secure for production use
+- ❌ Anyone with policy number can access portal
+- ❌ No user identity tracking
+- ❌ Can't associate multiple policies to one user
+
+**URL Examples**:
+- Portal Dashboard: `/portal/POL-2025-123456`
+- Billing History: `/portal/POL-2025-123456/billing`
+- File Claim: `/portal/POL-2025-123456/claims/new`
+- Claim Details: `/portal/POL-2025-123456/claims/CLM-2025-789`
+
+---
+
+## 3. Rating Engine Architecture
 
 ### Decision: Separate Microservice with Multiplicative Factor Model
 
@@ -490,7 +570,7 @@ CREATE INDEX idx_rating_data_gin ON rating_factors USING GIN(rating_data);
 | **Backend Framework** | NestJS | Enterprise architecture, DI, testing |
 | **ORM** | Drizzle ORM | Best type safety, Neon optimization |
 | **Database** | Neon PostgreSQL | Serverless, OMG-compliant, performant |
-| **Authentication** | Supabase Auth | Cost-effective, Postgres integration |
+| **Authentication** | None (URL-based access) | Simplified for demo, policy access via URL |
 | **Testing (Backend)** | Vitest | 10-20x faster than Jest, native TypeScript |
 | **Testing (Frontend)** | Vitest + React Testing Library | Consistent testing across stack |
 | **E2E Testing** | Playwright | Modern, reliable, multi-browser |
@@ -507,7 +587,7 @@ CREATE INDEX idx_rating_data_gin ON rating_factors USING GIN(rating_data);
 1. Initialize NestJS project with TypeScript
 2. Set up Drizzle ORM with Neon connection
 3. Define OMG entity schemas (start with 5 core: Policy, Coverage, Party, Vehicle, Driver)
-4. Configure Supabase Auth with NestJS guards
+4. Implement URL-based policy access (no auth system needed)
 5. Set up Vitest testing infrastructure
 
 ### Phase 2: Core Features (Week 2-3)

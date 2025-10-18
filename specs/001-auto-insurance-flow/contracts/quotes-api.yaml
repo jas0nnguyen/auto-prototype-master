@@ -1,0 +1,1014 @@
+openapi: 3.0.3
+info:
+  title: Auto Insurance Quotes API
+  description: |
+    Quote generation and management endpoints for the auto insurance purchase flow.
+    Supports creating quotes, updating coverage selections, and retrieving quote details.
+    All endpoints follow OMG P&C Data Model v1.0 standards.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@autoinsurance.demo
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.autoinsurance.demo
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Quotes
+    description: Quote generation and management operations
+
+paths:
+  /api/v1/quotes:
+    post:
+      tags:
+        - Quotes
+      summary: Create new auto insurance quote
+      description: |
+        Generates a new auto insurance quote based on vehicle, driver, and coverage information.
+        Creates a Policy entity with status='QUOTED' following OMG P&C Data Model.
+        Enriches vehicle data using simulated VIN decoder and valuation services.
+      operationId: createQuote
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateQuoteRequest'
+            examples:
+              basic_quote:
+                summary: Basic quote with VIN
+                value:
+                  driver:
+                    firstName: John
+                    lastName: Doe
+                    birthDate: "1988-05-15"
+                    gender: M
+                    email: john.doe@email.com
+                    phone: "5551234567"
+                    licenseNumber: "D1234567"
+                    yearsLicensed: 10
+                  vehicle:
+                    vin: "1HGCM82633A123456"
+                    garageAddress:
+                      line1Address: "123 Main St"
+                      municipalityName: "Los Angeles"
+                      stateCode: "CA"
+                      postalCode: "90001"
+                  coverage:
+                    liabilityLimits:
+                      bodilyInjuryPerPerson: 100000
+                      bodilyInjuryPerAccident: 300000
+                      propertyDamagePerAccident: 50000
+                    collision:
+                      selected: true
+                      deductible: 500
+                    comprehensive:
+                      selected: true
+                      deductible: 500
+                    uninsuredMotorist:
+                      selected: true
+              manual_vehicle:
+                summary: Quote with manual vehicle entry
+                value:
+                  driver:
+                    firstName: Jane
+                    lastName: Smith
+                    birthDate: "1992-08-22"
+                    gender: F
+                    email: jane.smith@email.com
+                    phone: "5559876543"
+                    licenseNumber: "D9876543"
+                    yearsLicensed: 8
+                  vehicle:
+                    make: "Toyota"
+                    model: "Camry"
+                    year: 2020
+                    garageAddress:
+                      line1Address: "456 Oak Ave"
+                      municipalityName: "San Francisco"
+                      stateCode: "CA"
+                      postalCode: "94102"
+                  coverage:
+                    liabilityLimits:
+                      bodilyInjuryPerPerson: 250000
+                      bodilyInjuryPerAccident: 500000
+                      propertyDamagePerAccident: 100000
+                    collision:
+                      selected: true
+                      deductible: 1000
+                    comprehensive:
+                      selected: true
+                      deductible: 1000
+      responses:
+        '201':
+          description: Quote created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+              example:
+                quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                quoteNumber: "Q-2025-123456"
+                status: "QUOTED"
+                effectiveDate: "2025-11-01"
+                expirationDate: "2026-11-01"
+                quoteExpirationDate: "2025-11-17"
+                premium:
+                  basePremium: 950.00
+                  totalDiscounts: 142.50
+                  totalSurcharges: 0.00
+                  subtotal: 807.50
+                  taxes: 32.30
+                  fees: 15.00
+                  totalPremium: 854.80
+                coverageBreakdown:
+                  - coveragePart: "LIABILITY"
+                    premium: 425.25
+                  - coveragePart: "COLLISION"
+                    premium: 312.50
+                  - coveragePart: "COMPREHENSIVE"
+                    premium: 69.75
+                discountsApplied:
+                  - code: "GOOD_DRIVER"
+                    name: "Good Driver Discount"
+                    amount: 95.00
+                  - code: "ADVANCE_QUOTE"
+                    name: "Advance Quote Discount"
+                    amount: 47.50
+                vehicle:
+                  vin: "1HGCM82633A123456"
+                  make: "Honda"
+                  model: "Accord"
+                  year: 2023
+                  marketValue: 28500.00
+                  safetyRating: 5
+                driver:
+                  firstName: "John"
+                  lastName: "Doe"
+                  age: 37
+                createdAt: "2025-10-17T10:30:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags:
+        - Quotes
+      summary: List user quotes
+      description: |
+        Retrieves all quotes for the authenticated user.
+        Includes active, expired, and converted quotes.
+      operationId: listQuotes
+      parameters:
+        - name: status
+          in: query
+          description: Filter by quote status
+          required: false
+          schema:
+            type: string
+            enum: [QUOTED, BINDING, BOUND, ACTIVE, EXPIRED, CANCELLED]
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Quotes retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  quotes:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/QuoteSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              example:
+                quotes:
+                  - quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                    quoteNumber: "Q-2025-123456"
+                    status: "QUOTED"
+                    totalPremium: 854.80
+                    vehicleMake: "Honda"
+                    vehicleModel: "Accord"
+                    vehicleYear: 2023
+                    createdAt: "2025-10-17T10:30:00Z"
+                    expiresAt: "2025-11-17T10:30:00Z"
+                  - quoteId: "660e9511-f3ac-52e5-b827-557766551111"
+                    quoteNumber: "Q-2025-123455"
+                    status: "EXPIRED"
+                    totalPremium: 920.50
+                    vehicleMake: "Toyota"
+                    vehicleModel: "Camry"
+                    vehicleYear: 2022
+                    createdAt: "2025-09-10T14:22:00Z"
+                    expiresAt: "2025-10-10T14:22:00Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 2
+                  totalPages: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/quotes/{quoteId}:
+    get:
+      tags:
+        - Quotes
+      summary: Get quote details
+      description: |
+        Retrieves detailed information for a specific quote including coverage details,
+        premium breakdown, vehicle information, and driver details.
+      operationId: getQuote
+      security: []
+      parameters:
+        - name: quoteId
+          in: path
+          description: Quote UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Quote details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/quotes/{quoteId}/coverage:
+    put:
+      tags:
+        - Quotes
+      summary: Update coverage selections
+      description: |
+        Updates coverage selections (limits, deductibles) for an existing quote.
+        Triggers automatic premium recalculation.
+        Quote must be in QUOTED status.
+      operationId: updateCoverage
+      security: []
+      parameters:
+        - name: quoteId
+          in: path
+          description: Quote UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateCoverageRequest'
+            example:
+              liabilityLimits:
+                bodilyInjuryPerPerson: 250000
+                bodilyInjuryPerAccident: 500000
+                propertyDamagePerAccident: 100000
+              collision:
+                selected: true
+                deductible: 1000
+              comprehensive:
+                selected: true
+                deductible: 1000
+              uninsuredMotorist:
+                selected: true
+      responses:
+        '200':
+          description: Coverage updated and premium recalculated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QuoteResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/quotes/{quoteId}/calculate:
+    post:
+      tags:
+        - Quotes
+      summary: Recalculate premium
+      description: |
+        Triggers premium recalculation for a quote using the rating engine.
+        Returns updated premium breakdown with all rating factors, discounts, and surcharges.
+      operationId: calculatePremium
+      security: []
+      parameters:
+        - name: quoteId
+          in: path
+          description: Quote UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Premium recalculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PremiumCalculationResponse'
+              example:
+                quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                calculationId: "770f9622-g4bd-63f6-c938-668877662222"
+                premium:
+                  basePremium: 950.00
+                  totalDiscounts: 142.50
+                  totalSurcharges: 0.00
+                  subtotal: 807.50
+                  taxes: 32.30
+                  fees: 15.00
+                  totalPremium: 854.80
+                coverageBreakdown:
+                  - coveragePart: "LIABILITY"
+                    basePremium: 500.00
+                    premium: 425.25
+                  - coveragePart: "COLLISION"
+                    basePremium: 350.00
+                    premium: 312.50
+                  - coveragePart: "COMPREHENSIVE"
+                    basePremium: 100.00
+                    premium: 69.75
+                ratingFactors:
+                  - factorName: "Driver Age"
+                    factorType: "DRIVER"
+                    factorValue: "37"
+                    multiplier: 0.85
+                  - factorName: "Vehicle Safety Rating"
+                    factorType: "VEHICLE"
+                    factorValue: "5"
+                    multiplier: 0.90
+                  - factorName: "Territory"
+                    factorType: "LOCATION"
+                    factorValue: "CA-LA-01"
+                    multiplier: 1.15
+                discountsApplied:
+                  - code: "GOOD_DRIVER"
+                    name: "Good Driver Discount"
+                    percentage: 10.0
+                    amount: 95.00
+                  - code: "ADVANCE_QUOTE"
+                    name: "Advance Quote Discount"
+                    percentage: 5.0
+                    amount: 47.50
+                surchargesApplied: []
+                calculatedAt: "2025-10-17T10:35:00Z"
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT token
+
+  schemas:
+    CreateQuoteRequest:
+      type: object
+      required:
+        - driver
+        - vehicle
+        - coverage
+      properties:
+        driver:
+          $ref: '#/components/schemas/DriverInput'
+        vehicle:
+          $ref: '#/components/schemas/VehicleInput'
+        coverage:
+          $ref: '#/components/schemas/CoverageInput'
+
+    DriverInput:
+      type: object
+      required:
+        - firstName
+        - lastName
+        - birthDate
+        - email
+        - licenseNumber
+      properties:
+        firstName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Driver's legal first name
+          example: "John"
+        lastName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Driver's legal last name
+          example: "Doe"
+        birthDate:
+          type: string
+          format: date
+          description: Driver's date of birth (must be at least 16 years old)
+          example: "1988-05-15"
+        gender:
+          type: string
+          enum: [M, F, X]
+          description: Gender code (where permitted by state)
+          example: "M"
+        email:
+          type: string
+          format: email
+          description: Contact email address
+          example: "john.doe@email.com"
+        phone:
+          type: string
+          pattern: '^[0-9]{10}$'
+          description: 10-digit phone number
+          example: "5551234567"
+        licenseNumber:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Driver's license number
+          example: "D1234567"
+        licenseState:
+          type: string
+          minLength: 2
+          maxLength: 2
+          description: State that issued the driver's license
+          example: "CA"
+        yearsLicensed:
+          type: integer
+          minimum: 0
+          maximum: 80
+          description: Number of years driver has been licensed
+          example: 10
+        maritalStatus:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+          description: Marital status (affects rating)
+          example: "MARRIED"
+        address:
+          $ref: '#/components/schemas/AddressInput'
+
+    VehicleInput:
+      type: object
+      required:
+        - garageAddress
+      properties:
+        vin:
+          type: string
+          pattern: '^[A-HJ-NPR-Z0-9]{17}$'
+          description: 17-character Vehicle Identification Number (excludes I, O, Q)
+          example: "1HGCM82633A123456"
+        make:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Vehicle manufacturer (required if VIN not provided)
+          example: "Honda"
+        model:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Vehicle model (required if VIN not provided)
+          example: "Accord"
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2026
+          description: Model year (required if VIN not provided)
+          example: 2023
+        garageAddress:
+          $ref: '#/components/schemas/AddressInput'
+          description: Where vehicle is primarily kept (affects rating)
+
+    AddressInput:
+      type: object
+      required:
+        - line1Address
+        - municipalityName
+        - stateCode
+        - postalCode
+      properties:
+        line1Address:
+          type: string
+          minLength: 1
+          maxLength: 255
+          description: Street address line 1 (no PO boxes for garaging)
+          example: "123 Main St"
+        line2Address:
+          type: string
+          maxLength: 255
+          description: Apartment, suite, unit number
+          example: "Apt 4B"
+        municipalityName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: City or town name
+          example: "Los Angeles"
+        stateCode:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: Two-letter state code
+          example: "CA"
+        postalCode:
+          type: string
+          pattern: '^[0-9]{5}(-[0-9]{4})?$'
+          description: 5-digit or 9-digit ZIP code
+          example: "90001"
+
+    CoverageInput:
+      type: object
+      required:
+        - liabilityLimits
+      properties:
+        liabilityLimits:
+          type: object
+          required:
+            - bodilyInjuryPerPerson
+            - bodilyInjuryPerAccident
+            - propertyDamagePerAccident
+          properties:
+            bodilyInjuryPerPerson:
+              type: integer
+              enum: [25000, 50000, 100000, 250000, 500000]
+              description: Bodily injury liability limit per person
+              example: 100000
+            bodilyInjuryPerAccident:
+              type: integer
+              enum: [50000, 100000, 300000, 500000, 1000000]
+              description: Bodily injury liability limit per accident
+              example: 300000
+            propertyDamagePerAccident:
+              type: integer
+              enum: [25000, 50000, 100000, 250000, 500000]
+              description: Property damage liability limit per accident
+              example: 50000
+        collision:
+          type: object
+          properties:
+            selected:
+              type: boolean
+              default: false
+              description: Whether collision coverage is selected
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+              description: Collision deductible amount (required if selected)
+        comprehensive:
+          type: object
+          properties:
+            selected:
+              type: boolean
+              default: false
+              description: Whether comprehensive coverage is selected
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+              description: Comprehensive deductible amount (required if selected)
+        uninsuredMotorist:
+          type: object
+          properties:
+            selected:
+              type: boolean
+              default: false
+              description: Whether uninsured motorist coverage is selected
+        personalInjuryProtection:
+          type: object
+          properties:
+            selected:
+              type: boolean
+              default: false
+              description: Whether PIP coverage is selected (required in some states)
+
+    UpdateCoverageRequest:
+      type: object
+      properties:
+        liabilityLimits:
+          type: object
+          properties:
+            bodilyInjuryPerPerson:
+              type: integer
+              enum: [25000, 50000, 100000, 250000, 500000]
+            bodilyInjuryPerAccident:
+              type: integer
+              enum: [50000, 100000, 300000, 500000, 1000000]
+            propertyDamagePerAccident:
+              type: integer
+              enum: [25000, 50000, 100000, 250000, 500000]
+        collision:
+          type: object
+          properties:
+            selected:
+              type: boolean
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+        comprehensive:
+          type: object
+          properties:
+            selected:
+              type: boolean
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+        uninsuredMotorist:
+          type: object
+          properties:
+            selected:
+              type: boolean
+
+    QuoteResponse:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+          description: Quote unique identifier (OMG Policy.policy_identifier)
+        quoteNumber:
+          type: string
+          description: Human-readable quote number (OMG Policy.policy_number)
+          example: "Q-2025-123456"
+        status:
+          type: string
+          enum: [QUOTED, BINDING, BOUND, ACTIVE, EXPIRED, CANCELLED]
+          description: Quote status (OMG Policy.status_code)
+        effectiveDate:
+          type: string
+          format: date
+          description: Policy effective date (OMG Policy.effective_date)
+        expirationDate:
+          type: string
+          format: date
+          description: Policy expiration date (OMG Policy.expiration_date)
+        quoteExpirationDate:
+          type: string
+          format: date-time
+          description: Quote expires 30 days from creation
+        premium:
+          $ref: '#/components/schemas/PremiumBreakdown'
+        coverageBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoverageBreakdown'
+        discountsApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscountApplied'
+        surchargesApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurchargeApplied'
+        vehicle:
+          $ref: '#/components/schemas/VehicleDetails'
+        driver:
+          $ref: '#/components/schemas/DriverDetails'
+        createdAt:
+          type: string
+          format: date-time
+
+    QuoteSummary:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        quoteNumber:
+          type: string
+          example: "Q-2025-123456"
+        status:
+          type: string
+          enum: [QUOTED, BINDING, BOUND, ACTIVE, EXPIRED, CANCELLED]
+        totalPremium:
+          type: number
+          format: decimal
+          example: 854.80
+        vehicleMake:
+          type: string
+          example: "Honda"
+        vehicleModel:
+          type: string
+          example: "Accord"
+        vehicleYear:
+          type: integer
+          example: 2023
+        createdAt:
+          type: string
+          format: date-time
+        expiresAt:
+          type: string
+          format: date-time
+
+    PremiumBreakdown:
+      type: object
+      description: OMG Policy Amount breakdown
+      properties:
+        basePremium:
+          type: number
+          format: decimal
+          description: Base premium before adjustments
+          example: 950.00
+        totalDiscounts:
+          type: number
+          format: decimal
+          description: Total discount amount
+          example: 142.50
+        totalSurcharges:
+          type: number
+          format: decimal
+          description: Total surcharge amount
+          example: 0.00
+        subtotal:
+          type: number
+          format: decimal
+          description: Premium after discounts and surcharges
+          example: 807.50
+        taxes:
+          type: number
+          format: decimal
+          description: State taxes (2-4% of premium)
+          example: 32.30
+        fees:
+          type: number
+          format: decimal
+          description: Policy fees
+          example: 15.00
+        totalPremium:
+          type: number
+          format: decimal
+          description: Final total premium
+          example: 854.80
+
+    CoverageBreakdown:
+      type: object
+      description: OMG Policy Coverage Detail premium
+      properties:
+        coveragePart:
+          type: string
+          enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+          description: OMG Coverage Part code
+        premium:
+          type: number
+          format: decimal
+          example: 425.25
+
+    DiscountApplied:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "GOOD_DRIVER"
+        name:
+          type: string
+          example: "Good Driver Discount"
+        percentage:
+          type: number
+          format: decimal
+          example: 10.0
+        amount:
+          type: number
+          format: decimal
+          example: 95.00
+
+    SurchargeApplied:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "YOUNG_DRIVER"
+        name:
+          type: string
+          example: "Young Driver Surcharge"
+        percentage:
+          type: number
+          format: decimal
+          example: 30.0
+        amount:
+          type: number
+          format: decimal
+          example: 285.00
+
+    VehicleDetails:
+      type: object
+      description: OMG Vehicle entity details
+      properties:
+        vin:
+          type: string
+          example: "1HGCM82633A123456"
+        make:
+          type: string
+          example: "Honda"
+        model:
+          type: string
+          example: "Accord"
+        year:
+          type: integer
+          example: 2023
+        marketValue:
+          type: number
+          format: decimal
+          description: Estimated market value from simulated valuation service
+          example: 28500.00
+        safetyRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: NHTSA overall safety rating from simulated service
+          example: 5
+
+    DriverDetails:
+      type: object
+      description: OMG Person entity details
+      properties:
+        firstName:
+          type: string
+          example: "John"
+        lastName:
+          type: string
+          example: "Doe"
+        age:
+          type: integer
+          example: 37
+
+    PremiumCalculationResponse:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        calculationId:
+          type: string
+          format: uuid
+          description: OMG Premium Calculation identifier
+        premium:
+          $ref: '#/components/schemas/PremiumBreakdown'
+        coverageBreakdown:
+          type: array
+          items:
+            type: object
+            properties:
+              coveragePart:
+                type: string
+              basePremium:
+                type: number
+                format: decimal
+              premium:
+                type: number
+                format: decimal
+        ratingFactors:
+          type: array
+          items:
+            $ref: '#/components/schemas/RatingFactor'
+        discountsApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/DiscountApplied'
+        surchargesApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/SurchargeApplied'
+        calculatedAt:
+          type: string
+          format: date-time
+
+    RatingFactor:
+      type: object
+      description: OMG Rating Factor entity
+      properties:
+        factorName:
+          type: string
+          example: "Driver Age"
+        factorType:
+          type: string
+          enum: [VEHICLE, DRIVER, LOCATION, COVERAGE]
+        factorValue:
+          type: string
+          example: "37"
+        multiplier:
+          type: number
+          format: decimal
+          example: 0.85
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 3
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              example: "Validation failed"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "driver.birthDate"
+                  message:
+                    type: string
+                    example: "Driver must be at least 16 years old"
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Validation failed"
+              details:
+                - field: "driver.birthDate"
+                  message: "Driver must be at least 16 years old"
+                - field: "vehicle.vin"
+                  message: "Invalid VIN format"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "Quote not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"
