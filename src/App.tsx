@@ -6,6 +6,11 @@ import GettingStartedPage from './pages/GettingStartedPage';
 import CoveragePage from './pages/CoveragePage';
 import CheckoutPage from './pages/CheckoutPage';
 import ConfirmationPage from './pages/ConfirmationPage';
+import AutoInsuranceLandingPage from './pages/AutoInsuranceLandingPage';
+import AutoInsuranceGettingStartedPage from './pages/AutoInsuranceGettingStartedPage';
+import AutoInsuranceCoveragePage from './pages/AutoInsuranceCoveragePage';
+import AutoInsuranceCheckoutPage from './pages/AutoInsuranceCheckoutPage';
+import AutoInsuranceConfirmationPage from './pages/AutoInsuranceConfirmationPage';
 
 function App() {
   return (
@@ -22,7 +27,14 @@ function App() {
         <Route path="/examples/coverage" element={<CoveragePage />} />
         <Route path="/examples/checkout" element={<CheckoutPage />} />
         <Route path="/examples/confirmation" element={<ConfirmationPage />} />
-        
+
+        {/* Auto Insurance Flow */}
+        <Route path="/auto-insurance/landing" element={<AutoInsuranceLandingPage />} />
+        <Route path="/auto-insurance/getting-started" element={<AutoInsuranceGettingStartedPage />} />
+        <Route path="/auto-insurance/coverage" element={<AutoInsuranceCoveragePage />} />
+        <Route path="/auto-insurance/checkout" element={<AutoInsuranceCheckoutPage />} />
+        <Route path="/auto-insurance/confirmation" element={<AutoInsuranceConfirmationPage />} />
+
         {/* Catch all route - redirect to home */}
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
