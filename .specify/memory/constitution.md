@@ -1,50 +1,209 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+SYNC IMPACT REPORT
+==================
+Version Change: [Initial] → 1.0.0
+Type: MINOR (New constitution initialization)
+Rationale: First formal constitution for the Auto Insurance Prototype project
+
+Modified Principles:
+- [NEW] I. Design System First
+- [NEW] II. OMG Standards Compliance
+- [NEW] III. Production-Ready Patterns (NON-NEGOTIABLE)
+- [NEW] IV. User Story-Driven Development
+- [NEW] V. Type Safety
+- [NEW] VI. Data Persistence
+
+Added Sections:
+- Core Principles (6 principles)
+- Development Standards
+- Quality Gates
+- Governance
+
+Removed Sections: None (initial version)
+
+Template Consistency Status:
+✅ plan-template.md - Constitution Check section references this file (verified)
+✅ spec-template.md - User Stories structure aligns with Principle IV (verified)
+✅ tasks-template.md - Task organization by user story matches Principle IV (verified)
+⚠️  No command files found in .specify/templates/commands/ (expected location per SpecKit structure)
+
+Follow-up TODOs:
+- None - All placeholders filled with concrete values
+- Future: Add testing principles when test framework is established
+- Future: Add deployment/observability principles when infrastructure is defined
+
+Generated: 2025-10-17
+-->
+
+# Auto Insurance Prototype Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Design System First
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+All UI components MUST use the Canary Design System without custom CSS exceptions.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+**Rules:**
+- Import components from `@sureapp/canary-design-system` exclusively
+- Use component props for styling variations (size, variant, color schemes)
+- Global CSS limited to layout and design system integration only
+- Custom CSS requires explicit justification and architecture approval
+- Design system tokens MUST be used for colors, spacing, typography
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**Rationale:** The Canary Design System provides a production-ready, accessible, and consistent UI framework. Custom CSS creates maintenance burden, accessibility risks, and design inconsistency. The design system is the foundation of rapid prototyping while maintaining professional quality.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### II. OMG Standards Compliance
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+All insurance domain entities MUST conform to OMG Property & Casualty Data Model v1.0.
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+**Rules:**
+- Entity naming, attributes, and relationships follow OMG P&C standard
+- Non-standard extensions documented with OMG mapping justification
+- Quote, Policy, Coverage, Claim entities use OMG-defined structures
+- Rating engine calculations aligned with OMG methodology guidance
+- Data model changes require OMG compliance verification
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+**Rationale:** OMG P&C Data Model ensures industry interoperability, regulatory alignment, and semantic clarity. This standard enables integration with third-party insurance systems and demonstrates enterprise-grade data architecture practices.
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+### III. Production-Ready Patterns (NON-NEGOTIABLE)
+
+Even as a prototype, all implemented features MUST follow production-ready patterns for security, error handling, and user experience.
+
+**Rules:**
+- Authentication and authorization implemented with industry-standard patterns
+- Sensitive data (payment info, PII) handled with encryption and masking
+- Error messages user-friendly with technical details logged separately
+- Loading states, validation feedback, and edge cases handled gracefully
+- Database transactions ensure data consistency (quotes, policies, payments)
+- Simulated integrations mirror real-world API behavior and error modes
+
+**Rationale:** This prototype serves as a reference implementation and demonstration of best practices. Cutting corners on security or UX patterns would undermine its credibility and educational value. Production-ready patterns from the start prevent technical debt.
+
+### IV. User Story-Driven Development
+
+Features MUST be organized by independently testable user stories with clear priorities (P1, P2, P3...).
+
+**Rules:**
+- Each user story deliverable as standalone MVP increment
+- User stories prioritized by business value (P1 = highest)
+- Acceptance scenarios written in Given-When-Then format
+- Tasks organized by user story in tasks.md for parallel execution
+- Each story independently testable without dependencies on lower-priority stories
+- Foundational infrastructure identified and completed before story work begins
+
+**Rationale:** User story-driven development enables incremental delivery, parallel team execution, and clear validation criteria. Prioritization ensures the most valuable features ship first, and independence prevents blocking dependencies.
+
+### V. Type Safety
+
+TypeScript MUST be used throughout with strict type checking enabled.
+
+**Rules:**
+- No `any` types except for explicitly justified third-party integrations
+- Interfaces defined for all domain entities (Quote, Policy, User, Claim, etc.)
+- API contracts typed with request/response interfaces
+- Component props strictly typed with TypeScript interfaces
+- Type errors MUST be resolved before committing code
+
+**Rationale:** TypeScript catches bugs at compile time, improves code documentation through type signatures, and enables confident refactoring. Strict typing is essential for maintainability in React applications.
+
+### VI. Data Persistence
+
+All business-critical data MUST persist in Neon database with clear state transitions.
+
+**Rules:**
+- Quotes persist with states: draft, active, converted, expired
+- Policies persist with states: pending, active, cancelled, expired
+- Users created upon policy binding with secure credential management
+- Payment transactions logged with full audit trail (date, amount, status, method)
+- Claims persist with states: submitted, under_review, approved, denied, closed
+- State transitions validated and logged for compliance
+
+**Rationale:** Data persistence is essential for business continuity, compliance, and user experience. State management enables accurate reporting, audit trails, and recovery from failures. The Neon database provides scalable, reliable storage.
+
+## Development Standards
+
+### Simulated Integrations
+
+External integrations (payment processing, VIN decoder, vehicle valuation, email delivery) MUST be simulated with realistic behavior:
+
+- Mock payment gateway returns realistic responses (success, declined, validation errors)
+- VIN decoder simulation provides vehicle details with edge case handling (invalid VIN, not found)
+- Vehicle valuation returns estimates with fallback logic for missing data
+- Email previews displayed in-app instead of actual delivery
+- All simulations include realistic latency and error scenarios
+- Documentation clearly indicates simulated vs. real integrations
+
+### Code Organization
+
+- Frontend: React components in `src/`, organized by feature/domain
+- Backend: (To be defined when implemented - likely `backend/` or `api/` directory)
+- Shared types: Centralized TypeScript interfaces for domain entities
+- Database schema: Migration-based approach for version control
+- Configuration: Environment-based config for dev/staging/production
+
+### Documentation
+
+- Feature specs MUST include user stories with priorities and acceptance criteria
+- Implementation plans MUST define project structure and constitution compliance
+- Tasks MUST be organized by user story with clear dependencies
+- README MUST provide quickstart and deployment instructions
+- Edge cases documented in spec.md for defensive implementation
+
+## Quality Gates
+
+### Pre-Implementation
+
+- [ ] Feature spec approved with prioritized user stories
+- [ ] Implementation plan defines structure and constitution compliance
+- [ ] Foundational infrastructure tasks identified (blocking prerequisites)
+- [ ] Constitution violations justified in complexity tracking table
+
+### During Implementation
+
+- [ ] TypeScript compiles without errors (`npm run build`)
+- [ ] Canary Design System components used exclusively
+- [ ] OMG data model compliance verified for insurance entities
+- [ ] Error handling and loading states implemented
+- [ ] Database state transitions validated
+
+### Pre-Commit
+
+- [ ] Code formatted and linted
+- [ ] TypeScript strict checks pass
+- [ ] No sensitive data hardcoded (credentials, API keys)
+- [ ] User story acceptance criteria met
+- [ ] Edge cases from spec.md handled
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+### Amendment Process
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+1. Proposed changes documented with rationale
+2. Impact analysis on existing features and templates
+3. Version bump determined (MAJOR/MINOR/PATCH)
+4. Templates updated for consistency (plan, spec, tasks)
+5. Constitution updated with sync impact report
+6. Changes communicated to development team
+
+### Versioning Policy
+
+- **MAJOR**: Backward-incompatible principle removals or redefinitions
+- **MINOR**: New principles added or material guidance expansions
+- **PATCH**: Clarifications, wording fixes, non-semantic refinements
+
+### Compliance Review
+
+- All pull requests MUST verify constitution compliance
+- Template updates MUST propagate to dependent artifacts
+- Complexity MUST be justified in implementation plan
+- Constitution supersedes all other practices and conventions
+
+### Runtime Guidance
+
+For development workflow and implementation details, developers should:
+1. Review feature spec for user stories and acceptance criteria
+2. Consult implementation plan for structure and technical context
+3. Follow tasks.md for execution order and dependencies
+4. Validate against constitution principles throughout development
+
+**Version**: 1.0.0 | **Ratified**: 2025-10-17 | **Last Amended**: 2025-10-17
