@@ -63,7 +63,7 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 - [ ] T015 Create database migration framework using Drizzle Kit at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/database/schema/
 - [ ] T016 Create base entity types from OMG model at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/entities/base/
 - [ ] T017 Create NestJS database module at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/database/database.module.ts
-- [ ] T018 Define TypeScript interfaces for all 27 OMG entities at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/types/omg-entities.ts
+- [ ] T018 Define TypeScript interfaces for all OMG entities and rating engine entities (33 total: 27 OMG P&C core entities + 6 rating engine entities) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/types/omg-entities.ts
 - [ ] T019 Create shared validation utilities at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/utils/validators.ts
 - [ ] T020 Create shared error handling middleware at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/middleware/error-handler.ts
 - [ ] T021 Setup API response formatters at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/utils/response-formatter.ts
@@ -127,12 +127,13 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 - [ ] T054 [P] [US1] Create vehicle rating factors calculator at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/vehicle-rating.ts
 - [ ] T055 [P] [US1] Create driver rating factors calculator at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/driver-rating.ts
 - [ ] T056 [P] [US1] Create location rating factors calculator at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/location-rating.ts
-- [ ] T056b [US1] Implement Redis/in-memory cache for vehicle data service with 24-hour TTL and cache-aside pattern at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/mock-services/vehicle-data-cache.ts
+- [ ] T056b [US1] Implement Redis/in-memory cache for vehicle data service with 24-hour TTL, cache-aside pattern, and cache key structure: vehicle:vin:{vin}, vehicle:mmv:{make}:{model}:{year} at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/mock-services/vehicle-data-cache.ts
 - [ ] T057 [P] [US1] Create coverage rating factors calculator at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/coverage-rating.ts
 - [ ] T057b [US1] Create quote expiration cron job (daily check for quotes older than 30 days, update status to 'expired') at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/quote-service/expiration-monitor.ts
 - [ ] T058 [US1] Create discount calculator with 7 standard discounts at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/discount-calculator.ts
 - [ ] T059 [US1] Create surcharge calculator with 8 standard surcharges at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/surcharge-calculator.ts
-- [ ] T060 [US1] Create premium calculation orchestrator with multiplicative model and audit trail (persist all rating factors, weights, discounts, surcharges to Premium Calculation entity with timestamp and quote_id FK) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/premium-calculator.ts
+- [ ] T060 [US1] Create premium calculation orchestrator with multiplicative model and persist all rating factors, weights, discounts, surcharges, intermediate values to Premium Calculation entity (per FR-003) with timestamp and quote_id FK for audit trail at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/premium-calculator.ts
+- [ ] T060b [US1] Create state tax and fee calculator (premium tax 2-4%, policy fee $10-25, DMV fees per FR-064) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/rating-engine/tax-fee-calculator.ts
 - [ ] T061 [US1] Seed rating tables with base rates and multipliers at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/database/seeds/rating-tables.sql
 - [ ] T062 [US1] Create rating engine API controller at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/routes/rating.controller.ts
 
@@ -151,7 +152,7 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 - [x] T070 [P] [US1] Create VehicleInfo page with VIN input and manual entry at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/quote/VehicleInfo.tsx ✅ 2025-10-18
 - [x] T071 [P] [US1] Create DriverInfo page with person details form at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/quote/DriverInfo.tsx ✅ 2025-10-18
 - [x] T072 [P] [US1] Create CoverageSelection page with limits/deductibles at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/quote/CoverageSelection.tsx ✅ 2025-10-18
-- [x] T073 [P] [US1] Create QuoteResults page with premium breakdown at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/quote/QuoteResults.tsx ✅ 2025-10-18
+- [x] T073 [P] [US1] Create QuoteResults page with itemized premium breakdown (coverage subtotals, discounts, surcharges, taxes, fees, total per FR-067) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/quote/QuoteResults.tsx ✅ 2025-10-18
 - [x] T074 [P] [US1] Create PremiumBreakdown component (Canary) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/components/insurance/PremiumBreakdown.tsx ✅ 2025-10-18
 - [ ] T075 [P] [US1] Create CoverageCard component (Canary) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/components/insurance/CoverageCard.tsx
 - [ ] T076 [P] [US1] Create VehicleCard component (Canary) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/components/insurance/VehicleCard.tsx
@@ -232,17 +233,18 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 
 ### Portal Service (US3)
 
-- [ ] T108 [US3] Create portal service with policy number validation and generate policy access token (UUID for URL-based access, policy_id FK) and trigger email with portal link at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/portal.service.ts
+- [ ] T108 [US3] Create portal service with policy number validation, email deduplication check (link new policy to existing account if email matches per FR-020), generate policy access token (UUID for URL-based access, policy_id FK), and trigger email with portal link at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/portal.service.ts
 - [ ] T109 [US3] Create dashboard data aggregation service at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/dashboard-service.ts
 - [ ] T110 [US3] Create billing history service at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/billing-service.ts
 - [ ] T111 [US3] Create claims filing service at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/claims-service.ts
 - [ ] T112 [US3] Create claim attachment upload handler (10MB limit, JPEG/PNG/PDF) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/services/portal-service/attachment-handler.ts
+- [ ] T112b [US3] Create file upload validation middleware with MIME type checking (image/jpeg, image/png, application/pdf), magic number verification, 10MB size limit enforcement at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/middleware/file-upload-validator.ts
 - [ ] T113 [US3] Create portal API controller with URL-based access at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/routes/portal.controller.ts
 
 ### Frontend Portal Pages (US3)
 
 - [ ] T114 [P] [US3] Create Dashboard page with policy summary at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/Dashboard.tsx
-- [ ] T115 [P] [US3] Create PolicyDetails page with coverage breakdown at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/PolicyDetails.tsx
+- [ ] T115 [P] [US3] Create PolicyDetails page with coverage breakdown and policy document download section (declarations, ID cards per FR-053) at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/PolicyDetails.tsx
 - [ ] T116 [P] [US3] Create BillingHistory page with payment transactions at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/BillingHistory.tsx
 - [ ] T117 [P] [US3] Create ClaimsList page with claim status at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/ClaimsList.tsx
 - [ ] T118 [P] [US3] Create FileClaim page with incident details form at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/src/pages/portal/FileClaim.tsx
@@ -280,6 +282,13 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 - API integration tests: 100% endpoint coverage
 - Frontend component tests: Critical user flows and reusable components
 - E2E tests: Happy path for each user story
+
+**Edge Case Coverage Notes**:
+- All test tasks should reference applicable edge cases from spec.md Edge Cases section (lines 73-101)
+- Quote flow tests (T168-T172): Cover Quote Flow Edge Cases and Vehicle Data Lookup Edge Cases
+- Payment tests (T173-T175, T159): Cover Payment & Binding Edge Cases
+- Portal tests (T176-T180): Cover Account & Portal Edge Cases
+- Service tests should validate edge case handling per specification
 
 **Tasks**:
 

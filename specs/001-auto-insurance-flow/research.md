@@ -613,6 +613,246 @@ CREATE INDEX idx_rating_data_gin ON rating_factors USING GIN(rating_data);
 
 ---
 
+## 8. Vehicle Data Enrichment Mapping
+
+### Purpose
+
+Define which vehicle attributes are enriched by simulated third-party services (FR-001, FR-044) and fallback behavior for service failures.
+
+---
+
+### VIN Decoder Service Enrichment
+
+**Input**: `vehicle_identification_number` (17-character VIN)
+
+**Enriched Fields** (added to Vehicle entity):
+- `make_name` (e.g., "Toyota", "Honda", "Ford")
+- `model_name` (e.g., "Camry", "Accord", "F-150")
+- `model_year` (e.g., 2020, 2021, 2022)
+- `body_style_code` (SEDAN, SUV, TRUCK, COUPE, CONVERTIBLE, WAGON)
+- `engine_type` (e.g., "2.5L 4-Cylinder", "3.5L V6")
+- `trim_level` (e.g., "LE", "EX", "XLT")
+- `manufacturer_name` (e.g., "Toyota Motor Corporation")
+
+**Fallback Behavior**:
+1. **Invalid VIN format**: Display validation error "VIN must be 17 alphanumeric characters (excluding I, O, Q)" → Offer manual vehicle entry
+2. **VIN not found in mock database**: Display "Vehicle not found in our database" → Provide manual entry form with make/model/year dropdowns
+3. **Service timeout** (>2s): Display "Service temporarily unavailable" → Offer retry button or manual entry option
+
+---
+
+### Vehicle Valuation Service Enrichment
+
+**Input**: `make_name`, `model_name`, `model_year`, `mileage` (optional), `zip_code`
+
+**Enriched Fields**:
+- `market_value_amount` (estimated current market value)
+- `replacement_cost_amount` (new vehicle replacement cost)
+- `valuation_source_code` (JD_POWER, KBB, NADA)
+- `valuation_date` (timestamp of valuation)
+
+**Fallback Behavior**:
+1. **Valuation data unavailable**: Use default estimate formula: `base_msrp * (1 - (0.15 * vehicle_age))` → Display disclaimer "Estimated value based on vehicle age"
+2. **Service timeout**: Use depreciation table lookup by make/model/year → Mark valuation as "ESTIMATED"
+3. **Exotic/rare vehicle**: Prompt user for manual market value entry → Allow override with $5,000-$500,000 range validation
+
+---
+
+### Safety Rating Service Enrichment
+
+**Input**: `make_name`, `model_name`, `model_year`
+
+**Enriched Fields**:
+- `overall_safety_rating` (1-5 stars, NHTSA scale)
+- `frontal_crash_rating` (1-5 stars)
+- `side_crash_rating` (1-5 stars)
+- `rollover_rating` (1-5 stars)
+- `iihs_top_safety_pick` (boolean)
+- `standard_safety_features` (array: ABS, ESC, Airbags, BSM, etc.)
+
+**Fallback Behavior**:
+1. **No safety data for model year**: Display "Safety ratings not available for this model year" → Allow quote to proceed without safety rating discount
+2. **Older vehicles** (<2010): Skip safety rating enrichment → Use default risk factor (no discount or penalty)
+3. **Service unavailable**: Proceed without safety data → Exclude safety-based rating adjustments from premium calculation
+
+---
+
+### Enrichment Orchestration Flow
+
+```
+1. User enters VIN or selects vehicle manually
+   ↓
+2. IF VIN provided → Call VIN Decoder (with fallback)
+   ↓
+3. With make/model/year → Call Vehicle Valuation (parallel)
+   ↓
+4. With make/model/year → Call Safety Ratings (parallel)
+   ↓
+5. Merge all enriched data into Vehicle entity
+   ↓
+6. Validate all required rating fields present
+   ↓
+7. Proceed to premium calculation
+```
+
+**Performance Targets**:
+- VIN Decoder: 500ms-1s (95th percentile)
+- Valuation + Safety (parallel): 1-2s total (95th percentile)
+- Total enrichment: <3s for full VIN lookup flow
+
+**Mock Service Implementation Notes**:
+- VIN decoder uses Luhn-like checksum validation for realistic VIN validation
+- Seed database with ~100 common vehicles (top makes/models by market share)
+- Valuation service uses MSRP depreciation curves by vehicle class
+- Safety ratings pulled from NHTSA 2015-2025 data patterns
+- All services implement LogNormal latency distribution for realistic timing
+- Cache vehicle data with 24-hour TTL to simulate production caching patterns
+
+---
+
+## 9. Mock Payment Gateway Scenarios
+
+### Purpose
+
+Define realistic payment gateway behavior for demo application (FR-008), including validation rules, success/failure scenarios, and error responses.
+
+---
+
+### Credit Card Payment Scenarios
+
+**Validation Rules** (Luhn Algorithm):
+- Card number must pass Luhn checksum validation
+- Expiration date must be future date (MM/YY format)
+- CVV must be 3-4 digits
+- ZIP code must match billing address format
+
+**Success Scenarios** (Stripe Test Card Patterns):
+
+| Card Number | Scenario | Response Time | Result |
+|-------------|----------|---------------|--------|
+| 4242 4242 4242 4242 | Standard success | 1-2s | Payment approved, transaction ID generated |
+| 5555 5555 5555 4444 | Mastercard success | 1-2s | Payment approved |
+| 3782 822463 10005 | Amex success | 1-2s | Payment approved (CVV 4 digits) |
+
+**Decline Scenarios**:
+
+| Card Number | Decline Reason | Error Code | User Message |
+|-------------|----------------|------------|--------------|
+| 4000 0000 0000 0002 | Card declined | card_declined | "Your card was declined. Please try a different payment method." |
+| 4000 0000 0000 9995 | Insufficient funds | insufficient_funds | "Insufficient funds. Please use a different card or contact your bank." |
+| 4000 0000 0000 0069 | Expired card | expired_card | "Your card has expired. Please use a different card." |
+| 4000 0000 0000 0127 | Incorrect CVC | incorrect_cvc | "The security code is incorrect. Please check and try again." |
+| 4000 0000 0000 0119 | Processing error | processing_error | "An error occurred processing your payment. Please try again." |
+
+**Validation Error Scenarios**:
+
+| Invalid Input | Error Response | User Message |
+|---------------|----------------|--------------|
+| Invalid Luhn checksum | invalid_card_number | "The card number is invalid. Please check and try again." |
+| Expired date (past) | invalid_expiry_date | "The expiration date is in the past." |
+| Invalid CVV length | invalid_cvc | "The security code must be 3-4 digits." |
+| Missing required field | incomplete_request | "Please fill in all required fields." |
+
+---
+
+### ACH Bank Account Payment Scenarios
+
+**Validation Rules**:
+- Routing number must be 9 digits (valid ABA routing number)
+- Account number must be 4-17 digits
+- Account type: checking or savings
+
+**Success Scenarios**:
+
+| Routing Number | Account Number | Response Time | Result |
+|----------------|----------------|---------------|--------|
+| 110000000 | 000123456789 | 2-3s | ACH authorized, pending verification |
+| 011401533 | 000987654321 | 2-3s | ACH authorized |
+
+**Failure Scenarios**:
+
+| Routing Number | Account Number | Error Code | User Message |
+|----------------|----------------|------------|--------------|
+| 110000000 | 000000000000 | invalid_account | "The bank account number is invalid." |
+| 999999999 | 000123456789 | invalid_routing | "The routing number is invalid. Please verify with your bank." |
+| 110000000 | 999999999999 | account_closed | "This account appears to be closed. Please use a different account." |
+
+---
+
+### Timeout and Network Error Scenarios
+
+**Simulated Network Conditions**:
+- **Normal processing**: 1-3 seconds (LogNormal distribution, mean=2s)
+- **Slow network**: 5-8 seconds (10% probability)
+- **Timeout**: >10 seconds, return timeout error (2% probability)
+- **Network error**: Connection refused (1% probability)
+
+**Error Responses**:
+
+| Scenario | Response Time | Error Code | User Message | Retry Behavior |
+|----------|---------------|------------|--------------|----------------|
+| Slow processing | 5-8s | N/A | "Processing payment..." (loading state) | Auto-complete when done |
+| Timeout | 10s+ | request_timeout | "Payment processing timed out. Please try again." | Allow retry |
+| Network error | Immediate | network_error | "Unable to connect to payment processor. Please check your connection." | Allow retry |
+
+---
+
+### Payment Processing State Machine
+
+```
+INITIATED → VALIDATING → PROCESSING → [SUCCESS | DECLINED | ERROR]
+                ↓              ↓
+           VALIDATION_ERROR  TIMEOUT
+```
+
+**States**:
+1. **INITIATED**: User submits payment form
+2. **VALIDATING**: Client-side validation (Luhn, expiry, CVV format) - 100ms
+3. **PROCESSING**: Simulated gateway processing - 1-3s (LogNormal)
+4. **SUCCESS**: Payment approved, policy binding proceeds
+5. **DECLINED**: Payment declined, user prompted to retry
+6. **VALIDATION_ERROR**: Invalid input, immediate user feedback
+7. **TIMEOUT**: Request exceeded 10s, allow retry
+8. **ERROR**: Processing error, allow retry with different payment method
+
+---
+
+### Mock Service Implementation Details
+
+**Response Structure** (JSON):
+```json
+{
+  "status": "success | declined | error",
+  "transaction_id": "txn_1234567890abcdef",
+  "payment_method": {
+    "type": "card | bank_account",
+    "last4": "4242",
+    "brand": "visa | mastercard | amex | discover"
+  },
+  "amount": 120000,
+  "currency": "usd",
+  "created": 1634567890,
+  "error": {
+    "code": "card_declined",
+    "message": "Your card was declined.",
+    "decline_code": "generic_decline"
+  }
+}
+```
+
+**Tokenization** (PCI Compliance Simulation):
+- Real card numbers never stored in database
+- Generate mock payment method token: `pm_xxxxxxxxxxxxxxxxxxxx`
+- Store only: last 4 digits, brand, expiry month/year, token
+- Display masked number: `**** **** **** 4242`
+
+**Testing Configuration**:
+- Environment variable `MOCK_PAYMENT_SCENARIO` can force specific outcomes
+- Values: `always_succeed`, `always_decline`, `random` (default)
+- Allows testing error handling without relying on specific card numbers
+
+---
+
 ## Next Steps
 
 With all technology decisions resolved, proceed to:

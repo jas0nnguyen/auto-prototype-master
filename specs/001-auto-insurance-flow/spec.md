@@ -108,16 +108,16 @@ After successfully binding a policy, a user account is automatically created, al
 - **FR-003**: System MUST calculate insurance premium using a realistic rating engine based on industry-standard rating factors including vehicle characteristics, driver profile, location, coverage selections, and risk scoring. The rating engine MUST persist complete calculation audit trail (all rating factors, weights, discounts, surcharges, intermediate values) to Premium Calculation entity with timestamp and quote_id FK for transparency and regulatory compliance.
 - **FR-004**: System MUST assign a quote expiration date of 30 days from quote creation
 - **FR-005**: System MUST validate all input data (vehicle information, driver information, payment details) before processing
-- **FR-006**: System MUST allow users to retrieve and view previously generated quotes using the quote reference number
+- **FR-006**: System MUST allow users to retrieve and view previously generated quotes using the quote reference number (public retrieval by quote ID or reference number; distinct from FR-015 which provides authenticated quote history view)
 - **FR-007**: System MUST transition a quote object to a policy object when user completes payment and binding process
 - **FR-008**: System MUST simulate payment processing with realistic mock payment gateway behavior (including validation, success/failure scenarios, and processing delays) before creating policy
 - **FR-009**: System MUST generate a unique policy number for each successfully bound policy
 - **FR-010**: System MUST store policy effective date, expiration date, coverage details, and premium amount
 - **FR-011**: System MUST automatically create a user account when a policy is successfully bound
 - **FR-012**: System MUST generate and display account credentials and welcome information after account creation (via in-app preview, notification center, or demo email service)
-- **FR-013**: System MUST provide URL-based portal access using policy number (demo mode - no authentication required)
-- **FR-014**: System MUST allow authenticated users to view all their active and historical policies
-- **FR-015**: System MUST allow authenticated users to view their quote history (active, expired, and converted quotes)
+- **FR-013**: System MUST provide URL-based portal access using policy number (demo mode - no authentication required; see FR-045 for full portal capabilities)
+- **FR-014**: System MUST allow policy holders to view all their active and historical policies (accessed via portal per FR-013)
+- **FR-015**: System MUST allow policy holders to view their quote history (active, expired, and converted quotes) within the portal (provides list of all quotes for a policy holder; distinct from FR-006 which is single quote retrieval)
 - **FR-016**: System MUST persist all data (quotes, policies, user accounts) in the database with appropriate relationships
 - **FR-017**: System MUST track the status of each quote (draft, active, expired, converted)
 - **FR-018**: System MUST track the status of each policy (pending, active, cancelled, expired)
@@ -156,7 +156,7 @@ After successfully binding a policy, a user account is automatically created, al
 
 **Self-Service Portal Requirements:**
 
-- **FR-045**: System MUST provide authenticated portal access for users to view all their policies, quotes, billing, and claims
+- **FR-045**: System MUST provide portal access for policy holders to view all their policies, quotes, billing, and claims (Demo mode: URL-based access via policy number per FR-013; Production: authenticated access with industry-standard patterns per Constitution III)
 - **FR-046**: System MUST display billing/payment history showing all payment transactions with date, amount, payment method (last 4 digits only), status, and transaction reference
 - **FR-047**: System MUST allow users to file new claims through the portal by submitting incident details (date, time, location, description)
 - **FR-048**: System MUST accept claim attachments (photos, documents) up to 10MB per file with common file formats (JPEG, PNG, PDF)
@@ -204,6 +204,8 @@ The system implements the following OMG P&C core entities to ensure industry sta
 
 - **Policy**: A subtype of Agreement representing an insurance contract. Contains policy number, effective date, expiration date, status (QUOTED, BINDING, BOUND, ACTIVE, CANCELLED), and geographic jurisdiction. A quote is represented as a Policy with status='QUOTED', which transitions to BOUND upon payment and binding.
 
+- **Assessment**: OMG core entity representing risk evaluation and underwriting analysis. Contains assessment_type_code (UNDERWRITING, RISK_SCORE, CLAIM_DAMAGE, VEHICLE_INSPECTION), assessment_date, assessment_result_code (APPROVED, DECLINED, REFER), assessment_description (detailed findings), estimated_amount (for damage assessments), assessor_party_id (FK to Party performing assessment), and temporal validity (begin_date, end_date). Links to Agreement through Agreement Assessment relationship table. Used for quote evaluation, underwriting decisions, and claim damage assessments. For MVP, supports basic underwriting assessment during quote generation; full risk scoring deferred to Phase 2.
+
 - **Insurable Object**: Represents items that may be included or excluded from insurance coverage. For auto insurance, this is subtyped as Vehicle with attributes including VIN, make, model, year, and driving characteristics.
 
 - **Vehicle**: A subtype of Insurable Object representing automobiles. Contains vehicle identification number (VIN), make name, model name, model year, and other vehicle-specific attributes defined in the OMG standard.
@@ -233,6 +235,8 @@ The system implements the following OMG P&C core entities to ensure industry sta
 - **Claim Party Role**: Links Party to Claim with specific roles (claimant, injured party, witness, adjuster). Follows OMG Party Role pattern for flexible claim participant tracking.
 
 - **Claim Event**: Subtype of Event tracking claim lifecycle events (submission, status changes, payments, closure) with event dates and timestamps. Provides audit trail for claim processing.
+
+- **Account Agreement**: OMG relationship entity linking Account to Agreement (Policy). Contains account_id (FK to Account), agreement_id (FK to Agreement), relationship_type_code (POLICYHOLDER, BILLING_ACCOUNT, SERVICING_ACCOUNT), begin_date, end_date following OMG temporal validity pattern. Enables one Account to hold multiple Agreements and one Agreement to be associated with multiple Accounts (e.g., billing vs. servicing).
 
 **Rating Engine Entities:**
 
@@ -274,6 +278,8 @@ To avoid confusion between similar terms used throughout this specification:
 
 - **Portal Access**: URL-based access to self-service portal using policy number. No traditional authentication (username/password) required in demo mode. Production implementation would add authentication while maintaining policy number as primary identifier. (Demo vs Production)
 
+- **Policy Holder**: Person who owns an active insurance policy. In demo mode, "policy holder" replaces "authenticated user" terminology since access is via URL with policy number rather than username/password authentication. (Demo vs Production)
+
 ## Success Criteria *(mandatory)*
 
 ### Measurable Outcomes
@@ -306,6 +312,12 @@ To avoid confusion between similar terms used throughout this specification:
 - **SC-015**: System handles at least 100 concurrent quote calculation requests (simultaneous premium calculations) without performance degradation (response times remain within SC-003 threshold)
 - **SC-016**: Database queries for policy retrieval complete within 500 milliseconds for 95% of requests
 - **SC-017**: System uptime maintains 99.9% availability
+
+**Performance Measurement Context:**
+- All performance metrics measured under standard test conditions: warm database connections, application server with 2GB RAM, modern browser (Chrome/Firefox latest), simulated 4G network latency (50ms), no concurrent load unless specified
+- Cold start scenarios (first request after idle) may exceed thresholds by 1-2 seconds
+- Cache-enabled scenarios (repeated requests) typically 50-80% faster than stated thresholds
+- Success criteria thresholds represent 95th percentile under nominal conditions
 
 **OMG Compliance Metrics:**
 
