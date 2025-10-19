@@ -18,7 +18,7 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 - Database: Neon PostgreSQL (serverless), Drizzle ORM
 - Authentication: None (demo app uses URL-based policy access via policy number)
 
-**Storage**: Neon PostgreSQL (OMG P&C data model with 27 entities, UUID primary keys, temporal tracking)
+**Storage**: Neon PostgreSQL (OMG P&C data model with 27 OMG core entities + 6 rating engine entities = 33 total, UUID primary keys, temporal tracking)
 
 **Testing**:
 - Frontend: Vitest + React Testing Library
@@ -48,7 +48,7 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 **Scale/Scope**:
 - 3 primary user flows (quote, bind, portal)
 - 68 functional requirements
-- 27 OMG-compliant entities with full relationships
+- 27 OMG core entities + 6 rating engine entities (33 total) with full relationships
 - 8-12 main screens (quote form, payment, portal dashboard, billing history, claims filing)
 - ~100 concurrent users target
 - Demo application (not production traffic)
@@ -66,7 +66,7 @@ Build an OMG Property & Casualty Data Model v1.0 compliant auto insurance purcha
 | Principle | Status | Compliance Notes |
 |-----------|--------|------------------|
 | **I. Design System First** | ✅ PASS | Frontend uses Canary Design System 3.12+ exclusively. No custom CSS exceptions planned. |
-| **II. OMG Standards Compliance** | ✅ PASS | All 27 entities follow OMG P&C Data Model v1.0. Data model documented in data-model.md with full compliance verification. |
+| **II. OMG Standards Compliance** | ✅ PASS | All 27 OMG core entities (plus 6 rating engine entities) follow OMG P&C Data Model v1.0. Data model documented in data-model.md with full compliance verification. |
 | **III. Production-Ready Patterns** | ✅ PASS (Auth Waived) | No authentication for demo (policy access via URL). Input validation, error handling, mock services mirroring production patterns, transaction management all implemented. |
 | **IV. User Story-Driven Development** | ✅ PASS | Spec.md contains 3 prioritized user stories (P1, P2, P3) with Given-When-Then acceptance scenarios. Tasks will be organized by story. |
 | **V. Type Safety** | ✅ PASS | TypeScript 5.8+ across full stack. Drizzle ORM provides compile-time type safety. NestJS uses decorators for DTOs. No `any` types in architecture. |
@@ -109,7 +109,7 @@ specs/[###-feature]/
 ```
 backend/                          # Backend API service (to be created)
 ├── src/
-│   ├── entities/                 # OMG P&C entity definitions (27 entities)
+│   ├── entities/                 # OMG P&C entity definitions (27 OMG core + 6 rating engine = 33 total)
 │   │   ├── party/                # Party, Person, Communication Identity
 │   │   ├── policy/               # Policy, Agreement, Coverage, Policy Coverage Detail
 │   │   ├── vehicle/              # Vehicle, Insurable Object

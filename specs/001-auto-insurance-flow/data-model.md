@@ -21,15 +21,18 @@ This auto insurance purchase platform is built on the **OMG Property & Casualty 
 
 ### 1.3 Entity Count
 
-This implementation includes **27 core entities** organized across multiple subject areas:
+This implementation includes **33 total entities** organized across multiple subject areas:
+- **27 OMG P&C Core Entities** (Party, Agreement, Policy, Coverage, Claim, etc.)
+- **6 Rating Engine Entities** (Rating Factor, Rating Table, Discount, Surcharge, Premium Calculation, plus related)
+
+**Entity Breakdown by Subject Area:**
 - **5** Core Party Entities
 - **3** Account & Product Entities
 - **14** Policy & Coverage Entities
 - **2** Insurable Object Entities
-- **1** Coverage Entity (with supporting reference tables)
-- **5** Rating Engine Entities
+- **5** Rating Engine Entities (implementation-specific for premium calculation)
 - **3** Claims Entities
-- **2** Payment & Documents Entities
+- **1** Payment Entity
 
 ---
 
@@ -1903,5 +1906,5 @@ These extensions follow OMG principles and integrate seamlessly with core entiti
 **Document Version**: 1.0
 **Created**: 2025-10-17
 **Standard Reference**: OMG P&C Data Model v1.0 (formal/2014-11-01)
-**Compliance**: 100% OMG Core Entity Implementation (27 entities)
+**Compliance**: 100% OMG Core Entity Implementation (27 OMG core entities + 6 rating engine entities = 33 total)
 **Feature**: Auto Insurance Purchase Flow (001-auto-insurance-flow)

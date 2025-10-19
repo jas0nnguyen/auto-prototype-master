@@ -777,7 +777,7 @@ backend/
 │   │
 │   ├── database/               # Database layer
 │   │   ├── connection.ts       # Drizzle database connection
-│   │   ├── schema/             # Drizzle schemas (27 entities)
+│   │   ├── schema/             # Drizzle schemas (27 OMG core + 6 rating engine = 33 total)
 │   │   │   ├── party.schema.ts
 │   │   │   ├── account.schema.ts
 │   │   │   ├── policy.schema.ts
@@ -1840,7 +1840,7 @@ GET    /api/portal/billing      # Get billing history
 - URL: https://www.omg.org/spec/PC/1.0/PDF
 - Download: https://www.omg.org/spec/PC/1.0/
 
-**Key OMG Entities Implemented (27 total):**
+**Key OMG Entities Implemented (33 total: 27 OMG core + 6 rating engine):**
 
 | Category | Entities |
 |----------|----------|

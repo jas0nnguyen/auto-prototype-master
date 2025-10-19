@@ -437,7 +437,7 @@ Phase 1 (Setup) → Phase 2 (Foundational) → Phase 3 (US1) → Phase 4 (US2) �
 - T110: Billing history displays all transactions (SC-029)
 
 **OMG Compliance** (All Phases):
-- T023-T107: All 27 OMG entities implemented (SC-018)
+- T023-T107: All 33 entities implemented (27 OMG core + 6 rating engine per SC-018)
 - T045: Party Role pattern used throughout (SC-020)
 - T091: Policy status follows OMG transitions (SC-021)
 
