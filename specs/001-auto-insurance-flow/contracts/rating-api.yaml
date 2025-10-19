@@ -1,0 +1,963 @@
+openapi: 3.0.3
+info:
+  title: Auto Insurance Rating Engine API
+  description: |
+    Rating engine endpoints for auto insurance premium calculation.
+    Implements realistic multi-factor rating algorithm based on industry-standard
+    actuarial principles. Provides premium calculation, rating factors, discounts,
+    and surcharges following OMG P&C Data Model v1.0 standards.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@autoinsurance.demo
+
+servers:
+  - url: http://localhost:3001
+    description: Rating engine microservice (local)
+  - url: https://rating-api.autoinsurance.demo
+    description: Rating engine microservice (production)
+
+security: []
+
+tags:
+  - name: Rating
+    description: Premium calculation operations
+  - name: Rating Data
+    description: Rating factors, discounts, and surcharges lookup
+
+paths:
+  /api/v1/rating/calculate:
+    post:
+      tags:
+        - Rating
+      summary: Calculate premium
+      description: |
+        Calculates insurance premium using multi-factor rating algorithm.
+        Formula: Base Premium × Vehicle Factor × Driver Factor × Location Factor × Coverage Factor
+        × (1 - Total Discounts) × (1 + Total Surcharges) + Taxes + Fees = Total Premium.
+        Returns complete calculation breakdown with audit trail.
+      operationId: calculatePremium
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RatingRequest'
+            example:
+              quoteId: "550e8400-e29b-41d4-a716-446655440000"
+              effectiveDate: "2025-11-01"
+              state: "CA"
+              vehicle:
+                year: 2023
+                make: "Honda"
+                model: "Accord"
+                isoSymbol: 5
+                marketValue: 28500.00
+                safetyRating: 5
+                antiTheftDevices: ["IMMOBILIZER", "ALARM"]
+                annualMileage: 12000
+                garageZipCode: "90001"
+              driver:
+                age: 37
+                gender: "M"
+                maritalStatus: "MARRIED"
+                yearsLicensed: 20
+                accidents: []
+                violations: []
+                claimFreeYears: 5
+                continuousCoverage: true
+              coverage:
+                liability:
+                  bodilyInjuryPerPerson: 100000
+                  bodilyInjuryPerAccident: 300000
+                  propertyDamagePerAccident: 50000
+                collision:
+                  selected: true
+                  deductible: 500
+                comprehensive:
+                  selected: true
+                  deductible: 500
+                uninsuredMotorist:
+                  selected: true
+                personalInjuryProtection:
+                  selected: false
+      responses:
+        '200':
+          description: Premium calculated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RatingResponse'
+              example:
+                quoteId: "550e8400-e29b-41d4-a716-446655440000"
+                calculationId: "770f9622-g4bd-63f6-c938-668877662222"
+                ratingVersion: "2025.Q4.v1"
+                effectiveDate: "2025-11-01"
+                state: "CA"
+                premium:
+                  basePremium: 950.00
+                  totalDiscounts: 142.50
+                  totalSurcharges: 0.00
+                  subtotal: 807.50
+                  taxes: 32.30
+                  fees: 15.00
+                  totalPremium: 854.80
+                coverageBreakdown:
+                  - coveragePart: "LIABILITY"
+                    basePremium: 500.00
+                    adjustedPremium: 425.25
+                    limits:
+                      bodilyInjuryPerPerson: 100000
+                      bodilyInjuryPerAccident: 300000
+                      propertyDamagePerAccident: 50000
+                  - coveragePart: "COLLISION"
+                    basePremium: 350.00
+                    adjustedPremium: 312.50
+                    deductible: 500
+                  - coveragePart: "COMPREHENSIVE"
+                    basePremium: 100.00
+                    adjustedPremium: 69.75
+                    deductible: 500
+                ratingFactors:
+                  vehicle:
+                    - factorName: "ISO Vehicle Symbol"
+                      factorValue: "5"
+                      multiplier: 0.95
+                    - factorName: "Vehicle Age"
+                      factorValue: "2"
+                      multiplier: 1.05
+                    - factorName: "Safety Rating"
+                      factorValue: "5"
+                      multiplier: 0.90
+                    - factorName: "Anti-Theft Devices"
+                      factorValue: "IMMOBILIZER,ALARM"
+                      multiplier: 0.92
+                  driver:
+                    - factorName: "Driver Age"
+                      factorValue: "37"
+                      multiplier: 0.85
+                    - factorName: "Marital Status"
+                      factorValue: "MARRIED"
+                      multiplier: 0.90
+                    - factorName: "Years Licensed"
+                      factorValue: "20"
+                      multiplier: 0.88
+                    - factorName: "Claim-Free Years"
+                      factorValue: "5"
+                      multiplier: 0.80
+                  location:
+                    - factorName: "Territory"
+                      factorValue: "CA-LA-01"
+                      multiplier: 1.15
+                    - factorName: "Urban/Rural"
+                      factorValue: "URBAN"
+                      multiplier: 1.10
+                  coverage:
+                    - factorName: "Liability Limits"
+                      factorValue: "100/300/50"
+                      multiplier: 1.05
+                    - factorName: "Collision Deductible"
+                      factorValue: "500"
+                      multiplier: 0.92
+                    - factorName: "Comprehensive Deductible"
+                      factorValue: "500"
+                      multiplier: 0.88
+                discountsApplied:
+                  - code: "GOOD_DRIVER"
+                    name: "Good Driver Discount"
+                    percentage: 10.0
+                    amount: 95.00
+                    eligibility: "No accidents or violations in past 3 years"
+                  - code: "ADVANCE_QUOTE"
+                    name: "Advance Quote Discount"
+                    percentage: 5.0
+                    amount: 47.50
+                    eligibility: "Quote created 7+ days before effective date"
+                surchargesApplied: []
+                taxes:
+                  - name: "California State Tax"
+                    percentage: 4.0
+                    amount: 32.30
+                fees:
+                  - name: "Policy Fee"
+                    amount: 15.00
+                calculatedAt: "2025-10-17T10:35:00Z"
+                calculationDuration: 245
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/rating/factors:
+    get:
+      tags:
+        - Rating Data
+      summary: Get rating factors
+      description: |
+        Retrieves available rating factors with value ranges and multipliers
+        for a specific state and coverage type. Used for understanding how
+        different attributes affect premium calculation.
+      operationId: getRatingFactors
+      parameters:
+        - name: state
+          in: query
+          description: State code for state-specific factors
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+            example: "CA"
+        - name: coveragePart
+          in: query
+          description: Filter by coverage part
+          required: false
+          schema:
+            type: string
+            enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+        - name: factorType
+          in: query
+          description: Filter by factor type
+          required: false
+          schema:
+            type: string
+            enum: [VEHICLE, DRIVER, LOCATION, COVERAGE]
+      responses:
+        '200':
+          description: Rating factors retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                  ratingVersion:
+                    type: string
+                  effectiveDate:
+                    type: string
+                    format: date
+                  factors:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/RatingFactorDefinition'
+              example:
+                state: "CA"
+                ratingVersion: "2025.Q4.v1"
+                effectiveDate: "2025-10-01"
+                factors:
+                  - factorType: "VEHICLE"
+                    factorName: "ISO Vehicle Symbol"
+                    description: "Vehicle rating symbol (1-50, lower is less expensive)"
+                    valueRange:
+                      min: 1
+                      max: 50
+                    multiplierRange:
+                      min: 0.70
+                      max: 2.50
+                  - factorType: "DRIVER"
+                    factorName: "Driver Age"
+                    description: "Age-based risk factor"
+                    valueRange:
+                      min: 16
+                      max: 100
+                    multiplierRange:
+                      min: 0.80
+                      max: 2.50
+                    ageBreakpoints:
+                      - age: 16-25
+                        multiplier: 1.80-2.50
+                      - age: 26-35
+                        multiplier: 1.00-1.20
+                      - age: 36-65
+                        multiplier: 0.80-0.90
+                      - age: 66+
+                        multiplier: 1.10-1.30
+                  - factorType: "LOCATION"
+                    factorName: "Territory"
+                    description: "Geographic rating territory based on ZIP code"
+                    valueRange:
+                      values: ["CA-LA-01", "CA-SF-01", "CA-SD-01"]
+                    multiplierRange:
+                      min: 0.85
+                      max: 1.35
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/rating/discounts:
+    get:
+      tags:
+        - Rating Data
+      summary: Available discounts
+      description: |
+        Retrieves available discounts with eligibility criteria and discount percentages.
+        Used to show potential savings to customers during quote process.
+      operationId: getDiscounts
+      parameters:
+        - name: state
+          in: query
+          description: State code for state-specific discounts
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+            example: "CA"
+        - name: coveragePart
+          in: query
+          description: Filter by coverage part
+          required: false
+          schema:
+            type: string
+            enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+      responses:
+        '200':
+          description: Discounts retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                  discounts:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DiscountDefinition'
+              example:
+                state: "CA"
+                discounts:
+                  - code: "MULTI_CAR"
+                    name: "Multi-Car Discount"
+                    description: "Discount for insuring multiple vehicles on same policy"
+                    percentage: 10-20
+                    eligibility: "2 or more vehicles on policy"
+                    stackable: true
+                    applicableCoverages: ["LIABILITY", "COLLISION", "COMPREHENSIVE"]
+                  - code: "GOOD_DRIVER"
+                    name: "Good Driver Discount"
+                    description: "No accidents or violations in past 3 years"
+                    percentage: 15-25
+                    eligibility: "Clean driving record for 3+ years"
+                    stackable: true
+                    applicableCoverages: ["ALL"]
+                  - code: "DEFENSIVE_DRIVING"
+                    name: "Defensive Driving Course Discount"
+                    description: "Completed approved defensive driving course"
+                    percentage: 5-10
+                    eligibility: "Course completion within past 3 years"
+                    stackable: true
+                    applicableCoverages: ["ALL"]
+                  - code: "LOW_MILEAGE"
+                    name: "Low Mileage Discount"
+                    description: "Annual mileage under 7,500 miles"
+                    percentage: 5-15
+                    eligibility: "Annual mileage < 7,500 miles"
+                    stackable: true
+                    applicableCoverages: ["COLLISION", "COMPREHENSIVE"]
+                  - code: "HOMEOWNER"
+                    name: "Homeowner Discount"
+                    description: "Discount for homeowners"
+                    percentage: 5-10
+                    eligibility: "Own or purchasing a home"
+                    stackable: true
+                    applicableCoverages: ["ALL"]
+                  - code: "ADVANCE_QUOTE"
+                    name: "Advance Quote Discount"
+                    description: "Quote created 7+ days before effective date"
+                    percentage: 5
+                    eligibility: "Quote at least 7 days prior to effective date"
+                    stackable: true
+                    applicableCoverages: ["ALL"]
+                  - code: "PAPERLESS"
+                    name: "Paperless Discount"
+                    description: "Electronic documents and payment"
+                    percentage: 3-5
+                    eligibility: "Opt-in to paperless billing and documents"
+                    stackable: true
+                    applicableCoverages: ["ALL"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/rating/surcharges:
+    get:
+      tags:
+        - Rating Data
+      summary: Applicable surcharges
+      description: |
+        Retrieves applicable surcharges with criteria and duration.
+        Used to calculate premium increases for risk factors.
+      operationId: getSurcharges
+      parameters:
+        - name: state
+          in: query
+          description: State code for state-specific surcharges
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z]{2}$'
+            example: "CA"
+        - name: coveragePart
+          in: query
+          description: Filter by coverage part
+          required: false
+          schema:
+            type: string
+            enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+      responses:
+        '200':
+          description: Surcharges retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  state:
+                    type: string
+                  surcharges:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/SurchargeDefinition'
+              example:
+                state: "CA"
+                surcharges:
+                  - code: "YOUNG_DRIVER"
+                    name: "Young Driver Surcharge"
+                    description: "Driver under 25 years old"
+                    percentage: 30-100
+                    criteria: "Driver age < 25"
+                    durationYears: null
+                    applicableCoverages: ["ALL"]
+                  - code: "SENIOR_DRIVER"
+                    name: "Senior Driver Surcharge"
+                    description: "Driver over 75 years old"
+                    percentage: 10-30
+                    criteria: "Driver age > 75"
+                    durationYears: null
+                    applicableCoverages: ["ALL"]
+                  - code: "AT_FAULT_ACCIDENT"
+                    name: "At-Fault Accident Surcharge"
+                    description: "At-fault accident in past 3 years"
+                    percentage: 20-40
+                    criteria: "At-fault accident within 3 years"
+                    durationYears: 3
+                    applicableCoverages: ["LIABILITY", "COLLISION"]
+                  - code: "MOVING_VIOLATION"
+                    name: "Moving Violation Surcharge"
+                    description: "Moving violation in past 3 years"
+                    percentage: 10-30
+                    criteria: "Moving violation within 3 years"
+                    durationYears: 3
+                    applicableCoverages: ["LIABILITY"]
+                  - code: "DUI"
+                    name: "DUI Surcharge"
+                    description: "DUI/DWI conviction in past 5 years"
+                    percentage: 50-100
+                    criteria: "DUI/DWI conviction within 5 years"
+                    durationYears: 5
+                    applicableCoverages: ["ALL"]
+                  - code: "LAPSED_COVERAGE"
+                    name: "Lapsed Coverage Surcharge"
+                    description: "Coverage gap over 30 days"
+                    percentage: 15-25
+                    criteria: "Coverage lapse > 30 days in past 6 months"
+                    durationYears: 1
+                    applicableCoverages: ["ALL"]
+                  - code: "HIGH_PERFORMANCE"
+                    name: "High Performance Vehicle Surcharge"
+                    description: "Sports or high-performance vehicle"
+                    percentage: 20-50
+                    criteria: "Vehicle classified as high-performance"
+                    durationYears: null
+                    applicableCoverages: ["COLLISION", "COMPREHENSIVE"]
+                  - code: "EXOTIC_LUXURY"
+                    name: "Exotic/Luxury Vehicle Surcharge"
+                    description: "Exotic or luxury vehicle"
+                    percentage: 25-75
+                    criteria: "Vehicle classified as exotic/luxury"
+                    durationYears: null
+                    applicableCoverages: ["COLLISION", "COMPREHENSIVE"]
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  schemas:
+    RatingRequest:
+      type: object
+      required:
+        - effectiveDate
+        - state
+        - vehicle
+        - driver
+        - coverage
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+          description: Quote identifier for audit trail
+        effectiveDate:
+          type: string
+          format: date
+          description: Policy effective date affects rating version
+        state:
+          type: string
+          pattern: '^[A-Z]{2}$'
+          description: State code for state-specific rating
+        vehicle:
+          $ref: '#/components/schemas/VehicleRatingInput'
+        driver:
+          $ref: '#/components/schemas/DriverRatingInput'
+        coverage:
+          $ref: '#/components/schemas/CoverageRatingInput'
+
+    VehicleRatingInput:
+      type: object
+      required:
+        - year
+        - make
+        - model
+      properties:
+        year:
+          type: integer
+          minimum: 1900
+          maximum: 2026
+        make:
+          type: string
+        model:
+          type: string
+        isoSymbol:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: ISO vehicle symbol (from VIN decoder)
+        marketValue:
+          type: number
+          format: decimal
+          description: Estimated market value (from valuation service)
+        safetyRating:
+          type: integer
+          minimum: 1
+          maximum: 5
+          description: NHTSA overall rating (from safety ratings service)
+        antiTheftDevices:
+          type: array
+          items:
+            type: string
+            enum: [IMMOBILIZER, ALARM, GPS_TRACKING, STEERING_LOCK]
+        annualMileage:
+          type: integer
+          minimum: 0
+          maximum: 100000
+          default: 12000
+        garageZipCode:
+          type: string
+          pattern: '^[0-9]{5}$'
+          description: Where vehicle is garaged
+
+    DriverRatingInput:
+      type: object
+      required:
+        - age
+      properties:
+        age:
+          type: integer
+          minimum: 16
+          maximum: 100
+        gender:
+          type: string
+          enum: [M, F, X]
+          description: Gender (where permitted by state)
+        maritalStatus:
+          type: string
+          enum: [SINGLE, MARRIED, DIVORCED, WIDOWED]
+        yearsLicensed:
+          type: integer
+          minimum: 0
+          maximum: 80
+        accidents:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              atFault:
+                type: boolean
+        violations:
+          type: array
+          items:
+            type: object
+            properties:
+              date:
+                type: string
+                format: date
+              type:
+                type: string
+                enum: [SPEEDING, DUI, RECKLESS_DRIVING, OTHER]
+        claimFreeYears:
+          type: integer
+          minimum: 0
+          default: 0
+          description: Years without claims
+        continuousCoverage:
+          type: boolean
+          default: false
+          description: No lapse in coverage past 6 months
+
+    CoverageRatingInput:
+      type: object
+      required:
+        - liability
+      properties:
+        liability:
+          type: object
+          required:
+            - bodilyInjuryPerPerson
+            - bodilyInjuryPerAccident
+            - propertyDamagePerAccident
+          properties:
+            bodilyInjuryPerPerson:
+              type: integer
+            bodilyInjuryPerAccident:
+              type: integer
+            propertyDamagePerAccident:
+              type: integer
+        collision:
+          type: object
+          properties:
+            selected:
+              type: boolean
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+        comprehensive:
+          type: object
+          properties:
+            selected:
+              type: boolean
+            deductible:
+              type: integer
+              enum: [250, 500, 1000, 2500]
+        uninsuredMotorist:
+          type: object
+          properties:
+            selected:
+              type: boolean
+        personalInjuryProtection:
+          type: object
+          properties:
+            selected:
+              type: boolean
+
+    RatingResponse:
+      type: object
+      properties:
+        quoteId:
+          type: string
+          format: uuid
+        calculationId:
+          type: string
+          format: uuid
+          description: OMG Premium Calculation identifier
+        ratingVersion:
+          type: string
+          description: Rating table version used
+          example: "2025.Q4.v1"
+        effectiveDate:
+          type: string
+          format: date
+        state:
+          type: string
+        premium:
+          $ref: '#/components/schemas/PremiumBreakdown'
+        coverageBreakdown:
+          type: array
+          items:
+            $ref: '#/components/schemas/CoveragePremium'
+        ratingFactors:
+          type: object
+          properties:
+            vehicle:
+              type: array
+              items:
+                $ref: '#/components/schemas/AppliedRatingFactor'
+            driver:
+              type: array
+              items:
+                $ref: '#/components/schemas/AppliedRatingFactor'
+            location:
+              type: array
+              items:
+                $ref: '#/components/schemas/AppliedRatingFactor'
+            coverage:
+              type: array
+              items:
+                $ref: '#/components/schemas/AppliedRatingFactor'
+        discountsApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppliedDiscount'
+        surchargesApplied:
+          type: array
+          items:
+            $ref: '#/components/schemas/AppliedSurcharge'
+        taxes:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaxItem'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeItem'
+        calculatedAt:
+          type: string
+          format: date-time
+        calculationDuration:
+          type: integer
+          description: Calculation time in milliseconds
+
+    PremiumBreakdown:
+      type: object
+      properties:
+        basePremium:
+          type: number
+          format: decimal
+        totalDiscounts:
+          type: number
+          format: decimal
+        totalSurcharges:
+          type: number
+          format: decimal
+        subtotal:
+          type: number
+          format: decimal
+        taxes:
+          type: number
+          format: decimal
+        fees:
+          type: number
+          format: decimal
+        totalPremium:
+          type: number
+          format: decimal
+
+    CoveragePremium:
+      type: object
+      properties:
+        coveragePart:
+          type: string
+          enum: [LIABILITY, COLLISION, COMPREHENSIVE, PIP, UM, UIM]
+        basePremium:
+          type: number
+          format: decimal
+        adjustedPremium:
+          type: number
+          format: decimal
+        limits:
+          type: object
+          additionalProperties: true
+        deductible:
+          type: number
+          format: decimal
+
+    AppliedRatingFactor:
+      type: object
+      description: OMG Rating Factor entity
+      properties:
+        factorName:
+          type: string
+        factorValue:
+          type: string
+        multiplier:
+          type: number
+          format: decimal
+
+    AppliedDiscount:
+      type: object
+      description: OMG Discount entity
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        percentage:
+          type: number
+          format: decimal
+        amount:
+          type: number
+          format: decimal
+        eligibility:
+          type: string
+
+    AppliedSurcharge:
+      type: object
+      description: OMG Surcharge entity
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        percentage:
+          type: number
+          format: decimal
+        amount:
+          type: number
+          format: decimal
+        reason:
+          type: string
+
+    TaxItem:
+      type: object
+      properties:
+        name:
+          type: string
+        percentage:
+          type: number
+          format: decimal
+        amount:
+          type: number
+          format: decimal
+
+    FeeItem:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+          format: decimal
+
+    RatingFactorDefinition:
+      type: object
+      properties:
+        factorType:
+          type: string
+          enum: [VEHICLE, DRIVER, LOCATION, COVERAGE]
+        factorName:
+          type: string
+        description:
+          type: string
+        valueRange:
+          type: object
+          additionalProperties: true
+        multiplierRange:
+          type: object
+          properties:
+            min:
+              type: number
+              format: decimal
+            max:
+              type: number
+              format: decimal
+
+    DiscountDefinition:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        percentage:
+          oneOf:
+            - type: number
+            - type: string
+          description: Percentage or range (e.g., "10-20")
+        eligibility:
+          type: string
+        stackable:
+          type: boolean
+          description: Can be combined with other discounts
+        applicableCoverages:
+          type: array
+          items:
+            type: string
+
+    SurchargeDefinition:
+      type: object
+      properties:
+        code:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        percentage:
+          oneOf:
+            - type: number
+            - type: string
+          description: Percentage or range (e.g., "20-40")
+        criteria:
+          type: string
+        durationYears:
+          type: integer
+          nullable: true
+          description: How long surcharge remains on record
+        applicableCoverages:
+          type: array
+          items:
+            type: string
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            driver_too_young:
+              summary: Driver too young
+              value:
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Validation failed"
+                  details:
+                    - field: "driver.age"
+                      message: "Driver must be at least 16 years old"
+            invalid_state:
+              summary: Invalid state code
+              value:
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Validation failed"
+                  details:
+                    - field: "state"
+                      message: "Product not licensed in state XX"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

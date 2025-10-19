@@ -1,0 +1,1089 @@
+openapi: 3.0.3
+info:
+  title: Auto Insurance Portal API
+  description: |
+    Self-service portal endpoints for policyholders to manage their insurance.
+    Includes dashboard, billing history, claims filing, and claims tracking.
+    All endpoints follow OMG P&C Data Model v1.0 standards.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@autoinsurance.demo
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.autoinsurance.demo
+    description: Production server
+
+security:
+  - BearerAuth: []
+
+tags:
+  - name: Portal
+    description: Self-service portal operations
+  - name: Billing
+    description: Billing and payment history
+  - name: Claims
+    description: Claims filing and tracking
+
+paths:
+  /api/v1/portal/dashboard:
+    get:
+      tags:
+        - Portal
+      summary: Get dashboard data
+      description: |
+        Retrieves comprehensive dashboard data for authenticated user including
+        active policies, recent payments, pending claims, and upcoming renewals.
+      operationId: getDashboard
+      responses:
+        '200':
+          description: Dashboard data retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DashboardResponse'
+              example:
+                user:
+                  userId: "990h1844-i6df-85h8-e150-88aa99884444"
+                  email: "john.doe@email.com"
+                  firstName: "John"
+                  lastName: "Doe"
+                  lastLogin: "2025-10-17T10:00:00Z"
+                activePolicies:
+                  - policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    policyNumber: "P-2025-789012"
+                    status: "ACTIVE"
+                    effectiveDate: "2025-11-01"
+                    expirationDate: "2026-11-01"
+                    totalPremium: 854.80
+                    vehicle:
+                      make: "Honda"
+                      model: "Accord"
+                      year: 2023
+                    daysUntilRenewal: 380
+                recentPayments:
+                  - paymentId: "880g0733-h5ce-74g7-d049-779988773333"
+                    policyNumber: "P-2025-789012"
+                    amount: 854.80
+                    status: "COMPLETED"
+                    method: "CREDIT_CARD"
+                    last4: "4242"
+                    paymentDate: "2025-10-17T11:00:00Z"
+                pendingClaims:
+                  - claimId: "dd3l5288-m0hj-29l2-i594-22ee33228888"
+                    claimNumber: "CLM-2025-001234"
+                    status: "SUBMITTED"
+                    incidentDate: "2025-10-15"
+                    estimatedAmount: 2500.00
+                    vehicle:
+                      make: "Honda"
+                      model: "Accord"
+                      year: 2023
+                upcomingRenewals:
+                  - policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    policyNumber: "P-2025-789012"
+                    expirationDate: "2026-11-01"
+                    daysUntilRenewal: 380
+                    estimatedRenewalPremium: 875.00
+                summary:
+                  totalActivePolicies: 1
+                  totalVehiclesInsured: 1
+                  totalPendingClaims: 1
+                  totalPaidThisYear: 854.80
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/portal/billing:
+    get:
+      tags:
+        - Billing
+      summary: Get billing history
+      description: |
+        Retrieves complete billing and payment history for authenticated user.
+        Includes all transactions with payment method details (masked).
+      operationId: getBillingHistory
+      parameters:
+        - name: policyId
+          in: query
+          description: Filter by policy ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: startDate
+          in: query
+          description: Filter payments from this date
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: endDate
+          in: query
+          description: Filter payments until this date
+          required: false
+          schema:
+            type: string
+            format: date
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Billing history retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  payments:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/PaymentTransaction'
+                  summary:
+                    $ref: '#/components/schemas/BillingSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              example:
+                payments:
+                  - paymentId: "880g0733-h5ce-74g7-d049-779988773333"
+                    policyId: "550e8400-e29b-41d4-a716-446655440000"
+                    policyNumber: "P-2025-789012"
+                    amount: 854.80
+                    status: "COMPLETED"
+                    method: "CREDIT_CARD"
+                    cardType: "Visa"
+                    last4: "4242"
+                    transactionId: "txn_mock_1234567890"
+                    description: "Policy Premium - Annual Payment"
+                    paymentDate: "2025-10-17T11:00:00Z"
+                  - paymentId: "770f9622-g4bd-63f6-c938-668877662222"
+                    policyId: "660e9511-f3ac-52e5-b827-557766551111"
+                    policyNumber: "P-2024-456789"
+                    amount: 920.50
+                    status: "COMPLETED"
+                    method: "BANK_ACCOUNT"
+                    accountType: "CHECKING"
+                    last4: "6789"
+                    transactionId: "txn_mock_0987654321"
+                    description: "Policy Premium - Annual Payment"
+                    paymentDate: "2024-10-15T09:30:00Z"
+                summary:
+                  totalPayments: 2
+                  totalAmount: 1775.30
+                  successfulPayments: 2
+                  failedPayments: 0
+                  pendingPayments: 0
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 2
+                  totalPages: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/portal/claims:
+    post:
+      tags:
+        - Claims
+      summary: File new claim
+      description: |
+        Submits a new claim for an incident. Creates Claim entity with status='SUBMITTED'.
+        Supports attachment uploads for photos and documents.
+      operationId: fileClaim
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - policyId
+                - vehicleId
+                - incidentDate
+                - incidentLocation
+                - incidentDescription
+                - claimType
+              properties:
+                policyId:
+                  type: string
+                  format: uuid
+                  description: Policy under which claim is filed
+                vehicleId:
+                  type: string
+                  format: uuid
+                  description: Vehicle involved in incident (OMG Insurable Object)
+                incidentDate:
+                  type: string
+                  format: date
+                  description: Date of incident (must be within policy dates)
+                incidentTime:
+                  type: string
+                  pattern: '^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$'
+                  description: Time of incident (HH:MM format)
+                  example: "14:30"
+                incidentLocation:
+                  type: string
+                  minLength: 5
+                  maxLength: 255
+                  description: Where incident occurred
+                incidentDescription:
+                  type: string
+                  minLength: 20
+                  maxLength: 5000
+                  description: Detailed description of what happened
+                claimType:
+                  type: string
+                  enum: [COLLISION, COMPREHENSIVE, LIABILITY]
+                  description: Type of claim based on coverage
+                estimatedDamageAmount:
+                  type: number
+                  format: decimal
+                  minimum: 0
+                  description: Estimated repair/damage cost
+                otherDriverInvolved:
+                  type: boolean
+                  default: false
+                  description: Whether another driver was involved
+                otherDriverInfo:
+                  type: object
+                  properties:
+                    name:
+                      type: string
+                    phone:
+                      type: string
+                    insuranceCompany:
+                      type: string
+                    policyNumber:
+                      type: string
+                policeReportFiled:
+                  type: boolean
+                  default: false
+                  description: Whether police report was filed
+                policeReportNumber:
+                  type: string
+                  description: Police report number if filed
+                attachments:
+                  type: array
+                  items:
+                    type: string
+                    format: binary
+                  maxItems: 10
+                  description: Photos/documents (max 10 files, 10MB each, JPEG/PNG/PDF)
+            encoding:
+              attachments:
+                contentType: image/jpeg, image/png, application/pdf
+      responses:
+        '201':
+          description: Claim filed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimResponse'
+              example:
+                claimId: "dd3l5288-m0hj-29l2-i594-22ee33228888"
+                claimNumber: "CLM-2025-001234"
+                status: "SUBMITTED"
+                policyNumber: "P-2025-789012"
+                incidentDate: "2025-10-15"
+                incidentTime: "14:30"
+                incidentLocation: "Intersection of Main St and Oak Ave, Los Angeles, CA"
+                incidentDescription: "Rear-ended at traffic light by another vehicle"
+                claimType: "COLLISION"
+                estimatedAmount: 2500.00
+                vehicle:
+                  vin: "1HGCM82633A123456"
+                  make: "Honda"
+                  model: "Accord"
+                  year: 2023
+                attachments:
+                  - attachmentId: "ee4m6399-n1ik-30m3-j605-33ff44339999"
+                    fileName: "damage-front.jpg"
+                    fileType: "image/jpeg"
+                    fileSize: 1234567
+                    uploadedAt: "2025-10-17T12:00:00Z"
+                reportedDate: "2025-10-17"
+                nextSteps: "Your claim has been submitted and is under review. An adjuster will contact you within 2 business days."
+                createdAt: "2025-10-17T12:00:00Z"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '413':
+          description: File too large
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "FILE_TOO_LARGE"
+                  message: "File size exceeds maximum allowed"
+                  details:
+                    - field: "attachments[2]"
+                      message: "File size 12MB exceeds maximum 10MB"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    get:
+      tags:
+        - Claims
+      summary: List claims
+      description: |
+        Retrieves all claims filed by authenticated user.
+        Includes claims from all policies with current status.
+      operationId: listClaims
+      parameters:
+        - name: policyId
+          in: query
+          description: Filter by policy ID
+          required: false
+          schema:
+            type: string
+            format: uuid
+        - name: status
+          in: query
+          description: Filter by claim status
+          required: false
+          schema:
+            type: string
+            enum: [SUBMITTED, UNDER_REVIEW, APPROVED, DENIED, CLOSED]
+        - name: page
+          in: query
+          description: Page number for pagination
+          required: false
+          schema:
+            type: integer
+            default: 1
+            minimum: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          required: false
+          schema:
+            type: integer
+            default: 20
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Claims retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  claims:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ClaimSummary'
+                  pagination:
+                    $ref: '#/components/schemas/Pagination'
+              example:
+                claims:
+                  - claimId: "dd3l5288-m0hj-29l2-i594-22ee33228888"
+                    claimNumber: "CLM-2025-001234"
+                    status: "SUBMITTED"
+                    policyNumber: "P-2025-789012"
+                    incidentDate: "2025-10-15"
+                    claimType: "COLLISION"
+                    estimatedAmount: 2500.00
+                    vehicleMake: "Honda"
+                    vehicleModel: "Accord"
+                    vehicleYear: 2023
+                    reportedDate: "2025-10-17"
+                    lastUpdated: "2025-10-17T12:00:00Z"
+                  - claimId: "cc2k4177-l9gi-18k1-h483-11dd22117777"
+                    claimNumber: "CLM-2024-009876"
+                    status: "CLOSED"
+                    policyNumber: "P-2024-456789"
+                    incidentDate: "2024-08-10"
+                    claimType: "COMPREHENSIVE"
+                    estimatedAmount: 1200.00
+                    vehicleMake: "Toyota"
+                    vehicleModel: "Camry"
+                    vehicleYear: 2022
+                    reportedDate: "2024-08-11"
+                    lastUpdated: "2024-09-15T16:30:00Z"
+                pagination:
+                  page: 1
+                  limit: 20
+                  totalItems: 2
+                  totalPages: 1
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/portal/claims/{claimId}:
+    get:
+      tags:
+        - Claims
+      summary: Get claim details
+      description: |
+        Retrieves detailed information for a specific claim including
+        incident details, status history, attachments, and communication log.
+      operationId: getClaim
+      parameters:
+        - name: claimId
+          in: path
+          description: Claim UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Claim details retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ClaimDetailsResponse'
+              example:
+                claimId: "dd3l5288-m0hj-29l2-i594-22ee33228888"
+                claimNumber: "CLM-2025-001234"
+                status: "SUBMITTED"
+                policy:
+                  policyId: "550e8400-e29b-41d4-a716-446655440000"
+                  policyNumber: "P-2025-789012"
+                  effectiveDate: "2025-11-01"
+                  expirationDate: "2026-11-01"
+                incidentDate: "2025-10-15"
+                incidentTime: "14:30"
+                incidentLocation: "Intersection of Main St and Oak Ave, Los Angeles, CA"
+                incidentDescription: "Rear-ended at traffic light by another vehicle. Impact caused damage to rear bumper and trunk. Other driver admitted fault at scene."
+                claimType: "COLLISION"
+                estimatedAmount: 2500.00
+                vehicle:
+                  vehicleId: "aa0i2955-j7eg-96i9-f261-99bb00995555"
+                  vin: "1HGCM82633A123456"
+                  make: "Honda"
+                  model: "Accord"
+                  year: 2023
+                otherPartyInfo:
+                  name: "Jane Smith"
+                  phone: "5559876543"
+                  insuranceCompany: "ABC Insurance Co."
+                  policyNumber: "ABC-2025-654321"
+                policeReport:
+                  filed: true
+                  reportNumber: "LAPD-2025-123456"
+                attachments:
+                  - attachmentId: "ee4m6399-n1ik-30m3-j605-33ff44339999"
+                    fileName: "damage-rear-bumper.jpg"
+                    fileType: "image/jpeg"
+                    fileSize: 1234567
+                    url: "/api/v1/portal/claims/dd3l5288-m0hj-29l2-i594-22ee33228888/attachments/ee4m6399-n1ik-30m3-j605-33ff44339999"
+                    uploadedAt: "2025-10-17T12:00:00Z"
+                  - attachmentId: "ff5n7400-o2jl-41n4-k716-44gg55440000"
+                    fileName: "damage-trunk.jpg"
+                    fileType: "image/jpeg"
+                    fileSize: 987654
+                    url: "/api/v1/portal/claims/dd3l5288-m0hj-29l2-i594-22ee33228888/attachments/ff5n7400-o2jl-41n4-k716-44gg55440000"
+                    uploadedAt: "2025-10-17T12:01:00Z"
+                statusHistory:
+                  - status: "SUBMITTED"
+                    date: "2025-10-17T12:00:00Z"
+                    notes: "Claim submitted via customer portal"
+                reportedDate: "2025-10-17"
+                createdAt: "2025-10-17T12:00:00Z"
+                updatedAt: "2025-10-17T12:00:00Z"
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/portal/claims/{claimId}/attachments/{attachmentId}:
+    get:
+      tags:
+        - Claims
+      summary: Download claim attachment
+      description: Downloads a specific claim attachment (photo or document)
+      operationId: downloadClaimAttachment
+      parameters:
+        - name: claimId
+          in: path
+          description: Claim UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+        - name: attachmentId
+          in: path
+          description: Attachment UUID
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Attachment downloaded successfully
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+            image/png:
+              schema:
+                type: string
+                format: binary
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase Auth JWT token
+
+  schemas:
+    DashboardResponse:
+      type: object
+      properties:
+        user:
+          $ref: '#/components/schemas/UserInfo'
+        activePolicies:
+          type: array
+          items:
+            $ref: '#/components/schemas/PolicySummary'
+        recentPayments:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentSummary'
+        pendingClaims:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimSummary'
+        upcomingRenewals:
+          type: array
+          items:
+            $ref: '#/components/schemas/RenewalSummary'
+        summary:
+          $ref: '#/components/schemas/DashboardSummary'
+
+    UserInfo:
+      type: object
+      description: OMG User Account and Person entities
+      properties:
+        userId:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        firstName:
+          type: string
+        lastName:
+          type: string
+        lastLogin:
+          type: string
+          format: date-time
+
+    PolicySummary:
+      type: object
+      properties:
+        policyId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+        status:
+          type: string
+          enum: [BOUND, ACTIVE, CANCELLED, EXPIRED]
+        effectiveDate:
+          type: string
+          format: date
+        expirationDate:
+          type: string
+          format: date
+        totalPremium:
+          type: number
+          format: decimal
+        vehicle:
+          type: object
+          properties:
+            make:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer
+        daysUntilRenewal:
+          type: integer
+
+    PaymentSummary:
+      type: object
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+        method:
+          type: string
+          enum: [CREDIT_CARD, BANK_ACCOUNT]
+        last4:
+          type: string
+        paymentDate:
+          type: string
+          format: date-time
+
+    ClaimSummary:
+      type: object
+      description: OMG Claim entity summary
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        claimNumber:
+          type: string
+          example: "CLM-2025-001234"
+        status:
+          type: string
+          enum: [SUBMITTED, UNDER_REVIEW, APPROVED, DENIED, CLOSED]
+        policyNumber:
+          type: string
+        incidentDate:
+          type: string
+          format: date
+        claimType:
+          type: string
+          enum: [COLLISION, COMPREHENSIVE, LIABILITY]
+        estimatedAmount:
+          type: number
+          format: decimal
+        vehicleMake:
+          type: string
+        vehicleModel:
+          type: string
+        vehicleYear:
+          type: integer
+        reportedDate:
+          type: string
+          format: date
+        lastUpdated:
+          type: string
+          format: date-time
+
+    RenewalSummary:
+      type: object
+      properties:
+        policyId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+        expirationDate:
+          type: string
+          format: date
+        daysUntilRenewal:
+          type: integer
+        estimatedRenewalPremium:
+          type: number
+          format: decimal
+
+    DashboardSummary:
+      type: object
+      properties:
+        totalActivePolicies:
+          type: integer
+        totalVehiclesInsured:
+          type: integer
+        totalPendingClaims:
+          type: integer
+        totalPaidThisYear:
+          type: number
+          format: decimal
+
+    PaymentTransaction:
+      type: object
+      description: OMG Payment entity
+      properties:
+        paymentId:
+          type: string
+          format: uuid
+        policyId:
+          type: string
+          format: uuid
+        policyNumber:
+          type: string
+        amount:
+          type: number
+          format: decimal
+        status:
+          type: string
+          enum: [PENDING, COMPLETED, FAILED, REFUNDED]
+        method:
+          type: string
+          enum: [CREDIT_CARD, BANK_ACCOUNT]
+        cardType:
+          type: string
+          description: Credit card type (Visa, Mastercard, etc.)
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS]
+          description: Bank account type (for ACH payments)
+        last4:
+          type: string
+          description: Last 4 digits of payment method
+        transactionId:
+          type: string
+          description: Payment gateway transaction reference
+        description:
+          type: string
+        paymentDate:
+          type: string
+          format: date-time
+
+    BillingSummary:
+      type: object
+      properties:
+        totalPayments:
+          type: integer
+          description: Total number of payments
+        totalAmount:
+          type: number
+          format: decimal
+          description: Total amount paid
+        successfulPayments:
+          type: integer
+        failedPayments:
+          type: integer
+        pendingPayments:
+          type: integer
+
+    ClaimResponse:
+      type: object
+      description: OMG Claim entity response
+      properties:
+        claimId:
+          type: string
+          format: uuid
+          description: OMG Claim.claim_identifier
+        claimNumber:
+          type: string
+          description: OMG Claim.claim_number
+        status:
+          type: string
+          enum: [SUBMITTED, UNDER_REVIEW, APPROVED, DENIED, CLOSED]
+          description: OMG Claim.claim_status_code
+        policyNumber:
+          type: string
+        incidentDate:
+          type: string
+          format: date
+          description: OMG Claim.incident_date
+        incidentTime:
+          type: string
+          description: OMG Claim.incident_time
+        incidentLocation:
+          type: string
+          description: OMG Claim.incident_location
+        incidentDescription:
+          type: string
+          description: OMG Claim.incident_description
+        claimType:
+          type: string
+          enum: [COLLISION, COMPREHENSIVE, LIABILITY]
+          description: OMG Claim.claim_type_code
+        estimatedAmount:
+          type: number
+          format: decimal
+          description: OMG Claim.estimated_claim_amount
+        vehicle:
+          type: object
+          properties:
+            vin:
+              type: string
+            make:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        reportedDate:
+          type: string
+          format: date
+          description: OMG Claim.reported_date
+        nextSteps:
+          type: string
+          description: Guidance for policyholder
+        createdAt:
+          type: string
+          format: date-time
+
+    ClaimDetailsResponse:
+      type: object
+      properties:
+        claimId:
+          type: string
+          format: uuid
+        claimNumber:
+          type: string
+        status:
+          type: string
+          enum: [SUBMITTED, UNDER_REVIEW, APPROVED, DENIED, CLOSED]
+        policy:
+          type: object
+          properties:
+            policyId:
+              type: string
+              format: uuid
+            policyNumber:
+              type: string
+            effectiveDate:
+              type: string
+              format: date
+            expirationDate:
+              type: string
+              format: date
+        incidentDate:
+          type: string
+          format: date
+        incidentTime:
+          type: string
+        incidentLocation:
+          type: string
+        incidentDescription:
+          type: string
+        claimType:
+          type: string
+          enum: [COLLISION, COMPREHENSIVE, LIABILITY]
+        estimatedAmount:
+          type: number
+          format: decimal
+        vehicle:
+          type: object
+          properties:
+            vehicleId:
+              type: string
+              format: uuid
+            vin:
+              type: string
+            make:
+              type: string
+            model:
+              type: string
+            year:
+              type: integer
+        otherPartyInfo:
+          type: object
+          properties:
+            name:
+              type: string
+            phone:
+              type: string
+            insuranceCompany:
+              type: string
+            policyNumber:
+              type: string
+        policeReport:
+          type: object
+          properties:
+            filed:
+              type: boolean
+            reportNumber:
+              type: string
+        attachments:
+          type: array
+          items:
+            $ref: '#/components/schemas/Attachment'
+        statusHistory:
+          type: array
+          items:
+            $ref: '#/components/schemas/ClaimStatusHistory'
+        reportedDate:
+          type: string
+          format: date
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    Attachment:
+      type: object
+      properties:
+        attachmentId:
+          type: string
+          format: uuid
+        fileName:
+          type: string
+        fileType:
+          type: string
+          enum: [image/jpeg, image/png, application/pdf]
+        fileSize:
+          type: integer
+          description: File size in bytes
+        url:
+          type: string
+          description: Download URL
+        uploadedAt:
+          type: string
+          format: date-time
+
+    ClaimStatusHistory:
+      type: object
+      description: OMG Claim Event entity
+      properties:
+        status:
+          type: string
+          enum: [SUBMITTED, UNDER_REVIEW, APPROVED, DENIED, CLOSED]
+        date:
+          type: string
+          format: date-time
+        notes:
+          type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+          example: 1
+        limit:
+          type: integer
+          example: 20
+        totalItems:
+          type: integer
+          example: 42
+        totalPages:
+          type: integer
+          example: 3
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            invalid_incident_date:
+              summary: Invalid incident date
+              value:
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Validation failed"
+                  details:
+                    - field: "incidentDate"
+                      message: "Incident date must be within policy effective and expiration dates"
+            description_too_short:
+              summary: Description too short
+              value:
+                error:
+                  code: "VALIDATION_ERROR"
+                  message: "Validation failed"
+                  details:
+                    - field: "incidentDescription"
+                      message: "Description must be at least 20 characters"
+            vehicle_not_covered:
+              summary: Vehicle not on policy
+              value:
+                error:
+                  code: "VEHICLE_NOT_COVERED"
+                  message: "Vehicle not covered under specified policy"
+
+    Unauthorized:
+      description: Unauthorized - invalid or missing JWT token
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "UNAUTHORIZED"
+              message: "Authentication required"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          examples:
+            claim_not_found:
+              summary: Claim not found
+              value:
+                error:
+                  code: "NOT_FOUND"
+                  message: "Claim not found"
+            attachment_not_found:
+              summary: Attachment not found
+              value:
+                error:
+                  code: "NOT_FOUND"
+                  message: "Attachment not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"

@@ -1,0 +1,979 @@
+openapi: 3.0.3
+info:
+  title: Mock External Services API
+  description: |
+    Simulated external service integrations for auto insurance demo application.
+    Provides realistic mock implementations of VIN decoder, vehicle valuation,
+    safety ratings, payment processing, and email delivery services.
+    All services simulate production-like behavior without actual external API calls.
+  version: 1.0.0
+  contact:
+    name: API Support
+    email: api@autoinsurance.demo
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.autoinsurance.demo
+    description: Production server
+
+security: []
+
+tags:
+  - name: Vehicle Data
+    description: Simulated vehicle information services
+  - name: Payment
+    description: Mock payment gateway
+  - name: Email
+    description: Mock email delivery service
+
+paths:
+  /api/v1/mock/vin-decoder:
+    post:
+      tags:
+        - Vehicle Data
+      summary: VIN decoder lookup
+      description: |
+        Simulates VIN decoder APIs (NHTSA, Carfax) to retrieve vehicle specifications.
+        Validates VIN format (17 characters, check digit), returns make, model, year,
+        body style, engine type, trim. Uses seed database for common VINs with
+        algorithmic fallback for unknown VINs.
+      operationId: decodeVin
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - vin
+              properties:
+                vin:
+                  type: string
+                  pattern: '^[A-HJ-NPR-Z0-9]{17}$'
+                  description: 17-character VIN (excludes I, O, Q)
+                  example: "1HGCM82633A123456"
+            examples:
+              honda_accord:
+                summary: Honda Accord VIN
+                value:
+                  vin: "1HGCM82633A123456"
+              toyota_camry:
+                summary: Toyota Camry VIN
+                value:
+                  vin: "4T1BF1FK5CU123456"
+      responses:
+        '200':
+          description: VIN decoded successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VinDecodeResponse'
+              example:
+                vin: "1HGCM82633A123456"
+                make: "Honda"
+                model: "Accord"
+                year: 2023
+                bodyStyle: "Sedan"
+                engineType: "2.0L 4-Cylinder Turbo"
+                trimLevel: "Sport"
+                manufacturer: "Honda Motor Co., Ltd."
+                plantCountry: "USA"
+                plantCity: "Marysville, OH"
+                isoSymbol: 5
+                processingTime: 650
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: VIN not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "VIN_NOT_FOUND"
+                  message: "VIN not found in database"
+                  details:
+                    - field: "vin"
+                      message: "No vehicle data found for VIN 1ABCD12345EFGH678. Please enter vehicle details manually."
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+        '503':
+          description: Service timeout (simulated)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "SERVICE_TIMEOUT"
+                  message: "VIN decoder service timed out"
+
+  /api/v1/mock/vehicle-valuation:
+    post:
+      tags:
+        - Vehicle Data
+      summary: Vehicle market value estimate
+      description: |
+        Simulates vehicle valuation APIs (JD Power, Kelley Blue Book, NADA).
+        Returns estimated market value, replacement cost, depreciation data
+        based on year, make, model, mileage, condition, and location.
+      operationId: getVehicleValuation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - year
+                - make
+                - model
+              properties:
+                vin:
+                  type: string
+                  pattern: '^[A-HJ-NPR-Z0-9]{17}$'
+                  description: VIN for more accurate valuation
+                year:
+                  type: integer
+                  minimum: 1900
+                  maximum: 2026
+                  example: 2023
+                make:
+                  type: string
+                  example: "Honda"
+                model:
+                  type: string
+                  example: "Accord"
+                trimLevel:
+                  type: string
+                  example: "Sport"
+                mileage:
+                  type: integer
+                  minimum: 0
+                  default: 12000
+                  description: Current odometer reading
+                  example: 15000
+                condition:
+                  type: string
+                  enum: [EXCELLENT, GOOD, FAIR, POOR]
+                  default: GOOD
+                  example: "GOOD"
+                zipCode:
+                  type: string
+                  pattern: '^[0-9]{5}$'
+                  description: Location affects valuation
+                  example: "90001"
+      responses:
+        '200':
+          description: Valuation retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/VehicleValuationResponse'
+              example:
+                year: 2023
+                make: "Honda"
+                model: "Accord"
+                trimLevel: "Sport"
+                mileage: 15000
+                condition: "GOOD"
+                valuation:
+                  tradeInValue: 25500.00
+                  privatePartyValue: 27500.00
+                  retailValue: 29500.00
+                  estimatedMarketValue: 27500.00
+                  replacementCost: 31000.00
+                depreciation:
+                  originalMSRP: 32000.00
+                  currentDepreciation: 14.06
+                  annualDepreciationRate: 7.03
+                  estimatedValueNextYear: 25500.00
+                confidence: "HIGH"
+                dataSource: "Mock Valuation Service"
+                processingTime: 1250
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/mock/safety-ratings:
+    post:
+      tags:
+        - Vehicle Data
+      summary: Vehicle safety ratings lookup
+      description: |
+        Simulates safety data APIs (NHTSA, IIHS) to retrieve crash test scores
+        and safety features. Returns overall rating, frontal crash, side crash,
+        rollover ratings, and standard/optional safety equipment.
+      operationId: getSafetyRatings
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - year
+                - make
+                - model
+              properties:
+                vin:
+                  type: string
+                  pattern: '^[A-HJ-NPR-Z0-9]{17}$'
+                year:
+                  type: integer
+                  minimum: 1990
+                  maximum: 2026
+                  example: 2023
+                make:
+                  type: string
+                  example: "Honda"
+                model:
+                  type: string
+                  example: "Accord"
+      responses:
+        '200':
+          description: Safety ratings retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SafetyRatingsResponse'
+              example:
+                year: 2023
+                make: "Honda"
+                model: "Accord"
+                nhtsa:
+                  overallRating: 5
+                  frontalCrashRating: 5
+                  sideCrashRating: 5
+                  rolloverRating: 4
+                  rolloverRiskPercent: 9.5
+                iihs:
+                  overallRating: "TOP_SAFETY_PICK_PLUS"
+                  smallOverlapFront: "GOOD"
+                  moderateOverlapFront: "GOOD"
+                  side: "GOOD"
+                  roofStrength: "GOOD"
+                  headRestraints: "GOOD"
+                  frontCrashPrevention: "SUPERIOR"
+                safetyFeatures:
+                  standard:
+                    - "Forward Collision Warning"
+                    - "Automatic Emergency Braking"
+                    - "Lane Departure Warning"
+                    - "Lane Keeping Assist"
+                    - "Adaptive Cruise Control"
+                    - "Blind Spot Monitoring"
+                  optional:
+                    - "Surround View Camera"
+                    - "Head-Up Display"
+                antiTheft:
+                  standardDevices:
+                    - "Immobilizer"
+                    - "Alarm System"
+                  optionalDevices:
+                    - "GPS Tracking"
+                dataAvailability: "COMPLETE"
+                processingTime: 850
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '404':
+          description: Safety data not available
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              example:
+                error:
+                  code: "SAFETY_DATA_UNAVAILABLE"
+                  message: "Safety ratings not available for this model year"
+                  details:
+                    - field: "year"
+                      message: "Safety ratings not available for vehicles older than 1990"
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/mock/payment:
+    post:
+      tags:
+        - Payment
+      summary: Process payment
+      description: |
+        Simulates payment gateway (Stripe-like) for credit card and bank account payments.
+        Uses Stripe test card patterns for realistic validation. Returns success/failure
+        with realistic processing delays. NO actual payment processing occurs.
+      operationId: processPayment
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: '#/components/schemas/CreditCardPaymentRequest'
+                - $ref: '#/components/schemas/BankAccountPaymentRequest'
+              discriminator:
+                propertyName: paymentMethod
+            examples:
+              success_card:
+                summary: Successful credit card payment
+                value:
+                  paymentMethod: "CREDIT_CARD"
+                  amount: 854.80
+                  currency: "USD"
+                  cardNumber: "4242424242424242"
+                  expiryMonth: 12
+                  expiryYear: 2025
+                  cvv: "123"
+                  cardholderName: "John Doe"
+              declined_card:
+                summary: Declined credit card
+                value:
+                  paymentMethod: "CREDIT_CARD"
+                  amount: 854.80
+                  currency: "USD"
+                  cardNumber: "4000000000000002"
+                  expiryMonth: 12
+                  expiryYear: 2025
+                  cvv: "123"
+                  cardholderName: "John Doe"
+              insufficient_funds:
+                summary: Insufficient funds
+                value:
+                  paymentMethod: "CREDIT_CARD"
+                  amount: 854.80
+                  currency: "USD"
+                  cardNumber: "4000000000009995"
+                  expiryMonth: 12
+                  expiryYear: 2025
+                  cvv: "123"
+                  cardholderName: "John Doe"
+              ach_success:
+                summary: Successful ACH payment
+                value:
+                  paymentMethod: "BANK_ACCOUNT"
+                  amount: 854.80
+                  currency: "USD"
+                  accountNumber: "000123456789"
+                  routingNumber: "110000000"
+                  accountType: "CHECKING"
+                  accountHolderName: "John Doe"
+      responses:
+        '200':
+          description: Payment processed successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              example:
+                transactionId: "txn_mock_1634567890"
+                status: "COMPLETED"
+                amount: 854.80
+                currency: "USD"
+                paymentMethod: "CREDIT_CARD"
+                cardType: "Visa"
+                last4: "4242"
+                token: "tok_mock_abcdef123456"
+                processedAt: "2025-10-17T11:00:00Z"
+                processingTime: 1850
+                message: "Payment successful"
+        '400':
+          description: Payment validation failed
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+              examples:
+                invalid_card:
+                  summary: Invalid card number
+                  value:
+                    error:
+                      code: "INVALID_CARD_NUMBER"
+                      message: "Invalid card number"
+                      details:
+                        - field: "cardNumber"
+                          message: "Card number failed Luhn validation"
+                expired_card:
+                  summary: Card expired
+                  value:
+                    error:
+                      code: "CARD_EXPIRED"
+                      message: "Card has expired"
+                      details:
+                        - field: "expiryMonth"
+                          message: "Card expired on 10/2024"
+        '402':
+          description: Payment declined
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentResponse'
+              examples:
+                card_declined:
+                  summary: Card declined
+                  value:
+                    transactionId: "txn_mock_1634567891"
+                    status: "FAILED"
+                    amount: 854.80
+                    currency: "USD"
+                    paymentMethod: "CREDIT_CARD"
+                    declineCode: "card_declined"
+                    message: "Your card was declined"
+                    processingTime: 1650
+                insufficient_funds:
+                  summary: Insufficient funds
+                  value:
+                    transactionId: "txn_mock_1634567892"
+                    status: "FAILED"
+                    amount: 854.80
+                    currency: "USD"
+                    paymentMethod: "CREDIT_CARD"
+                    declineCode: "insufficient_funds"
+                    message: "Your card has insufficient funds"
+                    processingTime: 1720
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/mock/email:
+    post:
+      tags:
+        - Email
+      summary: Send email (preview)
+      description: |
+        Simulates email delivery service (SendGrid, Mailgun) for demo purposes.
+        Validates email format, stores email in in-memory log for debugging,
+        displays in console. NO actual emails are sent to external addresses.
+      operationId: sendEmail
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/EmailRequest'
+            examples:
+              welcome_email:
+                summary: Welcome email after policy binding
+                value:
+                  to: "john.doe@email.com"
+                  from: "noreply@autoinsurance.demo"
+                  subject: "Welcome to Auto Insurance - Policy P-2025-789012"
+                  templateId: "welcome"
+                  templateData:
+                    firstName: "John"
+                    lastName: "Doe"
+                    policyNumber: "P-2025-789012"
+                    effectiveDate: "2025-11-01"
+                    loginUrl: "https://portal.autoinsurance.demo/login"
+              policy_documents:
+                summary: Policy documents ready email
+                value:
+                  to: "john.doe@email.com"
+                  from: "noreply@autoinsurance.demo"
+                  subject: "Your Policy Documents are Ready - P-2025-789012"
+                  templateId: "policy_documents"
+                  templateData:
+                    firstName: "John"
+                    policyNumber: "P-2025-789012"
+                    documentsUrl: "https://portal.autoinsurance.demo/policies/550e8400-e29b-41d4-a716-446655440000/documents"
+      responses:
+        '200':
+          description: Email sent (simulated)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmailResponse'
+              example:
+                messageId: "msg_mock_abcdef123456"
+                status: "SENT"
+                to: "john.doe@email.com"
+                subject: "Welcome to Auto Insurance - Policy P-2025-789012"
+                sentAt: "2025-10-17T11:00:30Z"
+                previewUrl: "/api/v1/mock/email/msg_mock_abcdef123456/preview"
+                processingTime: 320
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /api/v1/mock/email/{messageId}/preview:
+    get:
+      tags:
+        - Email
+      summary: Preview sent email
+      description: |
+        Retrieves HTML preview of simulated email for demo/testing purposes.
+        Displays the email content that would have been sent.
+      operationId: previewEmail
+      parameters:
+        - name: messageId
+          in: path
+          description: Email message ID
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Email preview retrieved
+          content:
+            text/html:
+              schema:
+                type: string
+                example: |
+                  <!DOCTYPE html>
+                  <html>
+                  <head><title>Welcome Email</title></head>
+                  <body>
+                    <h1>Welcome to Auto Insurance, John!</h1>
+                    <p>Your policy P-2025-789012 is now active...</p>
+                  </body>
+                  </html>
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+components:
+  schemas:
+    VinDecodeResponse:
+      type: object
+      properties:
+        vin:
+          type: string
+          example: "1HGCM82633A123456"
+        make:
+          type: string
+          example: "Honda"
+        model:
+          type: string
+          example: "Accord"
+        year:
+          type: integer
+          example: 2023
+        bodyStyle:
+          type: string
+          example: "Sedan"
+        engineType:
+          type: string
+          example: "2.0L 4-Cylinder Turbo"
+        trimLevel:
+          type: string
+          example: "Sport"
+        manufacturer:
+          type: string
+          example: "Honda Motor Co., Ltd."
+        plantCountry:
+          type: string
+          example: "USA"
+        plantCity:
+          type: string
+          example: "Marysville, OH"
+        isoSymbol:
+          type: integer
+          minimum: 1
+          maximum: 50
+          description: ISO vehicle symbol for rating (1=lowest cost, 50=highest)
+          example: 5
+        processingTime:
+          type: integer
+          description: Simulated API response time in milliseconds
+          example: 650
+
+    VehicleValuationResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+        make:
+          type: string
+        model:
+          type: string
+        trimLevel:
+          type: string
+        mileage:
+          type: integer
+        condition:
+          type: string
+          enum: [EXCELLENT, GOOD, FAIR, POOR]
+        valuation:
+          type: object
+          properties:
+            tradeInValue:
+              type: number
+              format: decimal
+              description: Estimated trade-in value
+            privatePartyValue:
+              type: number
+              format: decimal
+              description: Private party sale value
+            retailValue:
+              type: number
+              format: decimal
+              description: Dealer retail value
+            estimatedMarketValue:
+              type: number
+              format: decimal
+              description: Current market value (used for insurance rating)
+            replacementCost:
+              type: number
+              format: decimal
+              description: New replacement cost
+        depreciation:
+          type: object
+          properties:
+            originalMSRP:
+              type: number
+              format: decimal
+            currentDepreciation:
+              type: number
+              format: decimal
+              description: Depreciation percentage
+            annualDepreciationRate:
+              type: number
+              format: decimal
+            estimatedValueNextYear:
+              type: number
+              format: decimal
+        confidence:
+          type: string
+          enum: [HIGH, MEDIUM, LOW]
+          description: Confidence level of valuation estimate
+        dataSource:
+          type: string
+          example: "Mock Valuation Service"
+        processingTime:
+          type: integer
+          description: Simulated API response time in milliseconds
+
+    SafetyRatingsResponse:
+      type: object
+      properties:
+        year:
+          type: integer
+        make:
+          type: string
+        model:
+          type: string
+        nhtsa:
+          type: object
+          description: NHTSA crash test ratings
+          properties:
+            overallRating:
+              type: integer
+              minimum: 1
+              maximum: 5
+              description: Overall safety rating (5 stars = best)
+            frontalCrashRating:
+              type: integer
+              minimum: 1
+              maximum: 5
+            sideCrashRating:
+              type: integer
+              minimum: 1
+              maximum: 5
+            rolloverRating:
+              type: integer
+              minimum: 1
+              maximum: 5
+            rolloverRiskPercent:
+              type: number
+              format: decimal
+        iihs:
+          type: object
+          description: IIHS safety ratings
+          properties:
+            overallRating:
+              type: string
+              enum: [TOP_SAFETY_PICK_PLUS, TOP_SAFETY_PICK, ACCEPTABLE, MARGINAL, POOR]
+            smallOverlapFront:
+              type: string
+              enum: [GOOD, ACCEPTABLE, MARGINAL, POOR]
+            moderateOverlapFront:
+              type: string
+              enum: [GOOD, ACCEPTABLE, MARGINAL, POOR]
+            side:
+              type: string
+              enum: [GOOD, ACCEPTABLE, MARGINAL, POOR]
+            roofStrength:
+              type: string
+              enum: [GOOD, ACCEPTABLE, MARGINAL, POOR]
+            headRestraints:
+              type: string
+              enum: [GOOD, ACCEPTABLE, MARGINAL, POOR]
+            frontCrashPrevention:
+              type: string
+              enum: [SUPERIOR, ADVANCED, BASIC, NOT_AVAILABLE]
+        safetyFeatures:
+          type: object
+          properties:
+            standard:
+              type: array
+              items:
+                type: string
+            optional:
+              type: array
+              items:
+                type: string
+        antiTheft:
+          type: object
+          properties:
+            standardDevices:
+              type: array
+              items:
+                type: string
+            optionalDevices:
+              type: array
+              items:
+                type: string
+        dataAvailability:
+          type: string
+          enum: [COMPLETE, PARTIAL, UNAVAILABLE]
+        processingTime:
+          type: integer
+          description: Simulated API response time in milliseconds
+
+    CreditCardPaymentRequest:
+      type: object
+      required:
+        - paymentMethod
+        - amount
+        - currency
+        - cardNumber
+        - expiryMonth
+        - expiryYear
+        - cvv
+        - cardholderName
+      properties:
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD]
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          example: 854.80
+        currency:
+          type: string
+          enum: [USD]
+          default: USD
+        cardNumber:
+          type: string
+          pattern: '^[0-9]{13,19}$'
+          description: Test cards - 4242424242424242 (success), 4000000000000002 (decline)
+          example: "4242424242424242"
+        expiryMonth:
+          type: integer
+          minimum: 1
+          maximum: 12
+          example: 12
+        expiryYear:
+          type: integer
+          minimum: 2025
+          maximum: 2035
+          example: 2025
+        cvv:
+          type: string
+          pattern: '^[0-9]{3,4}$'
+          example: "123"
+        cardholderName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "John Doe"
+
+    BankAccountPaymentRequest:
+      type: object
+      required:
+        - paymentMethod
+        - amount
+        - currency
+        - accountNumber
+        - routingNumber
+        - accountType
+        - accountHolderName
+      properties:
+        paymentMethod:
+          type: string
+          enum: [BANK_ACCOUNT]
+        amount:
+          type: number
+          format: decimal
+          minimum: 0.01
+          example: 854.80
+        currency:
+          type: string
+          enum: [USD]
+          default: USD
+        accountNumber:
+          type: string
+          pattern: '^[0-9]{4,17}$'
+          example: "000123456789"
+        routingNumber:
+          type: string
+          pattern: '^[0-9]{9}$'
+          description: Test routing - 110000000 (success), 110000001 (decline)
+          example: "110000000"
+        accountType:
+          type: string
+          enum: [CHECKING, SAVINGS]
+          example: "CHECKING"
+        accountHolderName:
+          type: string
+          minLength: 1
+          maxLength: 100
+          example: "John Doe"
+
+    PaymentResponse:
+      type: object
+      properties:
+        transactionId:
+          type: string
+          description: Mock transaction reference
+          example: "txn_mock_1634567890"
+        status:
+          type: string
+          enum: [COMPLETED, FAILED, PENDING]
+        amount:
+          type: number
+          format: decimal
+        currency:
+          type: string
+        paymentMethod:
+          type: string
+          enum: [CREDIT_CARD, BANK_ACCOUNT]
+        cardType:
+          type: string
+          description: Card brand (for credit card payments)
+          example: "Visa"
+        last4:
+          type: string
+          description: Last 4 digits of payment method
+          example: "4242"
+        token:
+          type: string
+          description: Mock payment token for storage
+          example: "tok_mock_abcdef123456"
+        declineCode:
+          type: string
+          description: Decline reason code (if failed)
+          example: "card_declined"
+        message:
+          type: string
+          example: "Payment successful"
+        processedAt:
+          type: string
+          format: date-time
+        processingTime:
+          type: integer
+          description: Simulated processing time in milliseconds
+
+    EmailRequest:
+      type: object
+      required:
+        - to
+        - from
+        - subject
+        - templateId
+      properties:
+        to:
+          type: string
+          format: email
+          example: "john.doe@email.com"
+        from:
+          type: string
+          format: email
+          example: "noreply@autoinsurance.demo"
+        subject:
+          type: string
+          minLength: 1
+          maxLength: 200
+          example: "Welcome to Auto Insurance"
+        templateId:
+          type: string
+          enum: [welcome, policy_documents, payment_confirmation, claim_received]
+          description: Email template identifier
+        templateData:
+          type: object
+          additionalProperties: true
+          description: Template variables for personalization
+
+    EmailResponse:
+      type: object
+      properties:
+        messageId:
+          type: string
+          description: Mock message identifier
+          example: "msg_mock_abcdef123456"
+        status:
+          type: string
+          enum: [SENT, QUEUED, FAILED]
+        to:
+          type: string
+          format: email
+        subject:
+          type: string
+        sentAt:
+          type: string
+          format: date-time
+        previewUrl:
+          type: string
+          description: URL to preview email content
+          example: "/api/v1/mock/email/msg_mock_abcdef123456/preview"
+        processingTime:
+          type: integer
+          description: Simulated processing time in milliseconds
+
+    Error:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                  message:
+                    type: string
+
+  responses:
+    BadRequest:
+      description: Bad request - validation error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "VALIDATION_ERROR"
+              message: "Validation failed"
+              details:
+                - field: "vin"
+                  message: "VIN must be exactly 17 characters"
+
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "NOT_FOUND"
+              message: "Resource not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/Error'
+          example:
+            error:
+              code: "INTERNAL_ERROR"
+              message: "An unexpected error occurred"
