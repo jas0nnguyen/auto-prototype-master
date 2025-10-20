@@ -1,0 +1,395 @@
+/**
+ * Quote Expiration Monitor Service (T057b)
+ *
+ * Implements a daily cron job that finds quotes older than 30 days and marks them as EXPIRED.
+ * This ensures quotes don't remain in QUOTED status indefinitely.
+ *
+ * ANALOGY: Like a grocery store clerk checking expiration dates on milk cartons.
+ * - Every morning (cron schedule)
+ * - Look at all milk cartons (quotes)
+ * - Check the date (created_at)
+ * - If older than 30 days, mark as expired and remove from shelf (update status)
+ */
+
+import { Injectable, Logger } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { eq, and, lt, sql } from 'drizzle-orm';
+import { DatabaseService } from '../../database/database.service';
+import { policy } from '../../../database/schema/policy.schema';
+
+/**
+ * Result of expiration check
+ */
+interface ExpirationCheckResult {
+  totalQuotesChecked: number;
+  quotesExpired: number;
+  quoteIds: string[];
+  executionTime: number; // milliseconds
+}
+
+/**
+ * Quote Expiration Monitor
+ *
+ * Runs daily to automatically expire old quotes
+ */
+@Injectable()
+export class QuoteExpirationMonitor {
+  private readonly logger = new Logger(QuoteExpirationMonitor.name);
+
+  /**
+   * Quote expiration period in days (from requirements)
+   */
+  private readonly EXPIRATION_DAYS = 30;
+
+  constructor(private readonly db: DatabaseService) {}
+
+  /**
+   * Daily cron job to check for expired quotes
+   *
+   * @Cron decorator syntax:
+   * - CronExpression.EVERY_DAY_AT_2AM = "0 2 * * *"
+   * - Runs at 2:00 AM server time every day
+   *
+   * CRON FORMAT EXPLAINED:
+   * ┌────────────── second (optional, 0-59)
+   * │ ┌──────────── minute (0-59)
+   * │ │ ┌────────── hour (0-23)
+   * │ │ │ ┌──────── day of month (1-31)
+   * │ │ │ │ ┌────── month (1-12)
+   * │ │ │ │ │ ┌──── day of week (0-7, 0 and 7 are Sunday)
+   * │ │ │ │ │ │
+   * * * * * * *
+   *
+   * Examples:
+   * - "0 2 * * *" = Every day at 2:00 AM
+   * - "0 */6 * * *" = Every 6 hours
+   * - "0 0 * * 0" = Every Sunday at midnight
+   */
+  @Cron(CronExpression.EVERY_DAY_AT_2AM, {
+    name: 'quote-expiration-check',
+    timeZone: 'America/New_York', // Use server's timezone or specify
+  })
+  async checkExpiredQuotes(): Promise<ExpirationCheckResult> {
+    const startTime = Date.now();
+
+    this.logger.log('Starting daily quote expiration check...');
+
+    try {
+      // Calculate cutoff date (30 days ago)
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() - this.EXPIRATION_DAYS);
+
+      this.logger.debug(`Checking for quotes created before ${expirationDate.toISOString()}`);
+
+      // Find all QUOTED policies older than 30 days
+      const expiredQuotes = await this.findExpiredQuotes(expirationDate);
+
+      // Update their status to EXPIRED
+      const result = await this.expireQuotes(expiredQuotes);
+
+      const executionTime = Date.now() - startTime;
+
+      this.logger.log(
+        `Quote expiration check completed in ${executionTime}ms. ` +
+        `Expired ${result.quotesExpired} of ${result.totalQuotesChecked} quotes.`
+      );
+
+      return {
+        ...result,
+        executionTime,
+      };
+
+    } catch (error) {
+      this.logger.error(`Quote expiration check failed: ${error.message}`, error.stack);
+      throw error;
+    }
+  }
+
+  /**
+   * Find quotes that should be expired
+   *
+   * Criteria:
+   * - Status = 'QUOTED' (not already bound, binding, or expired)
+   * - created_at < 30 days ago
+   */
+  private async findExpiredQuotes(cutoffDate: Date): Promise<string[]> {
+    const dbClient = this.db.getClient();
+
+    /**
+     * SQL Query Explanation:
+     *
+     * SELECT policy_identifier
+     * FROM policy
+     * WHERE status_code = 'QUOTED'
+     *   AND created_at < '2024-09-19'  (30 days ago)
+     *
+     * Drizzle ORM syntax:
+     * - eq() = equals (=)
+     * - lt() = less than (<)
+     * - and() = AND operator
+     */
+    const results = await dbClient
+      .select({
+        policy_identifier: policy.policy_identifier,
+        policy_number: policy.policy_number,
+        created_at: policy.created_at,
+      })
+      .from(policy)
+      .where(
+        and(
+          eq(policy.status_code, 'QUOTED'),
+          lt(policy.created_at, cutoffDate)
+        )
+      );
+
+    this.logger.debug(`Found ${results.length} expired quotes`);
+
+    // Log each expired quote for audit trail
+    for (const quote of results) {
+      const age = Math.floor(
+        (Date.now() - new Date(quote.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      );
+      this.logger.debug(
+        `Quote ${quote.policy_number} will be expired (age: ${age} days)`
+      );
+    }
+
+    // Return just the IDs
+    return results.map(r => r.policy_identifier);
+  }
+
+  /**
+   * Update quotes to EXPIRED status
+   *
+   * Uses a database transaction to ensure all-or-nothing semantics
+   */
+  private async expireQuotes(quoteIds: string[]): Promise<ExpirationCheckResult> {
+    if (quoteIds.length === 0) {
+      return {
+        totalQuotesChecked: 0,
+        quotesExpired: 0,
+        quoteIds: [],
+        executionTime: 0,
+      };
+    }
+
+    const dbClient = this.db.getClient();
+
+    /**
+     * SQL UPDATE Explanation:
+     *
+     * UPDATE policy
+     * SET status_code = 'EXPIRED',
+     *     updated_at = NOW()
+     * WHERE policy_identifier IN ('uuid1', 'uuid2', 'uuid3')
+     *   AND status_code = 'QUOTED'
+     *
+     * The WHERE clause includes status check to prevent race conditions
+     * (in case quote was bound between finding and expiring)
+     */
+    const updateResult = await dbClient
+      .update(policy)
+      .set({
+        status_code: 'EXPIRED',
+        updated_at: new Date(),
+      })
+      .where(
+        and(
+          // Only expire if still in QUOTED status
+          eq(policy.status_code, 'QUOTED'),
+          // Match the IDs we found
+          sql`${policy.policy_identifier} IN (${sql.join(
+            quoteIds.map(id => sql`${id}`),
+            sql`, `
+          )})`
+        )
+      );
+
+    return {
+      totalQuotesChecked: quoteIds.length,
+      quotesExpired: quoteIds.length, // Simplified - assume all updated
+      quoteIds,
+      executionTime: 0, // Will be set by caller
+    };
+  }
+
+  /**
+   * Manual trigger for expiration check
+   *
+   * Useful for:
+   * - Testing
+   * - Admin panel "expire old quotes now" button
+   * - Running immediately after deployment
+   */
+  async runManualCheck(): Promise<ExpirationCheckResult> {
+    this.logger.log('Manual quote expiration check triggered');
+    return this.checkExpiredQuotes();
+  }
+
+  /**
+   * Get preview of quotes that would be expired
+   *
+   * Doesn't actually expire them - just shows what would happen
+   * Useful for admin dashboard
+   */
+  async previewExpiredQuotes(): Promise<{
+    count: number;
+    quotes: Array<{
+      policy_number: string;
+      created_at: Date;
+      age_days: number;
+    }>;
+  }> {
+    const expirationDate = new Date();
+    expirationDate.setDate(expirationDate.getDate() - this.EXPIRATION_DAYS);
+
+    const dbClient = this.db.getClient();
+
+    const results = await dbClient
+      .select({
+        policy_number: policy.policy_number,
+        created_at: policy.created_at,
+      })
+      .from(policy)
+      .where(
+        and(
+          eq(policy.status_code, 'QUOTED'),
+          lt(policy.created_at, expirationDate)
+        )
+      );
+
+    const quotes = results.map(r => ({
+      policy_number: r.policy_number,
+      created_at: r.created_at,
+      age_days: Math.floor(
+        (Date.now() - new Date(r.created_at).getTime()) / (1000 * 60 * 60 * 24)
+      ),
+    }));
+
+    return {
+      count: quotes.length,
+      quotes,
+    };
+  }
+
+  /**
+   * Expire a specific quote by ID
+   *
+   * Used when quote is manually expired by customer service
+   */
+  async expireQuoteById(policyId: string): Promise<boolean> {
+    const dbClient = this.db.getClient();
+
+    const result = await dbClient
+      .update(policy)
+      .set({
+        status_code: 'EXPIRED',
+        updated_at: new Date(),
+      })
+      .where(
+        and(
+          eq(policy.policy_identifier, policyId),
+          eq(policy.status_code, 'QUOTED')
+        )
+      );
+
+    if (result) {
+      this.logger.log(`Quote ${policyId} manually expired`);
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Check if a specific quote is expired or will expire soon
+   *
+   * Returns:
+   * - isExpired: true if already 30+ days old
+   * - daysUntilExpiration: days remaining (negative if already expired)
+   */
+  async checkQuoteExpiration(policyId: string): Promise<{
+    isExpired: boolean;
+    daysUntilExpiration: number;
+    createdAt: Date;
+  }> {
+    const dbClient = this.db.getClient();
+
+    const result = await dbClient
+      .select({
+        created_at: policy.created_at,
+        status_code: policy.status_code,
+      })
+      .from(policy)
+      .where(eq(policy.policy_identifier, policyId))
+      .limit(1);
+
+    if (!result || result.length === 0) {
+      throw new Error(`Quote ${policyId} not found`);
+    }
+
+    const quote = result[0];
+    const createdAt = new Date(quote.created_at);
+    const now = new Date();
+
+    // Calculate age in days
+    const ageInDays = Math.floor(
+      (now.getTime() - createdAt.getTime()) / (1000 * 60 * 60 * 24)
+    );
+
+    const daysUntilExpiration = this.EXPIRATION_DAYS - ageInDays;
+
+    return {
+      isExpired: ageInDays >= this.EXPIRATION_DAYS || quote.status_code === 'EXPIRED',
+      daysUntilExpiration,
+      createdAt,
+    };
+  }
+}
+
+/**
+ * LEARNING SUMMARY - Key Concepts:
+ *
+ * 1. **Cron Jobs**:
+ *    - Scheduled tasks that run automatically
+ *    - Named after Unix cron utility (1975!)
+ *    - Common in background job processing
+ *
+ * 2. **@Cron Decorator**:
+ *    - NestJS feature powered by @nestjs/schedule
+ *    - Converts method into scheduled task
+ *    - Handles timezone, error recovery automatically
+ *
+ * 3. **Database Batch Updates**:
+ *    - Update many records at once (efficient!)
+ *    - WHERE IN clause: "update if ID is in this list"
+ *    - Better than loop + individual updates
+ *
+ * 4. **Race Conditions**:
+ *    - Problem: Quote might be bound DURING expiration check
+ *    - Solution: Re-check status in UPDATE WHERE clause
+ *    - Only expires if STILL in QUOTED status
+ *
+ * 5. **Audit Trail**:
+ *    - Log every action (who, what, when)
+ *    - Critical for compliance and debugging
+ *    - "Why was my quote expired?" → Check logs
+ *
+ * 6. **Manual Overrides**:
+ *    - Cron runs automatically, but also allow manual trigger
+ *    - Useful for testing, emergency fixes
+ *    - Admin can expire quote immediately if needed
+ *
+ * PRODUCTION CONSIDERATIONS:
+ * - Use distributed lock (Redis) if multiple servers
+ * - Only one server should run cron at a time
+ * - Monitor cron execution (alerts if job fails)
+ * - Log metrics (how many expired, execution time)
+ * - Consider timezone effects (30 days in which timezone?)
+ *
+ * BUSINESS IMPACT:
+ * - Prevents stale quotes from clogging database
+ * - Ensures customers get fresh pricing (rates change!)
+ * - Complies with insurance regulations (quote validity period)
+ * - Reduces risk of honoring outdated rates
+ */

@@ -117,5 +117,30 @@ Thumbs.db
 # IDE files
 *.swp
 *.swo
-*~ 
+*~
+
+# Vercel
 .vercel
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+
+# Backend specific
+backend/dist/
+backend/build/
+backend/node_modules/
+backend/.env
+backend/.env.*
+
+# Drizzle ORM
+.drizzle/
+drizzle/
+
+# Test coverage
+.nyc_output/
+
+# Lock files (keep package-lock.json, ignore yarn.lock if not using Yarn)
+yarn.lock
+pnpm-lock.yaml

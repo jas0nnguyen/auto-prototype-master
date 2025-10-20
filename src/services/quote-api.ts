@@ -1,0 +1,385 @@
+/**
+ * Quote API Client Service (T077)
+ *
+ * This service handles all HTTP communication with the backend quote API.
+ * It's like a messenger that carries data between frontend and backend.
+ *
+ * WHY A SEPARATE SERVICE FILE?
+ * - Centralizes all API calls in one place
+ * - Easy to change API URLs (one place to update)
+ * - Reusable across components
+ * - Can mock for testing
+ */
+
+/**
+ * Quote data types (matching backend DTOs)
+ */
+export interface CreateQuoteRequest {
+  // Driver info
+  driver_first_name: string;
+  driver_last_name: string;
+  driver_birth_date: string;
+  driver_email: string;
+  driver_phone: string;
+  driver_gender?: string;
+  driver_years_licensed?: number;
+
+  // Address
+  address_line_1: string;
+  address_line_2?: string;
+  address_city: string;
+  address_state: string;
+  address_zip: string;
+
+  // Vehicle
+  vehicle_year?: number;
+  vehicle_make?: string;
+  vehicle_model?: string;
+  vehicle_vin?: string;
+  annual_mileage?: number;
+  vehicle_usage?: string;
+
+  // Coverage
+  coverage_bodily_injury?: string;
+  coverage_property_damage?: string;
+  coverage_collision_deductible?: number;
+  coverage_comprehensive_deductible?: number;
+  include_uninsured_motorist?: boolean;
+  include_medical_payments?: boolean;
+  include_rental_reimbursement?: boolean;
+  include_roadside_assistance?: boolean;
+}
+
+export interface QuoteResponse {
+  quote_id: string;
+  quote_number: string;
+  quote_status: string;
+  driver: {
+    party_id: string;
+    full_name: string;
+    email: string;
+  };
+  vehicle: {
+    vehicle_id: string;
+    description: string;
+    vin?: string;
+  };
+  premium?: {
+    total_premium: number;
+    currency: string;
+  };
+  created_at: string;
+  expiration_date?: string;
+}
+
+/**
+ * Quote API Service Class
+ *
+ * This class provides methods for all quote-related API operations.
+ */
+class QuoteApiService {
+  /**
+   * Base API URL
+   *
+   * In development, Vite proxy forwards /api to http://localhost:3000
+   * In production, this would be the actual API domain
+   */
+  private baseUrl = '/api/v1';
+
+  /**
+   * Create a new quote
+   *
+   * POST /api/v1/quotes
+   *
+   * @param data - Quote creation data
+   * @returns Promise resolving to created quote
+   *
+   * ASYNC/AWAIT EXPLAINED (again, but from frontend perspective):
+   * - fetch() returns a Promise (like an IOU for data)
+   * - await pauses until the Promise resolves
+   * - Lets you write async code that looks synchronous
+   */
+  async createQuote(data: CreateQuoteRequest): Promise<QuoteResponse> {
+    try {
+      /**
+       * fetch() API
+       *
+       * Built-in browser API for making HTTP requests.
+       * Modern replacement for XMLHttpRequest.
+       *
+       * Returns a Promise<Response>
+       */
+      const response = await fetch(`${this.baseUrl}/quotes`, {
+        method: 'POST',              // HTTP method (POST = create)
+        headers: {
+          'Content-Type': 'application/json',  // Tell server we're sending JSON
+        },
+        body: JSON.stringify(data),  // Convert JavaScript object to JSON string
+      });
+
+      /**
+       * Check if response is successful (status 200-299)
+       */
+      if (!response.ok) {
+        /**
+         * Parse error response
+         */
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create quote');
+      }
+
+      /**
+       * Parse successful response
+       *
+       * .json() returns a Promise, so we await it
+       */
+      const result = await response.json();
+
+      /**
+       * API response format (from response-formatter.ts):
+       * {
+       *   success: true,
+       *   data: { quote_id: '...', ... },
+       *   message: 'Quote created successfully'
+       * }
+       *
+       * We return just the data portion
+       */
+      return result.data;
+
+    } catch (error) {
+      /**
+       * Error handling
+       *
+       * Re-throw the error so the calling code can handle it
+       * (usually displayed to the user via UI)
+       */
+      console.error('[QuoteAPI] Error creating quote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get quote by ID
+   *
+   * GET /api/v1/quotes/:id
+   *
+   * @param quoteId - Quote identifier (UUID)
+   * @returns Promise resolving to quote data
+   */
+  async getQuoteById(quoteId: string): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(`${this.baseUrl}/quotes/${quoteId}`);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch quote');
+      }
+
+      const result = await response.json();
+      return result.data;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error fetching quote:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get quote by quote number
+   *
+   * GET /api/v1/quotes/reference/:refNumber
+   *
+   * @param quoteNumber - Quote number (e.g., 'QTE-2025-123456')
+   * @returns Promise resolving to quote data
+   */
+  async getQuoteByNumber(quoteNumber: string): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/reference/${quoteNumber}`
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to fetch quote');
+      }
+
+      const result = await response.json();
+      return result.data;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error fetching quote by number:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote coverage
+   *
+   * PUT /api/v1/quotes/:id/coverage
+   *
+   * @param quoteId - Quote identifier
+   * @param coverageData - Updated coverage selections
+   * @returns Promise resolving to updated quote
+   */
+  async updateQuoteCoverage(
+    quoteId: string,
+    coverageData: Partial<CreateQuoteRequest>
+  ): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/${quoteId}/coverage`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(coverageData),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update coverage');
+      }
+
+      const result = await response.json();
+      return result.data;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error updating coverage:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Recalculate quote premium
+   *
+   * POST /api/v1/quotes/:id/calculate
+   *
+   * Triggers premium recalculation after coverage changes.
+   *
+   * @param quoteId - Quote identifier
+   * @returns Promise resolving to updated quote with new premium
+   */
+  async recalculateQuote(quoteId: string): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/${quoteId}/calculate`,
+        {
+          method: 'POST',
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to recalculate quote');
+      }
+
+      const result = await response.json();
+      return result.data;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error recalculating quote:', error);
+      throw error;
+    }
+  }
+}
+
+/**
+ * Export a singleton instance
+ *
+ * SINGLETON PATTERN:
+ * - Create one instance of the service
+ * - Export that instance (not the class)
+ * - All imports use the same instance
+ *
+ * Benefits:
+ * - Shared state (if needed)
+ * - Consistent configuration
+ * - Easy to mock for testing
+ */
+export const quoteApi = new QuoteApiService();
+
+/**
+ * Also export the class for testing/mocking
+ */
+export default QuoteApiService;
+
+/**
+ * ============================================================================
+ * LEARNING SUMMARY: API CLIENT SERVICES
+ * ============================================================================
+ *
+ * KEY CONCEPTS:
+ *
+ * 1. API CLIENT
+ *    - Centralized place for all API calls
+ *    - Handles HTTP requests/responses
+ *    - Abstracts fetch() details from components
+ *
+ * 2. FETCH API
+ *    - Built-in browser API for HTTP requests
+ *    - Returns Promises
+ *    - Modern replacement for XMLHttpRequest
+ *
+ * 3. JSON SERIALIZATION
+ *    - JSON.stringify() = JS object → JSON string
+ *    - response.json() = JSON string → JS object
+ *    - Required for HTTP communication
+ *
+ * 4. ERROR HANDLING
+ *    - Check response.ok (status 200-299)
+ *    - Parse error messages from backend
+ *    - Re-throw errors for component handling
+ *
+ * 5. TYPESCRIPT INTERFACES
+ *    - Define request/response shapes
+ *    - Type safety for API calls
+ *    - Catch errors at compile time
+ *
+ * ANALOGIES:
+ *
+ * - API Client = Postal Service
+ *   - You give them a letter (request)
+ *   - They deliver it to an address (URL)
+ *   - They bring back a reply (response)
+ *
+ * - fetch() = Making a Phone Call
+ *   - Dial number (URL)
+ *   - Say your message (request body)
+ *   - Wait for response
+ *   - Hang up when done
+ *
+ * - JSON.stringify() = Packaging a Gift
+ *   - Put items in a box (object → string)
+ *   - Ship the box
+ *   - Receiver unpacks it (string → object)
+ *
+ * - Singleton Pattern = Shared Telephone
+ *   - One phone for the whole office
+ *   - Everyone uses the same phone
+ *   - Consistent phone number (configuration)
+ *
+ * BEST PRACTICES:
+ *
+ * 1. Centralize API Calls
+ *    - All API logic in service files
+ *    - Components just call methods
+ *    - Easy to change/test
+ *
+ * 2. Type Safety
+ *    - Define interfaces for requests/responses
+ *    - TypeScript catches mismatches
+ *    - Self-documenting code
+ *
+ * 3. Error Handling
+ *    - Always check response.ok
+ *    - Parse error messages
+ *    - Log errors for debugging
+ *
+ * 4. Consistent Patterns
+ *    - All methods follow same structure
+ *    - try/catch for error handling
+ *    - Return just the data portion
+ */
