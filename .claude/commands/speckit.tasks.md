@@ -125,4 +125,10 @@ Every task MUST strictly follow this format:
 - **Phase 3+**: User Stories in priority order (P1, P2, P3...)
   - Within each story: Tests (if requested) → Models → Services → Endpoints → Integration
   - Each phase should be a complete, independently testable increment
+  - **Option B Descoping Strategy**: When implementation gets complex, identify simplified alternatives:
+    - Mark completed tasks as ✅ with completion date
+    - Mark descoped tasks as ⏭️ DESCOPED with reason
+    - Add new simplified tasks below descoped ones
+    - Document what was built vs. what was planned
+    - Example: Complex 17-service architecture → Single simplified service
 - **Final Phase**: Polish & Cross-Cutting Concerns

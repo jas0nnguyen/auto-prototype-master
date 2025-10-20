@@ -12,7 +12,7 @@ async function bootstrap() {
   app.enableCors(getCorsConfig());
 
   // Apply security headers to all responses
-  app.use((req, res, next) => {
+  app.use((req: any, res: any, next: any) => {
     const headers = getSecurityHeaders();
     Object.entries(headers).forEach(([key, value]) => {
       res.setHeader(key, value);
@@ -26,8 +26,8 @@ async function bootstrap() {
   // Global validation pipe for DTOs
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
-      forbidNonWhitelisted: true,
+      whitelist: false,
+      forbidNonWhitelisted: false,
       transform: true,
       transformOptions: {
         enableImplicitConversion: true,

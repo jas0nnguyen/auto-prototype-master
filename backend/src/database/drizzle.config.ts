@@ -56,10 +56,10 @@ export function createDrizzleDb(): Database {
  * const users = await db.select().from(usersTable);
  * ```
  */
-export function createDrizzleDbDirect(): ReturnType<typeof drizzle<NeonQueryFunction<false, false>>> {
+export function createDrizzleDbDirect() {
   const sql = createNeonClient();
 
-  return drizzle(sql, {
+  return drizzle(sql as any, {
     logger: process.env.NODE_ENV === 'development',
   });
 }

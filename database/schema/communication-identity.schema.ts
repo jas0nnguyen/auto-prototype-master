@@ -6,6 +6,7 @@
 
 import { pgTable, uuid, varchar, timestamp } from 'drizzle-orm/pg-core';
 import { geographicLocation } from './geographic-location.schema';
+import { party } from './party.schema';
 import { auditTimestamps } from './_base.schema';
 
 export const communicationIdentity = pgTable('communication_identity', {
@@ -18,6 +19,9 @@ export const communicationIdentity = pgTable('communication_identity', {
   communication_qualifier_value: varchar('communication_qualifier_value', { length: 100 }), // Extension, etc.
 
   // Relationships
+  party_identifier: uuid('party_identifier')
+    .notNull()
+    .references(() => party.party_identifier),
   geographic_location_identifier: uuid('geographic_location_identifier')
     .references(() => geographicLocation.geographic_location_identifier),
 

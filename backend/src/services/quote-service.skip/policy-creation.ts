@@ -11,12 +11,11 @@
  * - Eating = Active (coverage in force)
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService } from '../../database/database.service';
-import { agreement } from '../../../database/schema/agreement.schema';
-import { policy } from '../../../database/schema/policy.schema';
-import { product } from '../../../database/schema/product.schema';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { agreement, policy, product } from '../../../../database/schema';
+import type { Database } from '../../database/drizzle.config';
+import { DATABASE_CONNECTION } from '../../database/database.module';
 
 /**
  * Input data for creating a policy/quote
@@ -62,7 +61,9 @@ export interface PolicyCreationResult {
 export class PolicyCreationService {
   private readonly logger = new Logger(PolicyCreationService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    @Inject(DATABASE_CONNECTION) private readonly db: Database
+  ) {}
 
   /**
    * Create a new policy/quote
@@ -71,8 +72,6 @@ export class PolicyCreationService {
    */
   async createPolicy(input: PolicyCreationInput): Promise<PolicyCreationResult> {
     this.logger.debug('Creating new policy/quote', { input });
-
-    const dbClient = this.db.getClient();
 
     try {
       // Step 1: Ensure product exists
@@ -148,10 +147,10 @@ export class PolicyCreationService {
    * This is called "upsert" pattern (update or insert)
    */
   private async ensureProductExists(productName: string): Promise<string> {
-    const dbClient = this.db.getClient();
+    
 
     // Check if product already exists
-    const existing = await dbClient
+    const existing = await this.db
       .select()
       .from(product)
       .where(eq(product.licensed_product_name, productName))
@@ -163,7 +162,7 @@ export class PolicyCreationService {
     }
 
     // Create new product
-    const newProduct = await dbClient
+    const newProduct = await this.db
       .insert(product)
       .values({
         licensed_product_name: productName,
@@ -185,9 +184,9 @@ export class PolicyCreationService {
    * OMG Pattern: Subtype shares primary key with supertype
    */
   private async createAgreement(productId: string): Promise<string> {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .insert(agreement)
       .values({
         agreement_type_code: 'POLICY', // Could be POLICY, REINSURANCE, etc.
@@ -212,9 +211,9 @@ export class PolicyCreationService {
     policyNumber: string,
     input: PolicyCreationInput
   ): Promise<string> {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .insert(policy)
       .values({
         policy_identifier: agreementId, // Same as agreement! (subtype pattern)
@@ -234,9 +233,9 @@ export class PolicyCreationService {
    * Get policy by ID
    */
   async getPolicyById(policyId: string) {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .select()
       .from(policy)
       .where(eq(policy.policy_identifier, policyId))
@@ -249,9 +248,9 @@ export class PolicyCreationService {
    * Get policy by policy number
    */
   async getPolicyByNumber(policyNumber: string) {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .select()
       .from(policy)
       .where(eq(policy.policy_number, policyNumber))
@@ -266,9 +265,9 @@ export class PolicyCreationService {
    * Status flow: QUOTED → BINDING → BOUND → ACTIVE
    */
   async updatePolicyStatus(policyId: string, newStatus: string): Promise<void> {
-    const dbClient = this.db.getClient();
+    
 
-    await dbClient
+    await this.db
       .update(policy)
       .set({
         status_code: newStatus,

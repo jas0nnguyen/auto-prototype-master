@@ -12,13 +12,11 @@
  * - Deductibles = How much you pay before insurance kicks in
  */
 
-import { Injectable, Logger } from '@nestjs/common';
-import { DatabaseService } from '../../database/database.service';
-import { coverage } from '../../../database/schema/coverage.schema';
-import { policyCoverageDetail } from '../../../database/schema/policy-coverage-detail.schema';
-import { policyLimit } from '../../../database/schema/policy-limit.schema';
-import { policyDeductible } from '../../../database/schema/policy-deductible.schema';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { eq } from 'drizzle-orm';
+import { coverage, policyCoverageDetail, policyLimit, policyDeductible } from '../../../../database/schema';
+import type { Database } from '../../database/drizzle.config';
+import { DATABASE_CONNECTION } from '../../database/database.module';
 
 /**
  * Coverage selection from user
@@ -71,7 +69,9 @@ export interface CoverageAssignmentResult {
 export class CoverageAssignmentService {
   private readonly logger = new Logger(CoverageAssignmentService.name);
 
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    @Inject(DATABASE_CONNECTION) private readonly db: Database
+  ) {}
 
   /**
    * Assign coverages to a policy
@@ -164,9 +164,9 @@ export class CoverageAssignmentService {
    * Coverages are reference data (seeded during setup)
    */
   private async findCoverageByCode(coverageCode: string) {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .select()
       .from(coverage)
       .where(eq(coverage.coverage_code, coverageCode))
@@ -188,9 +188,9 @@ export class CoverageAssignmentService {
     effectiveDate: Date,
     expirationDate: Date
   ): Promise<string> {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .insert(policyCoverageDetail)
       .values({
         policy_identifier: policyId,
@@ -223,12 +223,12 @@ export class CoverageAssignmentService {
     detailId: string,
     limits: NonNullable<CoverageSelection['limits']>
   ): Promise<string[]> {
-    const dbClient = this.db.getClient();
+    
     const limitIds: string[] = [];
 
     // Per Person limit
     if (limits.perPerson) {
-      const result = await dbClient
+      const result = await this.db
         .insert(policyLimit)
         .values({
           policy_coverage_detail_identifier: detailId,
@@ -243,7 +243,7 @@ export class CoverageAssignmentService {
 
     // Per Accident limit
     if (limits.perAccident) {
-      const result = await dbClient
+      const result = await this.db
         .insert(policyLimit)
         .values({
           policy_coverage_detail_identifier: detailId,
@@ -258,7 +258,7 @@ export class CoverageAssignmentService {
 
     // Per Occurrence limit (for property damage)
     if (limits.perOccurrence) {
-      const result = await dbClient
+      const result = await this.db
         .insert(policyLimit)
         .values({
           policy_coverage_detail_identifier: detailId,
@@ -286,9 +286,9 @@ export class CoverageAssignmentService {
     detailId: string,
     deductibleAmount: number
   ): Promise<string> {
-    const dbClient = this.db.getClient();
+    
 
-    const result = await dbClient
+    const result = await this.db
       .insert(policyDeductible)
       .values({
         policy_coverage_detail_identifier: detailId,
@@ -309,11 +309,11 @@ export class CoverageAssignmentService {
    * Get all coverages for a policy
    */
   async getPolicyCoverages(policyId: string) {
-    const dbClient = this.db.getClient();
+    
 
     // This would join multiple tables to get complete coverage info
     // Simplified for now - just return PolicyCoverageDetail records
-    const results = await dbClient
+    const results = await this.db
       .select()
       .from(policyCoverageDetail)
       .where(eq(policyCoverageDetail.policy_identifier, policyId));
@@ -327,10 +327,10 @@ export class CoverageAssignmentService {
    * Used when customer wants to restart coverage selection
    */
   async removeCoverages(policyId: string): Promise<void> {
-    const dbClient = this.db.getClient();
+    
 
     // Cascade delete will remove limits and deductibles automatically
-    await dbClient
+    await this.db
       .delete(policyCoverageDetail)
       .where(eq(policyCoverageDetail.policy_identifier, policyId));
 

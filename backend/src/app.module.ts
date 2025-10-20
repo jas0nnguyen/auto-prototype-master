@@ -1,7 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
-import { QuoteModule } from './services/quote-service/quote.module';
+import { QuoteModule } from './services/quote/quote.module';
 
 @Module({
   imports: [
