@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -24,8 +24,8 @@ import {
   DateInput,
   Skeleton,
 } from '@sureapp/canary-design-system';
-import { useCreateQuote } from '../../hooks/useQuote';
-import type { CreateQuoteRequest } from '../../services/quote-api';
+import { useQuoteByNumber, useUpdateQuoteCoverage } from '../../hooks/useQuote';
+import { useQueryClient } from '@tanstack/react-query';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -45,7 +45,11 @@ interface CoverageData {
 
 const CoverageSelection: React.FC = () => {
   const navigate = useNavigate();
-  const createQuote = useCreateQuote();
+  const { quoteNumber } = useParams<{ quoteNumber: string }>();
+  const queryClient = useQueryClient();
+  const updateQuoteCoverage = useUpdateQuoteCoverage();
+  const { data: quote, isLoading: isLoadingQuote, refetch } = useQuoteByNumber(quoteNumber);
+
   const [coverage, setCoverage] = useState<CoverageData>({
     coverageStartDate: undefined,
     bodilyInjuryLimit: '100/300',
@@ -61,89 +65,98 @@ const CoverageSelection: React.FC = () => {
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isPricingLoading, setIsPricingLoading] = useState(false);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
-    // Check if previous steps completed
-    const quoteData = sessionStorage.getItem('quoteData');
-    if (!quoteData) {
+    if (!quoteNumber) {
       navigate('/quote/driver-info');
       return;
     }
+  }, [navigate, quoteNumber]);
 
-    const parsedData = JSON.parse(quoteData);
-    // Check for new data structure (primaryDriver + vehicles) or old structure (driver + vehicle)
-    const hasDriver = parsedData.primaryDriver || parsedData.driver;
-    const hasVehicle = (parsedData.vehicles && parsedData.vehicles.length > 0) || parsedData.vehicle;
-
-    if (!hasDriver || !hasVehicle) {
-      navigate('/quote/driver-info');
-    }
-  }, [navigate]);
-
-  // Simulate API latency when coverage changes
+  // Load initial coverage from quote when it loads
   useEffect(() => {
+    if (quote && quote.coverages && isInitialLoadRef.current) {
+      setCoverage({
+        coverageStartDate: quote.coverages.startDate ? new Date(quote.coverages.startDate) : undefined,
+        bodilyInjuryLimit: quote.coverages.bodilyInjuryLimit || '100/300',
+        propertyDamageLimit: quote.coverages.propertyDamageLimit || '50000',
+        hasCollision: quote.coverages.hasCollision || false,
+        collisionDeductible: quote.coverages.collisionDeductible?.toString() || '500',
+        hasComprehensive: quote.coverages.hasComprehensive || false,
+        comprehensiveDeductible: quote.coverages.comprehensiveDeductible?.toString() || '500',
+        hasUninsured: quote.coverages.hasUninsured || false,
+        hasRoadside: quote.coverages.hasRoadside || false,
+        hasRental: quote.coverages.hasRental || false,
+        rentalLimit: quote.coverages.rentalLimit?.toString() || '50',
+      });
+      isInitialLoadRef.current = false; // Mark that initial data has been loaded
+    }
+  }, [quote?.quote_number]); // Only run when quote first loads
+
+  // Auto-update premium when coverage changes (with debounce)
+  useEffect(() => {
+    // Skip API call if this is the initial load
+    if (!quoteNumber || !coverage.coverageStartDate || isInitialLoadRef.current) return;
+
     setIsPricingLoading(true);
-    const timer = setTimeout(() => {
-      setIsPricingLoading(false);
-    }, 300);
+
+    // Debounce API calls - wait 300ms after user stops making changes
+    const timer = setTimeout(async () => {
+      try {
+        await updateQuoteCoverage.mutateAsync({
+          quoteNumber,
+          coverageData: {
+            coverage_start_date: coverage.coverageStartDate.toISOString().split('T')[0],
+            coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
+            coverage_property_damage_limit: coverage.propertyDamageLimit,
+            coverage_collision: coverage.hasCollision,
+            coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+            coverage_comprehensive: coverage.hasComprehensive,
+            coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
+            coverage_uninsured_motorist: coverage.hasUninsured,
+            coverage_roadside_assistance: coverage.hasRoadside,
+            coverage_rental_reimbursement: coverage.hasRental,
+            coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
+          },
+        });
+        // Explicitly refetch the quote to get the updated premium
+        await refetch();
+      } catch (error) {
+        console.error('Failed to update coverage:', error);
+      } finally {
+        setIsPricingLoading(false);
+      }
+    }, 300); // Wait 300ms after last change for snappier updates
+
     return () => clearTimeout(timer);
-  }, [coverage]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coverage, quoteNumber]); // Re-run when coverage or quoteNumber changes (refetch and updateQuoteCoverage are stable)
 
-  // Calculate premium based on selections - updates in real-time as coverage changes
+  // Get premium from API quote - this is the actual calculated premium from the backend
   const { monthly, sixMonth } = useMemo(() => {
-    let basePrice = 95; // Base liability coverage
-
-    // Add coverage limits adjustments
-    const biLimitAdjustment = {
-      '25/50': 0,
-      '50/100': 15,
-      '100/300': 30,
-      '250/500': 50,
-      '500/1000': 75,
-    }[coverage.bodilyInjuryLimit] || 0;
-    basePrice += biLimitAdjustment;
-
-    const pdLimitAdjustment = {
-      '25000': 0,
-      '50000': 10,
-      '100000': 20,
-      '250000': 35,
-      '500000': 50,
-    }[coverage.propertyDamageLimit] || 0;
-    basePrice += pdLimitAdjustment;
-
-    if (coverage.hasCollision) basePrice += 32;
-    if (coverage.hasComprehensive) basePrice += 28;
-    if (coverage.hasUninsured) basePrice += 15;
-    if (coverage.hasRoadside) basePrice += 5;
-    if (coverage.hasRental) basePrice += 8;
-
-    // Adjust for deductibles (higher deductible = lower premium)
-    if (coverage.hasCollision) {
-      const deductibleDiscount = {
-        '250': 0,
-        '500': -5,
-        '1000': -10,
-        '2500': -15,
-      }[coverage.collisionDeductible] || 0;
-      basePrice += deductibleDiscount;
+    if (!quote || !quote.premium) {
+      // Fallback to basic values while loading
+      return {
+        monthly: 100,
+        sixMonth: 600,
+      };
     }
 
-    if (coverage.hasComprehensive) {
-      const deductibleDiscount = {
-        '250': 0,
-        '500': -3,
-        '1000': -6,
-        '2500': -10,
-      }[coverage.comprehensiveDeductible] || 0;
-      basePrice += deductibleDiscount;
-    }
-
-    return {
-      monthly: Math.max(basePrice, 50), // Minimum $50/month
-      sixMonth: Math.max(basePrice * 6, 300),
+    const calculated = {
+      monthly: quote.premium.monthly || Math.round((quote.premium.total || 0) / 6),
+      sixMonth: quote.premium.sixMonth || quote.premium.total || 0,
     };
-  }, [coverage]); // Recalculates whenever coverage state changes
+
+    console.log('[CoverageSelection] Premium updated:', {
+      monthly: calculated.monthly,
+      sixMonth: calculated.sixMonth,
+      total: quote.premium.total,
+      quoteNumber: quote.quote_number,
+    });
+
+    return calculated;
+  }, [quote]); // Updates when quote data changes from API
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -153,107 +166,34 @@ const CoverageSelection: React.FC = () => {
       return;
     }
 
-    // Get data from previous steps
-    const storedData = sessionStorage.getItem('quoteData');
-    if (!storedData) {
-      alert('Session data lost. Please start over.');
-      navigate('/quote/vehicle-info');
-      return;
-    }
-
-    const quoteData = JSON.parse(storedData);
-
-    // Handle both old and new data structures
-    const primaryDriver = quoteData.primaryDriver || quoteData.driver;
-    const additionalDrivers = quoteData.additionalDrivers || [];
-    const allVehicles = quoteData.vehicles || (quoteData.vehicle ? [quoteData.vehicle] : []);
-
-    if (!primaryDriver || allVehicles.length === 0) {
-      alert('Missing driver or vehicle information. Please start over.');
-      navigate('/quote/driver-info');
-      return;
-    }
-
-    // Build drivers array for API (NEW FORMAT)
-    const driversArray = [
-      {
-        first_name: primaryDriver.firstName,
-        last_name: primaryDriver.lastName,
-        birth_date: primaryDriver.dob,
-        email: primaryDriver.email,
-        phone: primaryDriver.phone || '555-0100',
-        gender: primaryDriver.gender,
-        marital_status: primaryDriver.maritalStatus,
-        years_licensed: primaryDriver.yearsLicensed,
-        is_primary: true,
-      },
-      ...additionalDrivers.map((d: any) => ({
-        first_name: d.firstName,
-        last_name: d.lastName,
-        birth_date: d.dob,
-        email: d.email,
-        phone: d.phone || '555-0100',
-        gender: d.gender,
-        marital_status: d.maritalStatus,
-        years_licensed: d.yearsLicensed,
-        relationship: d.relationship,
-        is_primary: false,
-      })),
-    ];
-
-    // Build vehicles array for API (NEW FORMAT)
-    const vehiclesArray = allVehicles.map((v: any) => ({
-      year: parseInt(v.year),
-      make: v.make,
-      model: v.model,
-      vin: v.vin || undefined,
-      annual_mileage: v.annualMileage,
-      body_type: v.bodyType,
-      primary_driver_id: v.primaryDriverId,
-    }));
-
-    // Map frontend data to API request format
-    const quoteRequest: CreateQuoteRequest = {
-      // NEW: Send all drivers and vehicles
-      drivers: driversArray,
-      vehicles: vehiclesArray,
-
-      // Address (for PNI)
-      address_line_1: primaryDriver.address,
-      address_line_2: primaryDriver.apt || undefined,
-      address_city: primaryDriver.city,
-      address_state: primaryDriver.state,
-      address_zip: primaryDriver.zip,
-
-      // Coverage selections (NEW field names)
-      coverage_start_date: coverage.coverageStartDate?.toISOString().split('T')[0],
-      coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
-      coverage_property_damage_limit: coverage.propertyDamageLimit,
-      coverage_has_collision: coverage.hasCollision,
-      coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
-      coverage_has_comprehensive: coverage.hasComprehensive,
-      coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
-      coverage_has_uninsured: coverage.hasUninsured,
-      coverage_has_roadside: coverage.hasRoadside,
-      coverage_has_rental: coverage.hasRental,
-      coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
-    };
+    if (!quoteNumber) return;
 
     try {
       setIsSubmitting(true);
 
-      // Call the API to create the quote
-      const createdQuote = await createQuote.mutateAsync(quoteRequest);
+      // Update quote with coverage selections
+      const updatedQuote = await updateQuoteCoverage.mutateAsync({
+        quoteNumber,
+        coverageData: {
+          coverage_start_date: coverage.coverageStartDate?.toISOString().split('T')[0],
+          coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
+          coverage_property_damage_limit: coverage.propertyDamageLimit,
+          coverage_collision: coverage.hasCollision,
+          coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+          coverage_comprehensive: coverage.hasComprehensive,
+          coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
+          coverage_uninsured_motorist: coverage.hasUninsured,
+          coverage_roadside_assistance: coverage.hasRoadside,
+          coverage_rental_reimbursement: coverage.hasRental,
+          coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
+        },
+      });
 
-      // Store the quote ID and navigate to results
-      sessionStorage.setItem('quoteId', createdQuote.quoteId);
-      sessionStorage.setItem('quoteNumber', createdQuote.quoteNumber);
-
-      // Navigate to quote results
-      navigate('/quote/results');
+      // Navigate to quote results with quote number in URL
+      navigate(`/quote/results/${quoteNumber}`);
     } catch (error) {
-      console.error('Error creating quote:', error);
-      alert('Failed to create quote. Please try again.');
+      console.error('Error finalizing quote:', error);
+      alert('Failed to finalize quote. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -274,7 +214,7 @@ const CoverageSelection: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  onClick={() => navigate('/quote/vehicle-confirmation')}
+                  onClick={() => navigate(`/quote/vehicles/${quoteNumber}`)}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -317,6 +257,7 @@ const CoverageSelection: React.FC = () => {
                     id="bodily-injury"
                     label="Bodily Injury Limit"
                     size="small"
+                    value={coverage.bodilyInjuryLimit}
                     onChange={(value) => setCoverage({ ...coverage, bodilyInjuryLimit: value })}
                     options={[
                       { label: '$25,000 / $50,000', value: '25/50' },
@@ -329,6 +270,7 @@ const CoverageSelection: React.FC = () => {
                     id="property-damage"
                     label="Property Damage Limit"
                     size="small"
+                    value={coverage.propertyDamageLimit}
                     onChange={(value) => setCoverage({ ...coverage, propertyDamageLimit: value })}
                     options={[
                       { label: '$25,000', value: '25000' },
@@ -364,6 +306,7 @@ const CoverageSelection: React.FC = () => {
                       id="collision-deductible"
                       label="Deductible"
                       size="small"
+                      value={coverage.collisionDeductible}
                       onChange={(value) => setCoverage({ ...coverage, collisionDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
@@ -401,6 +344,7 @@ const CoverageSelection: React.FC = () => {
                       id="comprehensive-deductible"
                       label="Deductible"
                       size="small"
+                      value={coverage.comprehensiveDeductible}
                       onChange={(value) => setCoverage({ ...coverage, comprehensiveDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
@@ -479,6 +423,7 @@ const CoverageSelection: React.FC = () => {
                       id="rental-limit"
                       label="Daily Rental Limit"
                       size="small"
+                      value={coverage.rentalLimit}
                       onChange={(value) => setCoverage({ ...coverage, rentalLimit: value })}
                       options={[
                         { label: '$30 per day', value: '30' },
@@ -497,9 +442,9 @@ const CoverageSelection: React.FC = () => {
                 size="large"
                 variant="primary"
                 isFullWidth
-                disabled={isSubmitting}
+                disabled={isSubmitting || updateQuoteCoverage.isPending || isLoadingQuote}
               >
-                {isSubmitting ? 'Creating Your Quote...' : 'See My Quote'}
+                {isSubmitting || updateQuoteCoverage.isPending ? 'Finalizing Your Quote...' : 'See My Quote'}
               </Button>
             </div>
           </Form>
@@ -507,8 +452,8 @@ const CoverageSelection: React.FC = () => {
 
         <Aside>
           <QuoteCard
-            price={monthly.toString()}
-            total={sixMonth.toString()}
+            price={monthly.toFixed(2)}
+            total={sixMonth.toFixed(2)}
             isLoading={isPricingLoading}
           >
             <Button emphasis="strong" href="#" size="xsmall" variant="support">

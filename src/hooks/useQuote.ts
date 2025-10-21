@@ -295,7 +295,149 @@ export function useCreateQuote() {
 }
 
 /**
- * useUpdateQuoteCoverage Hook - Update coverage selections
+ * useUpdatePrimaryDriver Hook - Update primary driver information
+ *
+ * @returns Mutation result
+ */
+export function useUpdatePrimaryDriver() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      quoteNumber,
+      driverData,
+    }: {
+      quoteNumber: string;
+      driverData: {
+        driver_first_name: string;
+        driver_last_name: string;
+        driver_birth_date: string;
+        driver_email: string;
+        driver_phone: string;
+        driver_gender?: string;
+        driver_marital_status?: string;
+        address_line_1: string;
+        address_line_2?: string;
+        address_city: string;
+        address_state: string;
+        address_zip: string;
+      };
+    }) => quoteApi.updatePrimaryDriver(quoteNumber, driverData),
+
+    onSuccess: (updatedQuote: QuoteResponse, variables) => {
+      // Invalidate both byId and byNumber queries
+      if (updatedQuote.quoteId) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byId(updatedQuote.quoteId),
+        });
+      }
+      if (variables.quoteNumber) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byNumber(variables.quoteNumber),
+        });
+      }
+    },
+
+    onError: (error: Error) => {
+      console.error('[useUpdatePrimaryDriver] Error updating primary driver:', error);
+    },
+  });
+}
+
+/**
+ * useUpdateQuoteDrivers Hook - Update additional drivers
+ *
+ * @returns Mutation result
+ */
+export function useUpdateQuoteDrivers() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      quoteNumber,
+      additionalDrivers,
+    }: {
+      quoteNumber: string;
+      additionalDrivers: Array<{
+        first_name: string;
+        last_name: string;
+        birth_date: string;
+        email: string;
+        phone: string;
+        gender?: string;
+        marital_status?: string;
+        years_licensed?: number;
+        relationship?: string;
+      }>;
+    }) => quoteApi.updateQuoteDrivers(quoteNumber, additionalDrivers),
+
+    onSuccess: (updatedQuote: QuoteResponse, variables) => {
+      // Invalidate both byId and byNumber queries
+      if (updatedQuote.quoteId) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byId(updatedQuote.quoteId),
+        });
+      }
+      if (variables.quoteNumber) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byNumber(variables.quoteNumber),
+        });
+      }
+    },
+
+    onError: (error: Error) => {
+      console.error('[useUpdateQuoteDrivers] Error updating drivers:', error);
+    },
+  });
+}
+
+/**
+ * useUpdateQuoteVehicles Hook - Update vehicles
+ *
+ * @returns Mutation result
+ */
+export function useUpdateQuoteVehicles() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({
+      quoteNumber,
+      vehicles,
+    }: {
+      quoteNumber: string;
+      vehicles: Array<{
+        year: number;
+        make: string;
+        model: string;
+        vin?: string;
+        body_type?: string;
+        annual_mileage?: number;
+        primary_driver_id?: string;
+      }>;
+    }) => quoteApi.updateQuoteVehicles(quoteNumber, vehicles),
+
+    onSuccess: (updatedQuote: QuoteResponse, variables) => {
+      // Invalidate both byId and byNumber queries
+      if (updatedQuote.quoteId) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byId(updatedQuote.quoteId),
+        });
+      }
+      if (variables.quoteNumber) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byNumber(variables.quoteNumber),
+        });
+      }
+    },
+
+    onError: (error: Error) => {
+      console.error('[useUpdateQuoteVehicles] Error updating vehicles:', error);
+    },
+  });
+}
+
+/**
+ * useUpdateQuoteCoverage Hook - Update coverage selections and finalize quote
  *
  * @returns Mutation result
  */
@@ -304,33 +446,41 @@ export function useUpdateQuoteCoverage() {
 
   return useMutation({
     mutationFn: ({
-      quoteId,
+      quoteNumber,
       coverageData,
     }: {
-      quoteId: string;
-      coverageData: Partial<CreateQuoteRequest>;
-    }) => quoteApi.updateQuoteCoverage(quoteId, coverageData),
+      quoteNumber: string;
+      coverageData: {
+        coverage_start_date?: string;
+        coverage_bodily_injury_limit?: string;
+        coverage_property_damage_limit?: string;
+        coverage_collision?: boolean;
+        coverage_collision_deductible?: number;
+        coverage_comprehensive?: boolean;
+        coverage_comprehensive_deductible?: number;
+        coverage_uninsured_motorist?: boolean;
+        coverage_roadside_assistance?: boolean;
+        coverage_rental_reimbursement?: boolean;
+        coverage_rental_limit?: number;
+      };
+    }) => quoteApi.updateQuoteCoverage(quoteNumber, coverageData),
 
-    onSuccess: (updatedQuote: QuoteResponse) => {
-      /**
-       * Update the cached quote data
-       *
-       * This immediately updates the UI without refetching.
-       * Called "optimistic update" when done before server response.
-       */
-      queryClient.setQueryData(
-        quoteKeys.byId(updatedQuote.quote_id),
-        updatedQuote
-      );
+    onSuccess: (updatedQuote: QuoteResponse, variables) => {
+      // Invalidate both byId and byNumber queries
+      if (updatedQuote.quoteId) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byId(updatedQuote.quoteId),
+        });
+      }
+      if (variables.quoteNumber) {
+        queryClient.invalidateQueries({
+          queryKey: quoteKeys.byNumber(variables.quoteNumber),
+        });
+      }
+    },
 
-      /**
-       * Invalidate to trigger refetch in background
-       *
-       * Ensures we have the latest server data.
-       */
-      queryClient.invalidateQueries({
-        queryKey: quoteKeys.byId(updatedQuote.quote_id),
-      });
+    onError: (error: Error) => {
+      console.error('[useUpdateQuoteCoverage] Error updating coverage:', error);
     },
   });
 }

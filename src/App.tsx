@@ -70,13 +70,14 @@ function App() {
           <Route path="/auto-insurance/checkout" element={<AutoInsuranceCheckoutPage />} />
           <Route path="/auto-insurance/confirmation" element={<AutoInsuranceConfirmationPage />} />
 
-          {/* Quote Flow Routes (PNI → Additional Drivers → Vehicles → Vehicle Confirmation → Coverage → Results) */}
+          {/* Quote Flow Routes (Progressive Quote Creation with URL-based navigation) */}
           <Route path="/quote/driver-info" element={<PrimaryDriverInfo />} />
-          <Route path="/quote/additional-drivers" element={<AdditionalDrivers />} />
-          <Route path="/quote/vehicles" element={<VehiclesList />} />
-          <Route path="/quote/vehicle-confirmation" element={<VehicleConfirmation />} />
-          <Route path="/quote/coverage-selection" element={<CoverageSelection />} />
-          <Route path="/quote/results" element={<QuoteResults />} />
+          <Route path="/quote/driver-info/:quoteNumber" element={<PrimaryDriverInfo />} />
+          <Route path="/quote/additional-drivers/:quoteNumber" element={<AdditionalDrivers />} />
+          <Route path="/quote/vehicles/:quoteNumber" element={<VehiclesList />} />
+          <Route path="/quote/vehicle-confirmation/:quoteNumber" element={<VehicleConfirmation />} />
+          <Route path="/quote/coverage-selection/:quoteNumber" element={<CoverageSelection />} />
+          <Route path="/quote/results/:quoteNumber" element={<QuoteResults />} />
 
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

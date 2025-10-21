@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   Card,
 } from '@sureapp/canary-design-system';
+import { useQuoteByNumber, useUpdateQuoteVehicles } from '../../hooks/useQuote';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -38,6 +39,10 @@ interface DriverOption {
 
 const VehiclesList: React.FC = () => {
   const navigate = useNavigate();
+  const { quoteNumber } = useParams<{ quoteNumber: string }>();
+  const updateQuoteVehicles = useUpdateQuoteVehicles();
+  const { data: quote, isLoading: isLoadingQuote } = useQuoteByNumber(quoteNumber);
+
   const [vehicles, setVehicles] = useState<VehicleData[]>([]);
   const [driverOptions, setDriverOptions] = useState<DriverOption[]>([]);
   const [isAddingVehicle, setIsAddingVehicle] = useState(false);
@@ -51,44 +56,53 @@ const VehiclesList: React.FC = () => {
   });
   const [vinError, setVinError] = useState<string>('');
 
-  // Check if driver info exists and load drivers
+  // Load quote data and build driver options
   useEffect(() => {
-    const quoteData = sessionStorage.getItem('quoteData');
-    if (!quoteData) {
+    if (!quoteNumber) {
       navigate('/quote/driver-info');
       return;
     }
 
-    const parsedData = JSON.parse(quoteData);
-    if (!parsedData.primaryDriver) {
-      navigate('/quote/driver-info');
-      return;
-    }
+    if (!quote) return;
 
-    // Build driver options (primary + additional)
-    const options: DriverOption[] = [
-      {
-        label: `${parsedData.primaryDriver.firstName} ${parsedData.primaryDriver.lastName} (Primary)`,
+    // Build driver options from quote data
+    const options: DriverOption[] = [];
+
+    // Add primary driver from quote.driver object
+    if (quote.driver) {
+      options.push({
+        label: `${quote.driver.firstName} ${quote.driver.lastName} (Primary)`,
         value: 'primary',
-      },
-    ];
+      });
+    }
 
-    if (parsedData.additionalDrivers && Array.isArray(parsedData.additionalDrivers)) {
-      parsedData.additionalDrivers.forEach((driver: any) => {
+    // Add additional drivers
+    if (quote.additionalDrivers && Array.isArray(quote.additionalDrivers)) {
+      quote.additionalDrivers.forEach((driver: any, index: number) => {
         options.push({
           label: `${driver.firstName} ${driver.lastName}`,
-          value: driver.id,
+          value: driver.id || `driver-${index + 1}`,
         });
       });
     }
 
     setDriverOptions(options);
 
-    // Load existing vehicles if any
-    if (parsedData.vehicles && Array.isArray(parsedData.vehicles)) {
-      setVehicles(parsedData.vehicles);
+    // Load existing vehicles from quote if any, filtering out placeholder vehicles
+    if (quote.vehicles && Array.isArray(quote.vehicles)) {
+      const realVehicles = quote.vehicles
+        .filter((v: any) => v.make !== 'Placeholder' && !v.vin?.startsWith('PLACEHOLDER'))
+        .map((v: any) => ({
+          id: v.id || 'vehicle-' + v.vin,
+          year: v.year?.toString() || '',
+          make: v.make || '',
+          model: v.model || '',
+          vin: v.vin || '',
+          primaryDriverId: v.primary_driver_id || 'primary',
+        }));
+      setVehicles(realVehicles);
     }
-  }, [navigate]);
+  }, [navigate, quoteNumber, quote]);
 
   const validateVIN = (vin: string): boolean => {
     const vinRegex = /^[A-HJ-NPR-Z0-9]{17}$/;
@@ -137,14 +151,6 @@ const VehiclesList: React.FC = () => {
   const handleRemoveVehicle = (vehicleId: string) => {
     const updatedVehicles = vehicles.filter(v => v.id !== vehicleId);
     setVehicles(updatedVehicles);
-
-    // Update sessionStorage
-    const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-    const updatedData = {
-      ...existingData,
-      vehicles: updatedVehicles,
-    };
-    sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
   };
 
   const handleCancelForm = () => {
@@ -177,14 +183,6 @@ const VehiclesList: React.FC = () => {
           : v
       );
       setVehicles(updatedVehicles);
-
-      // Update sessionStorage
-      const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-      const updatedData = {
-        ...existingData,
-        vehicles: updatedVehicles,
-      };
-      sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
     } else {
       // Add new vehicle
       const newVehicle: VehicleData = {
@@ -193,28 +191,44 @@ const VehiclesList: React.FC = () => {
       };
       const updatedVehicles = [...vehicles, newVehicle];
       setVehicles(updatedVehicles);
-
-      // Update sessionStorage
-      const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-      const updatedData = {
-        ...existingData,
-        vehicles: updatedVehicles,
-      };
-      sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
     }
 
     // Reset form
     handleCancelForm();
   };
 
-  const handleContinue = () => {
+  const handleContinue = async () => {
     if (vehicles.length === 0) {
       alert('Please add at least one vehicle');
       return;
     }
 
-    // Navigate to vehicle confirmation page (mock 3rd party enrichment)
-    navigate('/quote/vehicle-confirmation');
+    if (!quoteNumber) return;
+
+    try {
+      // Convert local vehicle format to API format
+      const apiVehicles = vehicles.map(vehicle => ({
+        year: parseInt(vehicle.year),
+        make: vehicle.make,
+        model: vehicle.model,
+        vin: vehicle.vin || undefined,
+        body_type: 'sedan', // Default
+        annual_mileage: 12000, // Default
+        primary_driver_id: vehicle.primaryDriverId,
+      }));
+
+      // Update quote with vehicles via API
+      await updateQuoteVehicles.mutateAsync({
+        quoteNumber,
+        vehicles: apiVehicles,
+      });
+
+      // Navigate to coverage selection (skip vehicle confirmation for now)
+      navigate(`/quote/coverage-selection/${quoteNumber}`);
+    } catch (error) {
+      console.error('Failed to update vehicles:', error);
+      alert('Failed to update vehicles. Please try again.');
+    }
   };
 
   const getDriverName = (driverId: string): string => {
@@ -237,7 +251,7 @@ const VehiclesList: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  onClick={() => navigate('/quote/additional-drivers')}
+                  onClick={() => navigate(`/quote/additional-drivers/${quoteNumber}`)}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -331,16 +345,16 @@ const VehiclesList: React.FC = () => {
                     value={formData.make}
                     onChange={(value) => setFormData({ ...formData, make: value })}
                     options={[
-                      { label: 'Toyota', value: 'toyota' },
-                      { label: 'Honda', value: 'honda' },
-                      { label: 'Ford', value: 'ford' },
-                      { label: 'Chevrolet', value: 'chevrolet' },
-                      { label: 'Nissan', value: 'nissan' },
-                      { label: 'Tesla', value: 'tesla' },
-                      { label: 'BMW', value: 'bmw' },
-                      { label: 'Mercedes-Benz', value: 'mercedes' },
-                      { label: 'Audi', value: 'audi' },
-                      { label: 'Subaru', value: 'subaru' },
+                      { label: 'Toyota', value: 'Toyota' },
+                      { label: 'Honda', value: 'Honda' },
+                      { label: 'Ford', value: 'Ford' },
+                      { label: 'Chevrolet', value: 'Chevrolet' },
+                      { label: 'Nissan', value: 'Nissan' },
+                      { label: 'Tesla', value: 'Tesla' },
+                      { label: 'BMW', value: 'BMW' },
+                      { label: 'Mercedes-Benz', value: 'Mercedes-Benz' },
+                      { label: 'Audi', value: 'Audi' },
+                      { label: 'Subaru', value: 'Subaru' },
                     ]}
                   />
                 </Form.Row>
@@ -419,8 +433,9 @@ const VehiclesList: React.FC = () => {
                     size="large"
                     variant="primary"
                     isFullWidth
+                    disabled={updateQuoteVehicles.isPending || isLoadingQuote}
                   >
-                    Continue to Verification
+                    {updateQuoteVehicles.isPending ? 'Updating vehicles...' : 'Continue to Coverage Selection'}
                   </Button>
 
                   {/* Multi-car discount indicator */}

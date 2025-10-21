@@ -131,9 +131,15 @@ export class QuoteService {
    * This is the main method that creates a complete quote in one transaction.
    */
   async createQuote(input: CreateQuoteInput): Promise<QuoteResult> {
+    // Get primary vehicle (from legacy field or first vehicle in array)
+    const primaryVehicle = input.vehicle || input.vehicles?.[0];
+    if (!primaryVehicle) {
+      throw new Error('At least one vehicle is required');
+    }
+
     this.logger.log('Creating new quote', {
       driverEmail: input.driver.email,
-      vehicleVin: input.vehicle.vin
+      vehicleVin: primaryVehicle.vin
     });
 
     try {
@@ -171,21 +177,21 @@ export class QuoteService {
       // Step 5: Create Insurable Object (generic object)
       const [newInsurableObject] = await this.db.insert(insurableObject).values({
         insurable_object_type_code: 'VEHICLE',
-        object_description: `${input.vehicle.year} ${input.vehicle.make} ${input.vehicle.model}`,
+        object_description: `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`,
       }).returning();
 
       // Step 6: Create Vehicle (specific vehicle details)
       const vehicleData: any = {
         vehicle_identifier: newInsurableObject.insurable_object_identifier,
-        vin: input.vehicle.vin || null,  // Use null instead of empty string for unique constraint
-        make: input.vehicle.make,
-        model: input.vehicle.model,
-        year: input.vehicle.year,
+        vin: primaryVehicle.vin || null,  // Use null instead of empty string for unique constraint
+        make: primaryVehicle.make,
+        model: primaryVehicle.model,
+        year: primaryVehicle.year,
       };
 
       // Only add optional fields if they have values
-      if (input.vehicle.bodyType) vehicleData.body_style = input.vehicle.bodyType;
-      if (input.vehicle.annualMileage) vehicleData.annual_mileage = input.vehicle.annualMileage;
+      if (primaryVehicle.bodyType) vehicleData.body_style = primaryVehicle.bodyType;
+      if (primaryVehicle.annualMileage) vehicleData.annual_mileage = primaryVehicle.annualMileage;
 
       await this.db.insert(vehicle).values(vehicleData).returning();
 
@@ -441,16 +447,16 @@ export class QuoteService {
   }
 
   /**
-   * Generate quote number in format: QXXXXX (5 random alphanumeric characters)
+   * Generate quote number in format: DZXXXXXXXX (DZ prefix + 8 random alphanumeric characters)
    */
   private generateQuoteNumber(): string {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let suffix = '';
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 8; i++) {
       suffix += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    return `Q${suffix}`;
+    return `DZ${suffix}`;
   }
 
   /**
@@ -465,9 +471,15 @@ export class QuoteService {
     // Base premium starts at $1000
     let basePremium = 1000;
 
+    // Get primary vehicle (from legacy field or first vehicle in array)
+    const primaryVehicle = input.vehicle || input.vehicles?.[0];
+    if (!primaryVehicle) {
+      throw new Error('At least one vehicle is required for premium calculation');
+    }
+
     // Vehicle age factor
     const currentYear = new Date().getFullYear();
-    const vehicleAge = currentYear - input.vehicle.year;
+    const vehicleAge = currentYear - primaryVehicle.year;
     let vehicleFactor = 1.0;
 
     if (vehicleAge <= 3) {
@@ -554,5 +566,609 @@ export class QuoteService {
     const date = new Date();
     date.setDate(date.getDate() + 30);
     return date;
+  }
+
+  /**
+   * Update primary driver information
+   *
+   * This method updates the quote_snapshot with new primary driver and address data,
+   * then recalculates premium (age/gender may affect rates).
+   */
+  async updatePrimaryDriver(
+    quoteNumber: string,
+    driver: {
+      firstName: string;
+      lastName: string;
+      birthDate: Date;
+      email: string;
+      phone: string;
+      gender?: string;
+      maritalStatus?: string;
+    },
+    address: {
+      addressLine1: string;
+      addressLine2?: string;
+      city: string;
+      state: string;
+      zipCode: string;
+    }
+  ): Promise<QuoteResult> {
+    this.logger.log('Updating primary driver for quote', { quoteNumber });
+
+    try {
+      // Fetch existing quote
+      const existingQuote = await this.getQuote(quoteNumber);
+      if (!existingQuote) {
+        throw new NotFoundException(`Quote ${quoteNumber} not found`);
+      }
+
+      // Get the policy record
+      const policyResult = await this.db
+        .select()
+        .from(policy)
+        .where(eq(policy.policy_number, quoteNumber))
+        .limit(1);
+
+      if (!policyResult || policyResult.length === 0) {
+        throw new NotFoundException(`Policy for quote ${quoteNumber} not found`);
+      }
+
+      const policyRecord = policyResult[0];
+      const currentSnapshot = policyRecord.quote_snapshot as any;
+
+      // Build updated snapshot with new primary driver and address
+      const updatedSnapshot = {
+        ...currentSnapshot,
+        driver: {
+          firstName: driver.firstName,
+          lastName: driver.lastName,
+          birthDate: driver.birthDate.toISOString().split('T')[0],
+          email: driver.email,
+          phone: driver.phone,
+          gender: driver.gender || null,
+          maritalStatus: driver.maritalStatus || null,
+        },
+        address: {
+          addressLine1: address.addressLine1,
+          addressLine2: address.addressLine2 || null,
+          city: address.city,
+          state: address.state,
+          zipCode: address.zipCode,
+        },
+        meta: {
+          ...currentSnapshot.meta,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      // Recalculate premium (driver age and gender affect rates)
+      const newPremium = this.calculatePremiumProgressive({
+        driver,
+        additionalDrivers: currentSnapshot.additionalDrivers || [],
+        vehicles: currentSnapshot.vehicles || [],
+        coverages: currentSnapshot.coverages || {},
+      });
+
+      // Update premium in snapshot
+      updatedSnapshot.premium = {
+        total: newPremium,
+        monthly: Math.round(newPremium / 6 * 100) / 100,
+        sixMonth: newPremium,
+      };
+
+      // Update policy record
+      await this.db
+        .update(policy)
+        .set({
+          quote_snapshot: updatedSnapshot,
+        })
+        .where(eq(policy.policy_number, quoteNumber));
+
+      // Update agreement premium
+      await this.db
+        .update(agreement)
+        .set({
+          premium_amount: newPremium.toString(),
+        })
+        .where(eq(agreement.agreement_identifier, policyRecord.policy_identifier));
+
+      this.logger.log('Primary driver updated successfully', { quoteNumber, newPremium });
+
+      return {
+        quoteId: quoteNumber,
+        quoteNumber,
+        premium: newPremium,
+        createdAt: new Date(policyRecord.effective_date),
+        expiresAt: this.calculateQuoteExpiration(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to update primary driver', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote with additional drivers
+   *
+   * This method updates the quote_snapshot with new driver data and recalculates premium.
+   */
+  async updateQuoteDrivers(
+    quoteNumber: string,
+    additionalDrivers: Array<{
+      firstName: string;
+      lastName: string;
+      birthDate: Date;
+      email: string;
+      phone: string;
+      gender?: string;
+      maritalStatus?: string;
+      yearsLicensed?: number;
+      relationship?: string;
+    }>
+  ): Promise<QuoteResult> {
+    this.logger.log('Updating drivers for quote', { quoteNumber, driverCount: additionalDrivers.length });
+
+    try {
+      // Fetch existing quote
+      const existingQuote = await this.getQuote(quoteNumber);
+      if (!existingQuote) {
+        throw new NotFoundException(`Quote ${quoteNumber} not found`);
+      }
+
+      // Get the policy record
+      const policyResult = await this.db
+        .select()
+        .from(policy)
+        .where(eq(policy.policy_number, quoteNumber))
+        .limit(1);
+
+      if (!policyResult || policyResult.length === 0) {
+        throw new NotFoundException(`Policy for quote ${quoteNumber} not found`);
+      }
+
+      const policyRecord = policyResult[0];
+      const currentSnapshot = policyRecord.quote_snapshot as any;
+
+      // Get primary driver email to filter them out
+      const primaryDriverEmail = currentSnapshot.driver?.email;
+
+      // Filter out primary driver from additional drivers (prevent duplicates)
+      const filteredDrivers = additionalDrivers.filter(
+        d => d.email.toLowerCase() !== primaryDriverEmail?.toLowerCase()
+      );
+
+      if (filteredDrivers.length !== additionalDrivers.length) {
+        this.logger.warn('Filtered out primary driver from additional drivers', {
+          quoteNumber,
+          primaryDriverEmail,
+          originalCount: additionalDrivers.length,
+          filteredCount: filteredDrivers.length,
+        });
+      }
+
+      // Build updated snapshot with new drivers
+      const updatedSnapshot = {
+        ...currentSnapshot,
+        additionalDrivers: filteredDrivers.map(d => ({
+          firstName: d.firstName,
+          lastName: d.lastName,
+          birthDate: d.birthDate.toISOString().split('T')[0],
+          email: d.email,
+          phone: d.phone,
+          gender: d.gender || null,
+          maritalStatus: d.maritalStatus || null,
+          yearsLicensed: d.yearsLicensed || null,
+          relationship: d.relationship || null,
+        })),
+        meta: {
+          ...currentSnapshot.meta,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      // Recalculate premium with additional drivers
+      const newPremium = this.calculatePremiumProgressive({
+        driver: currentSnapshot.driver,
+        additionalDrivers,
+        vehicles: currentSnapshot.vehicles,
+        coverages: currentSnapshot.coverages,
+      });
+
+      // Update premium in snapshot
+      updatedSnapshot.premium = {
+        total: newPremium,
+        monthly: Math.round(newPremium / 6 * 100) / 100,
+        sixMonth: newPremium,
+      };
+
+      // Update policy record
+      await this.db
+        .update(policy)
+        .set({
+          quote_snapshot: updatedSnapshot,
+        })
+        .where(eq(policy.policy_number, quoteNumber));
+
+      // Update agreement premium
+      await this.db
+        .update(agreement)
+        .set({
+          premium_amount: newPremium.toString(),
+        })
+        .where(eq(agreement.agreement_identifier, policyRecord.policy_identifier));
+
+      this.logger.log('Drivers updated successfully', { quoteNumber, newPremium });
+
+      return {
+        quoteId: quoteNumber,
+        quoteNumber,
+        premium: newPremium,
+        createdAt: new Date(policyRecord.effective_date),
+        expiresAt: this.calculateQuoteExpiration(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to update drivers', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote with vehicles
+   *
+   * This method updates the quote_snapshot with vehicle data and recalculates premium.
+   */
+  async updateQuoteVehicles(
+    quoteNumber: string,
+    vehicles: Array<{
+      year: number;
+      make: string;
+      model: string;
+      vin: string;
+      bodyType?: string;
+      annualMileage?: number;
+      primaryDriverId?: string;
+    }>
+  ): Promise<QuoteResult> {
+    this.logger.log('Updating vehicles for quote', { quoteNumber, vehicleCount: vehicles.length });
+
+    try {
+      // Fetch existing quote
+      const existingQuote = await this.getQuote(quoteNumber);
+      if (!existingQuote) {
+        throw new NotFoundException(`Quote ${quoteNumber} not found`);
+      }
+
+      // Get the policy record
+      const policyResult = await this.db
+        .select()
+        .from(policy)
+        .where(eq(policy.policy_number, quoteNumber))
+        .limit(1);
+
+      if (!policyResult || policyResult.length === 0) {
+        throw new NotFoundException(`Policy for quote ${quoteNumber} not found`);
+      }
+
+      const policyRecord = policyResult[0];
+      const currentSnapshot = policyRecord.quote_snapshot as any;
+
+      // Build updated snapshot with new vehicles
+      const updatedSnapshot = {
+        ...currentSnapshot,
+        vehicles: vehicles.map(v => ({
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          vin: v.vin || null,
+          bodyType: v.bodyType || null,
+          annualMileage: v.annualMileage || null,
+          primaryDriverId: v.primaryDriverId || null,
+        })),
+        // Also update legacy vehicle field (first vehicle)
+        vehicle: vehicles.length > 0 ? {
+          year: vehicles[0].year,
+          make: vehicles[0].make,
+          model: vehicles[0].model,
+          vin: vehicles[0].vin || null,
+          bodyType: vehicles[0].bodyType || null,
+          annualMileage: vehicles[0].annualMileage || null,
+        } : null,
+        meta: {
+          ...currentSnapshot.meta,
+          updatedAt: new Date().toISOString(),
+        },
+      };
+
+      // Recalculate premium with vehicles (MAJOR FACTOR)
+      const newPremium = this.calculatePremiumProgressive({
+        driver: currentSnapshot.driver,
+        additionalDrivers: currentSnapshot.additionalDrivers || [],
+        vehicles,
+        coverages: currentSnapshot.coverages,
+      });
+
+      // Update premium in snapshot
+      updatedSnapshot.premium = {
+        total: newPremium,
+        monthly: Math.round(newPremium / 6 * 100) / 100,
+        sixMonth: newPremium,
+      };
+
+      // Update policy record
+      await this.db
+        .update(policy)
+        .set({
+          quote_snapshot: updatedSnapshot,
+        })
+        .where(eq(policy.policy_number, quoteNumber));
+
+      // Update agreement premium
+      await this.db
+        .update(agreement)
+        .set({
+          premium_amount: newPremium.toString(),
+        })
+        .where(eq(agreement.agreement_identifier, policyRecord.policy_identifier));
+
+      this.logger.log('Vehicles updated successfully', { quoteNumber, newPremium });
+
+      return {
+        quoteId: quoteNumber,
+        quoteNumber,
+        premium: newPremium,
+        createdAt: new Date(policyRecord.effective_date),
+        expiresAt: this.calculateQuoteExpiration(),
+      };
+    } catch (error) {
+      this.logger.error('Failed to update vehicles', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote with coverage selections and finalize to QUOTED status
+   *
+   * This method updates coverages and changes status from INCOMPLETE → QUOTED.
+   */
+  async updateQuoteCoverage(
+    quoteNumber: string,
+    coverages: {
+      startDate?: string;
+      bodilyInjuryLimit?: string;
+      propertyDamageLimit?: string;
+      collision?: boolean;
+      collisionDeductible?: number;
+      comprehensive?: boolean;
+      comprehensiveDeductible?: number;
+      uninsuredMotorist?: boolean;
+      roadsideAssistance?: boolean;
+      rentalReimbursement?: boolean;
+      rentalLimit?: number;
+    }
+  ): Promise<QuoteResult> {
+    this.logger.log('Updating coverage and finalizing quote', { quoteNumber });
+
+    try {
+      // Fetch existing quote
+      const existingQuote = await this.getQuote(quoteNumber);
+      if (!existingQuote) {
+        throw new NotFoundException(`Quote ${quoteNumber} not found`);
+      }
+
+      // Get the policy record
+      const policyResult = await this.db
+        .select()
+        .from(policy)
+        .where(eq(policy.policy_number, quoteNumber))
+        .limit(1);
+
+      if (!policyResult || policyResult.length === 0) {
+        throw new NotFoundException(`Policy for quote ${quoteNumber} not found`);
+      }
+
+      const policyRecord = policyResult[0];
+      const currentSnapshot = policyRecord.quote_snapshot as any;
+
+      // Build updated snapshot with new coverages
+      const updatedSnapshot = {
+        ...currentSnapshot,
+        coverages: {
+          startDate: coverages.startDate || null,
+          bodilyInjuryLimit: coverages.bodilyInjuryLimit || null,
+          propertyDamageLimit: coverages.propertyDamageLimit || null,
+          hasCollision: coverages.collision || false,
+          collisionDeductible: coverages.collisionDeductible || null,
+          hasComprehensive: coverages.comprehensive || false,
+          comprehensiveDeductible: coverages.comprehensiveDeductible || null,
+          hasUninsured: coverages.uninsuredMotorist || false,
+          hasRoadside: coverages.roadsideAssistance || false,
+          hasRental: coverages.rentalReimbursement || false,
+          rentalLimit: coverages.rentalLimit || null,
+        },
+        meta: {
+          ...currentSnapshot.meta,
+          updatedAt: new Date().toISOString(),
+          finalizedAt: new Date().toISOString(),
+        },
+      };
+
+      // Recalculate final premium with all coverages
+      const newPremium = this.calculatePremiumProgressive({
+        driver: currentSnapshot.driver,
+        additionalDrivers: currentSnapshot.additionalDrivers || [],
+        vehicles: currentSnapshot.vehicles || [],
+        coverages,
+      });
+
+      // Update premium in snapshot
+      updatedSnapshot.premium = {
+        total: newPremium,
+        monthly: Math.round(newPremium / 6 * 100) / 100,
+        sixMonth: newPremium,
+      };
+
+      // Calculate expiration date (30 days from now)
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30);
+
+      // Update policy record - CHANGE STATUS TO QUOTED
+      await this.db
+        .update(policy)
+        .set({
+          quote_snapshot: updatedSnapshot,
+          status_code: 'QUOTED',  // ← Status change from INCOMPLETE to QUOTED
+          expiration_date: expirationDate.toISOString().split('T')[0],
+          coverage_start_date: coverages.startDate || null,
+        })
+        .where(eq(policy.policy_number, quoteNumber));
+
+      // Update agreement premium
+      await this.db
+        .update(agreement)
+        .set({
+          premium_amount: newPremium.toString(),
+        })
+        .where(eq(agreement.agreement_identifier, policyRecord.policy_identifier));
+
+      this.logger.log('Coverage updated and quote finalized', { quoteNumber, newPremium, status: 'QUOTED' });
+
+      return {
+        quoteId: quoteNumber,
+        quoteNumber,
+        premium: newPremium,
+        createdAt: new Date(policyRecord.effective_date),
+        expiresAt: expirationDate,
+      };
+    } catch (error) {
+      this.logger.error('Failed to update coverage', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Calculate premium progressively (supports incomplete data)
+   *
+   * This enhanced version can calculate premium at any stage of the quote flow.
+   */
+  private calculatePremiumProgressive(data: {
+    driver: any;
+    additionalDrivers?: any[];
+    vehicles?: any[];
+    coverages?: any;
+  }): number {
+    // Base premium starts at $1000
+    let basePremium = 1000;
+
+    // Driver age factor (primary driver)
+    const birthDate = new Date(data.driver.birthDate);
+    const age = Math.floor((Date.now() - birthDate.getTime()) / (365.25 * 24 * 60 * 60 * 1000));
+    let driverFactor = 1.0;
+
+    if (age < 25) {
+      driverFactor = 1.8; // Young drivers higher risk
+    } else if (age >= 65) {
+      driverFactor = 1.2; // Senior drivers moderate risk
+    } else {
+      driverFactor = 1.0; // 25-64 baseline
+    }
+
+    // Additional drivers factor
+    let additionalDriversFactor = 1.0;
+    if (data.additionalDrivers && data.additionalDrivers.length > 0) {
+      // Each additional driver adds 15% to premium
+      additionalDriversFactor = 1 + (data.additionalDrivers.length * 0.15);
+    }
+
+    // Vehicle factor (use first vehicle if provided, else assume average)
+    let vehicleFactor = 1.0;
+    if (data.vehicles && data.vehicles.length > 0) {
+      const primaryVehicle = data.vehicles[0];
+      const currentYear = new Date().getFullYear();
+      const vehicleAge = currentYear - primaryVehicle.year;
+
+      if (vehicleAge <= 3) {
+        vehicleFactor = 1.3; // New cars cost more to repair
+      } else if (vehicleAge <= 7) {
+        vehicleFactor = 1.0; // Mid-age baseline
+      } else {
+        vehicleFactor = 0.9; // Older cars less valuable
+      }
+
+      // Multi-car discount (10% off for each additional vehicle)
+      if (data.vehicles.length > 1) {
+        const multiCarDiscount = 0.9 - ((data.vehicles.length - 1) * 0.05);
+        vehicleFactor *= Math.max(multiCarDiscount, 0.75); // Cap at 25% discount
+      }
+    }
+
+    // Coverage factor (use actual if provided, else minimum)
+    let coverageFactor = 1.0;
+    if (data.coverages) {
+      // Bodily Injury Liability - Higher limits cost more
+      const biLimit = data.coverages.bodilyInjuryLimit || data.coverages.bodilyInjuryLimit;
+      if (biLimit === '25/50') coverageFactor += 0.05;       // Minimum
+      else if (biLimit === '50/100') coverageFactor += 0.10;  // Standard
+      else if (biLimit === '100/300') coverageFactor += 0.15; // Recommended (baseline)
+      else if (biLimit === '250/500') coverageFactor += 0.25; // High coverage
+      else coverageFactor += 0.15; // Default to recommended
+
+      // Property Damage Liability - Higher limits cost more
+      const pdLimit = data.coverages.propertyDamageLimit || data.coverages.propertyDamageLimit;
+      if (pdLimit === '25000') coverageFactor += 0.03;      // Minimum
+      else if (pdLimit === '50000') coverageFactor += 0.05; // Standard (baseline)
+      else if (pdLimit === '100000') coverageFactor += 0.08; // High coverage
+      else coverageFactor += 0.05; // Default to standard
+
+      // Collision Coverage - Deductible affects price (higher deductible = lower price)
+      if (data.coverages.collision || data.coverages.hasCollision) {
+        const collDeductible = data.coverages.collisionDeductible || data.coverages.collisionDeductible;
+        if (collDeductible === 250) coverageFactor += 0.35;       // Low deductible = higher premium
+        else if (collDeductible === 500) coverageFactor += 0.30;  // Standard deductible
+        else if (collDeductible === 1000) coverageFactor += 0.25; // High deductible = lower premium
+        else if (collDeductible === 2500) coverageFactor += 0.20; // Very high deductible = much lower premium
+        else coverageFactor += 0.30; // Default to standard
+      }
+
+      // Comprehensive Coverage - Deductible affects price (higher deductible = lower price)
+      if (data.coverages.comprehensive || data.coverages.hasComprehensive) {
+        const compDeductible = data.coverages.comprehensiveDeductible || data.coverages.comprehensiveDeductible;
+        if (compDeductible === 250) coverageFactor += 0.25;       // Low deductible = higher premium
+        else if (compDeductible === 500) coverageFactor += 0.20;  // Standard deductible
+        else if (compDeductible === 1000) coverageFactor += 0.15; // High deductible = lower premium
+        else if (compDeductible === 2500) coverageFactor += 0.10; // Very high deductible = much lower premium
+        else coverageFactor += 0.20; // Default to standard
+      }
+
+      // Uninsured/Underinsured Motorist
+      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) coverageFactor += 0.10;
+
+      // Roadside Assistance
+      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) coverageFactor += 0.05;
+
+      // Rental Reimbursement - Limit affects price
+      if (data.coverages.rentalReimbursement || data.coverages.hasRental) {
+        const rentalLimit = data.coverages.rentalLimit || data.coverages.rentalLimit;
+        if (rentalLimit === 30) coverageFactor += 0.03;      // $30/day
+        else if (rentalLimit === 50) coverageFactor += 0.05; // $50/day
+        else if (rentalLimit === 75) coverageFactor += 0.07; // $75/day
+        else coverageFactor += 0.05; // Default to $50/day
+      }
+    }
+
+    // Calculate total
+    const totalPremium = Math.round(
+      basePremium * vehicleFactor * driverFactor * additionalDriversFactor * coverageFactor
+    );
+
+    this.logger.debug('Progressive premium calculated', {
+      basePremium,
+      vehicleFactor,
+      driverFactor,
+      additionalDriversFactor,
+      coverageFactor,
+      totalPremium,
+    });
+
+    return totalPremium;
   }
 }

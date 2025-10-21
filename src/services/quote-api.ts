@@ -312,21 +312,181 @@ class QuoteApiService {
   }
 
   /**
-   * Update quote coverage
+   * Update primary driver information
    *
-   * PUT /api/v1/quotes/:id/coverage
+   * PUT /api/v1/quotes/:quoteNumber/primary-driver
    *
-   * @param quoteId - Quote identifier
-   * @param coverageData - Updated coverage selections
-   * @returns Promise resolving to updated quote
+   * @param quoteNumber - Quote number (e.g., 'QZ2610')
+   * @param driverData - Updated primary driver and address data
+   * @returns Promise resolving to updated quote with new premium
    */
-  async updateQuoteCoverage(
-    quoteId: string,
-    coverageData: Partial<CreateQuoteRequest>
+  async updatePrimaryDriver(
+    quoteNumber: string,
+    driverData: {
+      driver_first_name: string;
+      driver_last_name: string;
+      driver_birth_date: string;
+      driver_email: string;
+      driver_phone: string;
+      driver_gender?: string;
+      driver_marital_status?: string;
+      address_line_1: string;
+      address_line_2?: string;
+      address_city: string;
+      address_state: string;
+      address_zip: string;
+    }
   ): Promise<QuoteResponse> {
     try {
       const response = await fetch(
-        `${this.baseUrl}/quotes/${quoteId}/coverage`,
+        `${this.baseUrl}/quotes/${quoteNumber}/primary-driver`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(driverData),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update primary driver');
+      }
+
+      const result = await response.json();
+      return result;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error updating primary driver:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote with additional drivers
+   *
+   * PUT /api/v1/quotes/:quoteNumber/drivers
+   *
+   * @param quoteNumber - Quote number (e.g., 'QZ2610')
+   * @param additionalDrivers - Array of additional drivers to add
+   * @returns Promise resolving to updated quote with new premium
+   */
+  async updateQuoteDrivers(
+    quoteNumber: string,
+    additionalDrivers: Array<{
+      first_name: string;
+      last_name: string;
+      birth_date: string;
+      email: string;
+      phone: string;
+      gender?: string;
+      marital_status?: string;
+      years_licensed?: number;
+      relationship?: string;
+    }>
+  ): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/${quoteNumber}/drivers`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ additionalDrivers }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update drivers');
+      }
+
+      const result = await response.json();
+      return result;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error updating drivers:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote with vehicles
+   *
+   * PUT /api/v1/quotes/:quoteNumber/vehicles
+   *
+   * @param quoteNumber - Quote number (e.g., 'QZ2610')
+   * @param vehicles - Array of vehicles to add/update
+   * @returns Promise resolving to updated quote with new premium
+   */
+  async updateQuoteVehicles(
+    quoteNumber: string,
+    vehicles: Array<{
+      year: number;
+      make: string;
+      model: string;
+      vin?: string;
+      body_type?: string;
+      annual_mileage?: number;
+      primary_driver_id?: string;
+    }>
+  ): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/${quoteNumber}/vehicles`,
+        {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ vehicles }),
+        }
+      );
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to update vehicles');
+      }
+
+      const result = await response.json();
+      return result;
+
+    } catch (error) {
+      console.error('[QuoteAPI] Error updating vehicles:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Update quote coverage and finalize quote
+   *
+   * PUT /api/v1/quotes/:quoteNumber/coverage
+   *
+   * @param quoteNumber - Quote number (e.g., 'QZ2610')
+   * @param coverageData - Updated coverage selections
+   * @returns Promise resolving to updated quote (status: QUOTED)
+   */
+  async updateQuoteCoverage(
+    quoteNumber: string,
+    coverageData: {
+      coverage_start_date?: string;
+      coverage_bodily_injury_limit?: string;
+      coverage_property_damage_limit?: string;
+      coverage_collision?: boolean;
+      coverage_collision_deductible?: number;
+      coverage_comprehensive?: boolean;
+      coverage_comprehensive_deductible?: number;
+      coverage_uninsured_motorist?: boolean;
+      coverage_roadside_assistance?: boolean;
+      coverage_rental_reimbursement?: boolean;
+      coverage_rental_limit?: number;
+    }
+  ): Promise<QuoteResponse> {
+    try {
+      const response = await fetch(
+        `${this.baseUrl}/quotes/${quoteNumber}/coverage`,
         {
           method: 'PUT',
           headers: {

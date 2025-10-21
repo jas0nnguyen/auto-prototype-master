@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -19,6 +19,7 @@ import {
   ChevronLeft,
   Card,
 } from '@sureapp/canary-design-system';
+import { useQuoteByNumber, useUpdateQuoteDrivers } from '../../hooks/useQuote';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -34,6 +35,10 @@ interface AdditionalDriverData {
 
 const AdditionalDrivers: React.FC = () => {
   const navigate = useNavigate();
+  const { quoteNumber } = useParams<{ quoteNumber: string }>();
+  const updateQuoteDrivers = useUpdateQuoteDrivers();
+  const { data: quote, isLoading: isLoadingQuote } = useQuoteByNumber(quoteNumber);
+
   const [drivers, setDrivers] = useState<AdditionalDriverData[]>([]);
   const [isAddingDriver, setIsAddingDriver] = useState(false);
   const [editingDriverId, setEditingDriverId] = useState<string | null>(null);
@@ -46,26 +51,28 @@ const AdditionalDrivers: React.FC = () => {
     yearsLicensed: undefined,
   });
 
-  // Check if primary driver exists (this is second step)
+  // Load existing additional drivers from the quote
   useEffect(() => {
-    const quoteData = sessionStorage.getItem('quoteData');
-    if (!quoteData) {
-      // Redirect back to driver info if no data
+    if (!quoteNumber) {
+      // Redirect back to driver info if no quote number
       navigate('/quote/driver-info');
       return;
     }
 
-    const parsedData = JSON.parse(quoteData);
-    if (!parsedData.primaryDriver) {
-      navigate('/quote/driver-info');
-      return;
+    // Load existing additional drivers from quote if any
+    if (quote?.additionalDrivers && Array.isArray(quote.additionalDrivers)) {
+      const mappedDrivers = quote.additionalDrivers.map((driver, index) => ({
+        id: driver.email || `driver-${index}`, // Use email as unique ID or fallback to index
+        firstName: driver.firstName || '',
+        lastName: driver.lastName || '',
+        dob: driver.birthDate || '',
+        gender: driver.gender || '',
+        relationship: driver.relationship || 'other',
+        yearsLicensed: driver.yearsLicensed,
+      }));
+      setDrivers(mappedDrivers);
     }
-
-    // Load existing additional drivers if any
-    if (parsedData.additionalDrivers && Array.isArray(parsedData.additionalDrivers)) {
-      setDrivers(parsedData.additionalDrivers);
-    }
-  }, [navigate]);
+  }, [navigate, quoteNumber, quote]);
 
   const handleAddDriver = () => {
     setIsAddingDriver(true);
@@ -96,14 +103,6 @@ const AdditionalDrivers: React.FC = () => {
   const handleRemoveDriver = (driverId: string) => {
     const updatedDrivers = drivers.filter(d => d.id !== driverId);
     setDrivers(updatedDrivers);
-
-    // Update sessionStorage
-    const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-    const updatedData = {
-      ...existingData,
-      additionalDrivers: updatedDrivers,
-    };
-    sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
   };
 
   const handleCancelForm = () => {
@@ -130,14 +129,6 @@ const AdditionalDrivers: React.FC = () => {
           : d
       );
       setDrivers(updatedDrivers);
-
-      // Update sessionStorage
-      const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-      const updatedData = {
-        ...existingData,
-        additionalDrivers: updatedDrivers,
-      };
-      sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
     } else {
       // Add new driver
       const newDriver: AdditionalDriverData = {
@@ -146,24 +137,41 @@ const AdditionalDrivers: React.FC = () => {
       };
       const updatedDrivers = [...drivers, newDriver];
       setDrivers(updatedDrivers);
-
-      // Update sessionStorage
-      const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-      const updatedData = {
-        ...existingData,
-        additionalDrivers: updatedDrivers,
-      };
-      sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
     }
 
     // Reset form
     handleCancelForm();
   };
 
-  const handleContinue = () => {
-    // Save current state to sessionStorage (already saved when adding/removing drivers)
-    // Navigate to vehicles page (next step)
-    navigate('/quote/vehicles');
+  const handleContinue = async () => {
+    if (!quoteNumber) return;
+
+    try {
+      // Convert local driver format to API format
+      const additionalDrivers = drivers.map(driver => ({
+        first_name: driver.firstName,
+        last_name: driver.lastName,
+        birth_date: driver.dob,
+        email: `${driver.firstName.toLowerCase()}.${driver.lastName.toLowerCase()}@example.com`,
+        phone: '555-0000', // Placeholder
+        gender: driver.gender,
+        marital_status: 'single', // Default
+        years_licensed: driver.yearsLicensed || 0,
+        relationship: driver.relationship,
+      }));
+
+      // Update quote with additional drivers via API
+      await updateQuoteDrivers.mutateAsync({
+        quoteNumber,
+        additionalDrivers,
+      });
+
+      // Navigate to vehicles page with quote number
+      navigate(`/quote/vehicles/${quoteNumber}`);
+    } catch (error) {
+      console.error('Failed to update additional drivers:', error);
+      alert('Failed to update drivers. Please try again.');
+    }
   };
 
   return (
@@ -181,7 +189,7 @@ const AdditionalDrivers: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  onClick={() => navigate('/quote/driver-info')}
+                  onClick={() => navigate(`/quote/driver-info/${quoteNumber}`)}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -358,8 +366,9 @@ const AdditionalDrivers: React.FC = () => {
                   size="large"
                   variant="primary"
                   isFullWidth
+                  disabled={updateQuoteDrivers.isPending || isLoadingQuote}
                 >
-                  Continue to Vehicles
+                  {updateQuoteDrivers.isPending ? 'Updating drivers...' : 'Continue to Vehicles'}
                 </Button>
               </div>
 
