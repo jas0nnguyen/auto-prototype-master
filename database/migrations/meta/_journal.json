@@ -22,6 +22,13 @@
       "when": 1761011132463,
       "tag": "0002_pink_mole_man",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1761027543118,
+      "tag": "0003_nice_echo",
+      "breakpoints": true
     }
   ]
 }

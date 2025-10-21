@@ -48,5 +48,11 @@ export * from './assessment.schema';
 // Account-Agreement Relationship
 export * from './account-agreement.schema';
 
+// Payment, Event & Document Entities (Phase 4 - US2)
+export * from './payment.schema';
+export * from './event.schema';
+export * from './policy-event.schema';
+export * from './document.schema';
+
 // Base Schema Utilities
 export * from './_base.schema';

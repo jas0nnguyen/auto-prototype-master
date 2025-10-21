@@ -1,0 +1,2871 @@
+{
+  "id": "4bb0e6d0-1365-4df6-a2eb-ee8895095f33",
+  "prevId": "93e823ba-902e-4601-9f14-185c9b37c919",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.account_agreement": {
+      "name": "account_agreement",
+      "schema": "",
+      "columns": {
+        "account_agreement_identifier": {
+          "name": "account_agreement_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "account_identifier": {
+          "name": "account_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agreement_identifier": {
+          "name": "agreement_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "relationship_type": {
+          "name": "relationship_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_agreement_account_identifier_account_account_identifier_fk": {
+          "name": "account_agreement_account_identifier_account_account_identifier_fk",
+          "tableFrom": "account_agreement",
+          "tableTo": "account",
+          "columnsFrom": [
+            "account_identifier"
+          ],
+          "columnsTo": [
+            "account_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "account_agreement_agreement_identifier_agreement_agreement_identifier_fk": {
+          "name": "account_agreement_agreement_identifier_agreement_agreement_identifier_fk",
+          "tableFrom": "account_agreement",
+          "tableTo": "agreement",
+          "columnsFrom": [
+            "agreement_identifier"
+          ],
+          "columnsTo": [
+            "agreement_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.account": {
+      "name": "account",
+      "schema": "",
+      "columns": {
+        "account_identifier": {
+          "name": "account_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "account_type_code": {
+          "name": "account_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "account_name": {
+          "name": "account_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.agreement": {
+      "name": "agreement",
+      "schema": "",
+      "columns": {
+        "agreement_identifier": {
+          "name": "agreement_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "agreement_type_code": {
+          "name": "agreement_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "agreement_name": {
+          "name": "agreement_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "agreement_original_inception_date": {
+          "name": "agreement_original_inception_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "product_identifier": {
+          "name": "product_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "driver_email": {
+          "name": "driver_email",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "premium_amount": {
+          "name": "premium_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "agreement_product_identifier_product_product_identifier_fk": {
+          "name": "agreement_product_identifier_product_product_identifier_fk",
+          "tableFrom": "agreement",
+          "tableTo": "product",
+          "columnsFrom": [
+            "product_identifier"
+          ],
+          "columnsTo": [
+            "product_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.assessment": {
+      "name": "assessment",
+      "schema": "",
+      "columns": {
+        "assessment_identifier": {
+          "name": "assessment_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "damage_description": {
+          "name": "damage_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "estimated_amount": {
+          "name": "estimated_amount",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "assessment_date": {
+          "name": "assessment_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assessment_type": {
+          "name": "assessment_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "assessor_party_id": {
+          "name": "assessor_party_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "assessment_assessor_party_id_party_party_identifier_fk": {
+          "name": "assessment_assessor_party_id_party_party_identifier_fk",
+          "tableFrom": "assessment",
+          "tableTo": "party",
+          "columnsFrom": [
+            "assessor_party_id"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.communication_identity": {
+      "name": "communication_identity",
+      "schema": "",
+      "columns": {
+        "communication_identifier": {
+          "name": "communication_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "communication_type_code": {
+          "name": "communication_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "communication_value": {
+          "name": "communication_value",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "communication_qualifier_value": {
+          "name": "communication_qualifier_value",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "party_identifier": {
+          "name": "party_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geographic_location_identifier": {
+          "name": "geographic_location_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "communication_identity_party_identifier_party_party_identifier_fk": {
+          "name": "communication_identity_party_identifier_party_party_identifier_fk",
+          "tableFrom": "communication_identity",
+          "tableTo": "party",
+          "columnsFrom": [
+            "party_identifier"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "communication_identity_geographic_location_identifier_geographic_location_geographic_location_identifier_fk": {
+          "name": "communication_identity_geographic_location_identifier_geographic_location_geographic_location_identifier_fk",
+          "tableFrom": "communication_identity",
+          "tableTo": "geographic_location",
+          "columnsFrom": [
+            "geographic_location_identifier"
+          ],
+          "columnsTo": [
+            "geographic_location_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.coverage_part": {
+      "name": "coverage_part",
+      "schema": "",
+      "columns": {
+        "coverage_part_identifier": {
+          "name": "coverage_part_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "coverage_part_code": {
+          "name": "coverage_part_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_part_name": {
+          "name": "coverage_part_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_part_description": {
+          "name": "coverage_part_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coverage_category": {
+          "name": "coverage_category",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_required": {
+          "name": "is_required",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'false'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "coverage_part_coverage_part_code_unique": {
+          "name": "coverage_part_coverage_part_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "coverage_part_code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.coverage": {
+      "name": "coverage",
+      "schema": "",
+      "columns": {
+        "coverage_identifier": {
+          "name": "coverage_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "coverage_code": {
+          "name": "coverage_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_name": {
+          "name": "coverage_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_description": {
+          "name": "coverage_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coverage_part_identifier": {
+          "name": "coverage_part_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_identifier": {
+          "name": "product_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "coverage_coverage_part_identifier_coverage_part_coverage_part_identifier_fk": {
+          "name": "coverage_coverage_part_identifier_coverage_part_coverage_part_identifier_fk",
+          "tableFrom": "coverage",
+          "tableTo": "coverage_part",
+          "columnsFrom": [
+            "coverage_part_identifier"
+          ],
+          "columnsTo": [
+            "coverage_part_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "coverage_product_identifier_product_product_identifier_fk": {
+          "name": "coverage_product_identifier_product_product_identifier_fk",
+          "tableFrom": "coverage",
+          "tableTo": "product",
+          "columnsFrom": [
+            "product_identifier"
+          ],
+          "columnsTo": [
+            "product_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.discount": {
+      "name": "discount",
+      "schema": "",
+      "columns": {
+        "discount_identifier": {
+          "name": "discount_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discount_code": {
+          "name": "discount_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discount_name": {
+          "name": "discount_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discount_description": {
+          "name": "discount_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discount_type": {
+          "name": "discount_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discount_percentage": {
+          "name": "discount_percentage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "discount_amount": {
+          "name": "discount_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "discount_policy_identifier_policy_policy_identifier_fk": {
+          "name": "discount_policy_identifier_policy_policy_identifier_fk",
+          "tableFrom": "discount",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.document": {
+      "name": "document",
+      "schema": "",
+      "columns": {
+        "document_id": {
+          "name": "document_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_id": {
+          "name": "policy_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "claim_id": {
+          "name": "claim_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "document_number": {
+          "name": "document_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_type": {
+          "name": "document_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "document_name": {
+          "name": "document_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "storage_url": {
+          "name": "storage_url",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_size": {
+          "name": "file_size",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mime_type": {
+          "name": "mime_type",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "description": {
+          "name": "description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "generated_at": {
+          "name": "generated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "expires_at": {
+          "name": "expires_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "document_policy_id_policy_policy_identifier_fk": {
+          "name": "document_policy_id_policy_policy_identifier_fk",
+          "tableFrom": "document",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_id"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "document_document_number_unique": {
+          "name": "document_document_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "document_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.event": {
+      "name": "event",
+      "schema": "",
+      "columns": {
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_type": {
+          "name": "event_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "event_subtype": {
+          "name": "event_subtype",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_date": {
+          "name": "event_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "event_data": {
+          "name": "event_data",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "event_description": {
+          "name": "event_description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actor_id": {
+          "name": "actor_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "actor_type": {
+          "name": "actor_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.geographic_location": {
+      "name": "geographic_location",
+      "schema": "",
+      "columns": {
+        "geographic_location_identifier": {
+          "name": "geographic_location_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "geographic_location_type_code": {
+          "name": "geographic_location_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_code": {
+          "name": "location_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_name": {
+          "name": "location_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_number": {
+          "name": "location_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state_code": {
+          "name": "state_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "parent_geographic_location_identifier": {
+          "name": "parent_geographic_location_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_address_identifier": {
+          "name": "location_address_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "physical_location_identifier": {
+          "name": "physical_location_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.insurable_object": {
+      "name": "insurable_object",
+      "schema": "",
+      "columns": {
+        "insurable_object_identifier": {
+          "name": "insurable_object_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "insurable_object_type_code": {
+          "name": "insurable_object_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "object_name": {
+          "name": "object_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "object_description": {
+          "name": "object_description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.location_address": {
+      "name": "location_address",
+      "schema": "",
+      "columns": {
+        "location_address_identifier": {
+          "name": "location_address_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "line_1_address": {
+          "name": "line_1_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "line_2_address": {
+          "name": "line_2_address",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "municipality_name": {
+          "name": "municipality_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state_code": {
+          "name": "state_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "postal_code": {
+          "name": "postal_code",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "country_code": {
+          "name": "country_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'USA'"
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.account_party_role": {
+      "name": "account_party_role",
+      "schema": "",
+      "columns": {
+        "account_party_role_identifier": {
+          "name": "account_party_role_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "account_identifier": {
+          "name": "account_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_identifier": {
+          "name": "party_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_role_code": {
+          "name": "party_role_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "account_party_role_account_identifier_account_account_identifier_fk": {
+          "name": "account_party_role_account_identifier_account_account_identifier_fk",
+          "tableFrom": "account_party_role",
+          "tableTo": "account",
+          "columnsFrom": [
+            "account_identifier"
+          ],
+          "columnsTo": [
+            "account_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "account_party_role_party_identifier_party_party_identifier_fk": {
+          "name": "account_party_role_party_identifier_party_party_identifier_fk",
+          "tableFrom": "account_party_role",
+          "tableTo": "party",
+          "columnsFrom": [
+            "party_identifier"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.agreement_party_role": {
+      "name": "agreement_party_role",
+      "schema": "",
+      "columns": {
+        "agreement_party_role_identifier": {
+          "name": "agreement_party_role_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "agreement_identifier": {
+          "name": "agreement_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_identifier": {
+          "name": "party_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_role_code": {
+          "name": "party_role_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "agreement_party_role_agreement_identifier_agreement_agreement_identifier_fk": {
+          "name": "agreement_party_role_agreement_identifier_agreement_agreement_identifier_fk",
+          "tableFrom": "agreement_party_role",
+          "tableTo": "agreement",
+          "columnsFrom": [
+            "agreement_identifier"
+          ],
+          "columnsTo": [
+            "agreement_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "agreement_party_role_party_identifier_party_party_identifier_fk": {
+          "name": "agreement_party_role_party_identifier_party_party_identifier_fk",
+          "tableFrom": "agreement_party_role",
+          "tableTo": "party",
+          "columnsFrom": [
+            "party_identifier"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.insurable_object_party_role": {
+      "name": "insurable_object_party_role",
+      "schema": "",
+      "columns": {
+        "insurable_object_party_role_identifier": {
+          "name": "insurable_object_party_role_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "insurable_object_identifier": {
+          "name": "insurable_object_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_identifier": {
+          "name": "party_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_role_code": {
+          "name": "party_role_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "insurable_object_party_role_insurable_object_identifier_insurable_object_insurable_object_identifier_fk": {
+          "name": "insurable_object_party_role_insurable_object_identifier_insurable_object_insurable_object_identifier_fk",
+          "tableFrom": "insurable_object_party_role",
+          "tableTo": "insurable_object",
+          "columnsFrom": [
+            "insurable_object_identifier"
+          ],
+          "columnsTo": [
+            "insurable_object_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "insurable_object_party_role_party_identifier_party_party_identifier_fk": {
+          "name": "insurable_object_party_role_party_identifier_party_party_identifier_fk",
+          "tableFrom": "insurable_object_party_role",
+          "tableTo": "party",
+          "columnsFrom": [
+            "party_identifier"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.party": {
+      "name": "party",
+      "schema": "",
+      "columns": {
+        "party_identifier": {
+          "name": "party_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "party_name": {
+          "name": "party_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "party_type_code": {
+          "name": "party_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "begin_date": {
+          "name": "begin_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "end_date": {
+          "name": "end_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.payment": {
+      "name": "payment",
+      "schema": "",
+      "columns": {
+        "payment_id": {
+          "name": "payment_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_id": {
+          "name": "policy_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_number": {
+          "name": "payment_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_method": {
+          "name": "payment_method",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "payment_status": {
+          "name": "payment_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount": {
+          "name": "amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "last_four_digits": {
+          "name": "last_four_digits",
+          "type": "varchar(4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "card_brand": {
+          "name": "card_brand",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "account_type": {
+          "name": "account_type",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transaction_id": {
+          "name": "transaction_id",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gateway_response": {
+          "name": "gateway_response",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "payment_date": {
+          "name": "payment_date",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "processed_at": {
+          "name": "processed_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "payment_policy_id_policy_policy_identifier_fk": {
+          "name": "payment_policy_id_policy_policy_identifier_fk",
+          "tableFrom": "payment",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_id"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "payment_payment_number_unique": {
+          "name": "payment_payment_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "payment_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.person": {
+      "name": "person",
+      "schema": "",
+      "columns": {
+        "person_identifier": {
+          "name": "person_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "prefix_name": {
+          "name": "prefix_name",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "first_name": {
+          "name": "first_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "middle_name": {
+          "name": "middle_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "last_name": {
+          "name": "last_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "suffix_name": {
+          "name": "suffix_name",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "full_legal_name": {
+          "name": "full_legal_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "nickname": {
+          "name": "nickname",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "birth_date": {
+          "name": "birth_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "birth_place_name": {
+          "name": "birth_place_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "gender_code": {
+          "name": "gender_code",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "person_person_identifier_party_party_identifier_fk": {
+          "name": "person_person_identifier_party_party_identifier_fk",
+          "tableFrom": "person",
+          "tableTo": "party",
+          "columnsFrom": [
+            "person_identifier"
+          ],
+          "columnsTo": [
+            "party_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy_amount": {
+      "name": "policy_amount",
+      "schema": "",
+      "columns": {
+        "policy_amount_identifier": {
+          "name": "policy_amount_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "geographic_location_identifier": {
+          "name": "geographic_location_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "amount_type_code": {
+          "name": "amount_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "amount_value": {
+          "name": "amount_value",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "currency_code": {
+          "name": "currency_code",
+          "type": "varchar(3)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'USD'"
+        },
+        "amount_description": {
+          "name": "amount_description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_amount_policy_identifier_policy_policy_identifier_fk": {
+          "name": "policy_amount_policy_identifier_policy_policy_identifier_fk",
+          "tableFrom": "policy_amount",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "policy_amount_geographic_location_identifier_geographic_location_geographic_location_identifier_fk": {
+          "name": "policy_amount_geographic_location_identifier_geographic_location_geographic_location_identifier_fk",
+          "tableFrom": "policy_amount",
+          "tableTo": "geographic_location",
+          "columnsFrom": [
+            "geographic_location_identifier"
+          ],
+          "columnsTo": [
+            "geographic_location_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy_coverage_detail": {
+      "name": "policy_coverage_detail",
+      "schema": "",
+      "columns": {
+        "policy_coverage_detail_identifier": {
+          "name": "policy_coverage_detail_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_identifier": {
+          "name": "coverage_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "insurable_object_identifier": {
+          "name": "insurable_object_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiration_date": {
+          "name": "expiration_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "coverage_description": {
+          "name": "coverage_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "is_included": {
+          "name": "is_included",
+          "type": "varchar(10)",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'true'"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_coverage_detail_policy_identifier_policy_policy_identifier_fk": {
+          "name": "policy_coverage_detail_policy_identifier_policy_policy_identifier_fk",
+          "tableFrom": "policy_coverage_detail",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "policy_coverage_detail_coverage_identifier_coverage_coverage_identifier_fk": {
+          "name": "policy_coverage_detail_coverage_identifier_coverage_coverage_identifier_fk",
+          "tableFrom": "policy_coverage_detail",
+          "tableTo": "coverage",
+          "columnsFrom": [
+            "coverage_identifier"
+          ],
+          "columnsTo": [
+            "coverage_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        },
+        "policy_coverage_detail_insurable_object_identifier_insurable_object_insurable_object_identifier_fk": {
+          "name": "policy_coverage_detail_insurable_object_identifier_insurable_object_insurable_object_identifier_fk",
+          "tableFrom": "policy_coverage_detail",
+          "tableTo": "insurable_object",
+          "columnsFrom": [
+            "insurable_object_identifier"
+          ],
+          "columnsTo": [
+            "insurable_object_identifier"
+          ],
+          "onDelete": "no action",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy_deductible": {
+      "name": "policy_deductible",
+      "schema": "",
+      "columns": {
+        "policy_deductible_identifier": {
+          "name": "policy_deductible_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_coverage_detail_identifier": {
+          "name": "policy_coverage_detail_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deductible_type_code": {
+          "name": "deductible_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deductible_amount": {
+          "name": "deductible_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "deductible_description": {
+          "name": "deductible_description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_deductible_policy_coverage_detail_identifier_policy_coverage_detail_policy_coverage_detail_identifier_fk": {
+          "name": "policy_deductible_policy_coverage_detail_identifier_policy_coverage_detail_policy_coverage_detail_identifier_fk",
+          "tableFrom": "policy_deductible",
+          "tableTo": "policy_coverage_detail",
+          "columnsFrom": [
+            "policy_coverage_detail_identifier"
+          ],
+          "columnsTo": [
+            "policy_coverage_detail_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy_event": {
+      "name": "policy_event",
+      "schema": "",
+      "columns": {
+        "policy_event_id": {
+          "name": "policy_event_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "event_id": {
+          "name": "event_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "policy_id": {
+          "name": "policy_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "previous_status": {
+          "name": "previous_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "new_status": {
+          "name": "new_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "change_reason": {
+          "name": "change_reason",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_event_event_id_event_event_id_fk": {
+          "name": "policy_event_event_id_event_event_id_fk",
+          "tableFrom": "policy_event",
+          "tableTo": "event",
+          "columnsFrom": [
+            "event_id"
+          ],
+          "columnsTo": [
+            "event_id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "policy_event_policy_id_policy_policy_identifier_fk": {
+          "name": "policy_event_policy_id_policy_policy_identifier_fk",
+          "tableFrom": "policy_event",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_id"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy_limit": {
+      "name": "policy_limit",
+      "schema": "",
+      "columns": {
+        "policy_limit_identifier": {
+          "name": "policy_limit_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_coverage_detail_identifier": {
+          "name": "policy_coverage_detail_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "limit_type_code": {
+          "name": "limit_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "limit_amount": {
+          "name": "limit_amount",
+          "type": "numeric(12, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "limit_description": {
+          "name": "limit_description",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_limit_policy_coverage_detail_identifier_policy_coverage_detail_policy_coverage_detail_identifier_fk": {
+          "name": "policy_limit_policy_coverage_detail_identifier_policy_coverage_detail_policy_coverage_detail_identifier_fk",
+          "tableFrom": "policy_limit",
+          "tableTo": "policy_coverage_detail",
+          "columnsFrom": [
+            "policy_coverage_detail_identifier"
+          ],
+          "columnsTo": [
+            "policy_coverage_detail_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.policy": {
+      "name": "policy",
+      "schema": "",
+      "columns": {
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "policy_number": {
+          "name": "policy_number",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiration_date": {
+          "name": "expiration_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status_code": {
+          "name": "status_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "quote_snapshot": {
+          "name": "quote_snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "marital_status": {
+          "name": "marital_status",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coverage_start_date": {
+          "name": "coverage_start_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "policy_policy_identifier_agreement_agreement_identifier_fk": {
+          "name": "policy_policy_identifier_agreement_agreement_identifier_fk",
+          "tableFrom": "policy",
+          "tableTo": "agreement",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "agreement_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "policy_policy_number_unique": {
+          "name": "policy_policy_number_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "policy_number"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.premium_calculation": {
+      "name": "premium_calculation",
+      "schema": "",
+      "columns": {
+        "premium_calculation_identifier": {
+          "name": "premium_calculation_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "base_premium": {
+          "name": "base_premium",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "vehicle_factors": {
+          "name": "vehicle_factors",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "driver_factors": {
+          "name": "driver_factors",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "location_factors": {
+          "name": "location_factors",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "coverage_factors": {
+          "name": "coverage_factors",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "discounts_applied": {
+          "name": "discounts_applied",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surcharges_applied": {
+          "name": "surcharges_applied",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_factor_multiplier": {
+          "name": "total_factor_multiplier",
+          "type": "numeric(8, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subtotal_before_discounts": {
+          "name": "subtotal_before_discounts",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_discount_amount": {
+          "name": "total_discount_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_surcharge_amount": {
+          "name": "total_surcharge_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "premium_tax_percentage": {
+          "name": "premium_tax_percentage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "premium_tax_amount": {
+          "name": "premium_tax_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "policy_fee_amount": {
+          "name": "policy_fee_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "dmv_fee_amount": {
+          "name": "dmv_fee_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "total_premium": {
+          "name": "total_premium",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "calculation_timestamp": {
+          "name": "calculation_timestamp",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "calculation_version": {
+          "name": "calculation_version",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "calculation_notes": {
+          "name": "calculation_notes",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "premium_calculation_policy_identifier_policy_policy_identifier_fk": {
+          "name": "premium_calculation_policy_identifier_policy_policy_identifier_fk",
+          "tableFrom": "premium_calculation",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.product": {
+      "name": "product",
+      "schema": "",
+      "columns": {
+        "product_identifier": {
+          "name": "product_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "line_of_business_identifier": {
+          "name": "line_of_business_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "licensed_product_name": {
+          "name": "licensed_product_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "product_description": {
+          "name": "product_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "product_licensed_product_name_unique": {
+          "name": "product_licensed_product_name_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "licensed_product_name"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rating_factor": {
+      "name": "rating_factor",
+      "schema": "",
+      "columns": {
+        "rating_factor_identifier": {
+          "name": "rating_factor_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "factor_name": {
+          "name": "factor_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "factor_category": {
+          "name": "factor_category",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "factor_code": {
+          "name": "factor_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "factor_value": {
+          "name": "factor_value",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "factor_weight": {
+          "name": "factor_weight",
+          "type": "numeric(5, 4)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "factor_description": {
+          "name": "factor_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.rating_table": {
+      "name": "rating_table",
+      "schema": "",
+      "columns": {
+        "rating_table_identifier": {
+          "name": "rating_table_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "table_name": {
+          "name": "table_name",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "table_code": {
+          "name": "table_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "table_type": {
+          "name": "table_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "table_description": {
+          "name": "table_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lookup_key_1": {
+          "name": "lookup_key_1",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lookup_key_2": {
+          "name": "lookup_key_2",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lookup_key_3": {
+          "name": "lookup_key_3",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "rate_value": {
+          "name": "rate_value",
+          "type": "numeric(10, 4)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "effective_date": {
+          "name": "effective_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expiration_date": {
+          "name": "expiration_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "rating_table_table_code_unique": {
+          "name": "rating_table_table_code_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "table_code"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.surcharge": {
+      "name": "surcharge",
+      "schema": "",
+      "columns": {
+        "surcharge_identifier": {
+          "name": "surcharge_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "policy_identifier": {
+          "name": "policy_identifier",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surcharge_code": {
+          "name": "surcharge_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "surcharge_name": {
+          "name": "surcharge_name",
+          "type": "varchar(255)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "surcharge_description": {
+          "name": "surcharge_description",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surcharge_type": {
+          "name": "surcharge_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "surcharge_percentage": {
+          "name": "surcharge_percentage",
+          "type": "numeric(5, 2)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "surcharge_amount": {
+          "name": "surcharge_amount",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "surcharge_policy_identifier_policy_policy_identifier_fk": {
+          "name": "surcharge_policy_identifier_policy_policy_identifier_fk",
+          "tableFrom": "surcharge",
+          "tableTo": "policy",
+          "columnsFrom": [
+            "policy_identifier"
+          ],
+          "columnsTo": [
+            "policy_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.vehicle": {
+      "name": "vehicle",
+      "schema": "",
+      "columns": {
+        "vehicle_identifier": {
+          "name": "vehicle_identifier",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "vin": {
+          "name": "vin",
+          "type": "varchar(17)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "license_plate_number": {
+          "name": "license_plate_number",
+          "type": "varchar(20)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "license_plate_state_code": {
+          "name": "license_plate_state_code",
+          "type": "varchar(2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "year": {
+          "name": "year",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "make": {
+          "name": "make",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "model": {
+          "name": "model",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "body_style": {
+          "name": "body_style",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "vehicle_type_code": {
+          "name": "vehicle_type_code",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engine_type": {
+          "name": "engine_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "engine_displacement": {
+          "name": "engine_displacement",
+          "type": "numeric(5, 1)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "fuel_type": {
+          "name": "fuel_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "transmission_type": {
+          "name": "transmission_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "purchase_date": {
+          "name": "purchase_date",
+          "type": "date",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "purchase_price": {
+          "name": "purchase_price",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "current_value": {
+          "name": "current_value",
+          "type": "numeric(10, 2)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "odometer_reading": {
+          "name": "odometer_reading",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "annual_mileage": {
+          "name": "annual_mileage",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "primary_use": {
+          "name": "primary_use",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "ownership_type": {
+          "name": "ownership_type",
+          "type": "varchar(50)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "anti_theft_device": {
+          "name": "anti_theft_device",
+          "type": "varchar(100)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "safety_features": {
+          "name": "safety_features",
+          "type": "varchar(500)",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "vehicle_vehicle_identifier_insurable_object_insurable_object_identifier_fk": {
+          "name": "vehicle_vehicle_identifier_insurable_object_insurable_object_identifier_fk",
+          "tableFrom": "vehicle",
+          "tableTo": "insurable_object",
+          "columnsFrom": [
+            "vehicle_identifier"
+          ],
+          "columnsTo": [
+            "insurable_object_identifier"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {
+        "vehicle_vin_unique": {
+          "name": "vehicle_vin_unique",
+          "nullsNotDistinct": false,
+          "columns": [
+            "vin"
+          ]
+        }
+      },
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}

@@ -46,6 +46,7 @@ interface DriverFormData {
   gender: string;
   maritalStatus: string;
   email: string;
+  phone: string;
   address: string;
   apt: string;
   city: string;
@@ -67,6 +68,7 @@ const PrimaryDriverInfo: React.FC = () => {
     gender: '',
     maritalStatus: '',
     email: '',
+    phone: '',
     address: '',
     apt: '',
     city: '',
@@ -85,6 +87,7 @@ const PrimaryDriverInfo: React.FC = () => {
         gender: existingQuote.driver.gender || '',
         maritalStatus: existingQuote.driver.maritalStatus || '',
         email: existingQuote.driver.email || '',
+        phone: existingQuote.driver.phone || '',
         address: existingQuote.address?.addressLine1 || '',
         apt: existingQuote.address?.addressLine2 || '',
         city: existingQuote.address?.city || '',
@@ -101,6 +104,14 @@ const PrimaryDriverInfo: React.FC = () => {
     return emailRegex.test(email);
   };
 
+  const validatePhone = (phone: string): boolean => {
+    if (!phone) return true; // Phone is optional
+    // Match formats: (123) 456-7890, 123-456-7890, 1234567890, 123.456.7890
+    const phoneRegex = /^[\d\s().-]{10,}$/;
+    const digitsOnly = phone.replace(/\D/g, '');
+    return phoneRegex.test(phone) && digitsOnly.length === 10;
+  };
+
   const validateZip = (zip: string): boolean => {
     const zipRegex = /^\d{5}$/;
     return zipRegex.test(zip);
@@ -112,6 +123,12 @@ const PrimaryDriverInfo: React.FC = () => {
     // Validate email
     if (!validateEmail(formData.email)) {
       alert('Please enter a valid email address');
+      return;
+    }
+
+    // Validate phone (optional but must be valid if provided)
+    if (!validatePhone(formData.phone)) {
+      alert('Please enter a valid 10-digit phone number or leave it blank');
       return;
     }
 
@@ -133,7 +150,7 @@ const PrimaryDriverInfo: React.FC = () => {
             driver_last_name: formData.lastName,
             driver_birth_date: formData.dob,
             driver_email: formData.email,
-            driver_phone: '555-0000',
+            driver_phone: formData.phone || undefined,
             driver_gender: formData.gender,
             driver_marital_status: formData.maritalStatus,
             address_line_1: formData.address,
@@ -157,6 +174,7 @@ const PrimaryDriverInfo: React.FC = () => {
             formData.dob !== originalData.dob ||
             formData.gender !== originalData.gender ||
             formData.maritalStatus !== originalData.maritalStatus ||
+            formData.phone !== originalData.phone ||
             formData.address !== originalData.address ||
             formData.apt !== originalData.apt ||
             formData.city !== originalData.city ||
@@ -172,7 +190,7 @@ const PrimaryDriverInfo: React.FC = () => {
                 driver_last_name: formData.lastName,
                 driver_birth_date: formData.dob,
                 driver_email: formData.email,
-                driver_phone: '555-0000',
+                driver_phone: formData.phone || undefined,
                 driver_gender: formData.gender,
                 driver_marital_status: formData.maritalStatus,
                 address_line_1: formData.address,
@@ -193,7 +211,7 @@ const PrimaryDriverInfo: React.FC = () => {
           driver_last_name: formData.lastName,
           driver_birth_date: formData.dob,
           driver_email: formData.email,
-          driver_phone: '555-0000',
+          driver_phone: formData.phone || undefined,
           driver_gender: formData.gender,
           driver_marital_status: formData.maritalStatus,
           address_line_1: formData.address,
@@ -323,6 +341,17 @@ const PrimaryDriverInfo: React.FC = () => {
                 value={formData.email}
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                 helpText="We'll send your quote and policy documents here"
+              />
+
+              <TextInput
+                id="phone"
+                label="Phone number (optional)"
+                size="small"
+                type="tel"
+                placeholder="(555) 123-4567"
+                value={formData.phone}
+                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                helpText="For account updates and claims support"
               />
             </Section>
 

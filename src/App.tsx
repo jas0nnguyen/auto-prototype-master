@@ -21,6 +21,10 @@ import VehicleConfirmation from './pages/quote/VehicleConfirmation';
 import CoverageSelection from './pages/quote/CoverageSelection';
 import QuoteResults from './pages/quote/QuoteResults';
 
+// Import binding flow pages (T101 - Phase 4)
+import Checkout from './pages/binding/Checkout';
+import Confirmation from './pages/binding/Confirmation';
+
 /**
  * Create TanStack Query Client
  *
@@ -78,6 +82,11 @@ function App() {
           <Route path="/quote/vehicle-confirmation/:quoteNumber" element={<VehicleConfirmation />} />
           <Route path="/quote/coverage-selection/:quoteNumber" element={<CoverageSelection />} />
           <Route path="/quote/results/:quoteNumber" element={<QuoteResults />} />
+
+          {/* Binding Flow Routes (T101 - Phase 4: Policy Binding & Payment) */}
+          <Route path="/binding/checkout/:quoteNumber" element={<Checkout />} />
+          <Route path="/binding/confirmation/:quoteNumber" element={<Confirmation />} />
+          {/* TODO: Add ReviewBind route when implemented (optional) */}
 
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

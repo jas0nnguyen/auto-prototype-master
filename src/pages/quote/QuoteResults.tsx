@@ -129,8 +129,8 @@ const QuoteResults: React.FC = () => {
   // ✅ NOW it's safe to access quote properties because we've checked for loading/error/null above
 
   const handleContinue = () => {
-    // Navigate to binding flow (Phase 4: US2)
-    navigate('/binding/payment-info');
+    // Navigate to binding flow with quote number (Phase 4: US2)
+    navigate(`/binding/checkout/${quoteNumber}`);
   };
 
   const handleSaveQuote = () => {
@@ -150,6 +150,13 @@ const QuoteResults: React.FC = () => {
   // Primary driver info - API returns nested object with camelCase
   const primaryDriverName = `${quote.driver?.firstName || ''} ${quote.driver?.lastName || ''}`.trim();
   const primaryDriverEmail = quote.driver?.email || '';
+
+  // Fallback vehicle display (in case vehicles array is empty - shouldn't happen with API)
+  const firstVehicle = vehicles.length > 0 ? vehicles[0] : null;
+  const vehicleDisplay = firstVehicle
+    ? `${firstVehicle.year} ${firstVehicle.make} ${firstVehicle.model}`
+    : 'Vehicle information unavailable';
+  const vehicleVin = firstVehicle?.vin || null;
 
   // Extract coverage data from API response for PremiumBreakdown component
   const localCoverage = quote.coverages ? {
