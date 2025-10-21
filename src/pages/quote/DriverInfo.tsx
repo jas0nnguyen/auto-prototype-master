@@ -184,9 +184,7 @@ const DriverInfo: React.FC = () => {
                   label="Gender"
                   size="small"
                   placeholder="Select gender"
-                  required
-                  value={formData.gender}
-                  onChange={(e) => setFormData({ ...formData, gender: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, gender: value })}
                   options={[
                     { label: 'Male', value: 'male' },
                     { label: 'Female', value: 'female' },
@@ -198,9 +196,7 @@ const DriverInfo: React.FC = () => {
                   label="Marital status"
                   size="small"
                   placeholder="Select marital status"
-                  required
-                  value={formData.maritalStatus}
-                  onChange={(e) => setFormData({ ...formData, maritalStatus: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, maritalStatus: value })}
                   options={[
                     { label: 'Single', value: 'single' },
                     { label: 'Married', value: 'married' },
@@ -255,9 +251,7 @@ const DriverInfo: React.FC = () => {
                   label="State"
                   size="small"
                   placeholder="Select state"
-                  required
-                  value={formData.state}
-                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  onChange={(value) => setFormData({ ...formData, state: value })}
                   options={states}
                 />
                 <TextInput
@@ -272,7 +266,7 @@ const DriverInfo: React.FC = () => {
               </Form.Group>
             </Section>
 
-            <Form.Actions>
+            <div style={{ marginTop: '2rem' }}>
               <Button
                 type="submit"
                 size="large"
@@ -281,7 +275,7 @@ const DriverInfo: React.FC = () => {
               >
                 Continue to Coverage
               </Button>
-            </Form.Actions>
+            </div>
           </Form>
         </Content>
       </Main>

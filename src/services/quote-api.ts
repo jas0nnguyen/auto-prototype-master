@@ -51,25 +51,22 @@ export interface CreateQuoteRequest {
 }
 
 export interface QuoteResponse {
-  quote_id: string;
-  quote_number: string;
-  quote_status: string;
-  driver: {
-    party_id: string;
-    full_name: string;
+  quoteId: string;
+  quoteNumber: string;
+  quoteStatus?: string;
+  driver?: {
+    partyId: string;
+    fullName: string;
     email: string;
   };
-  vehicle: {
-    vehicle_id: string;
+  vehicle?: {
+    vehicleId: string;
     description: string;
     vin?: string;
   };
-  premium?: {
-    total_premium: number;
-    currency: string;
-  };
-  created_at: string;
-  expiration_date?: string;
+  premium?: number;  // Backend returns just the number
+  createdAt: Date;
+  expiresAt: Date;
 }
 
 /**
@@ -136,16 +133,16 @@ class QuoteApiService {
       const result = await response.json();
 
       /**
-       * API response format (from response-formatter.ts):
+       * Backend returns the quote directly (not wrapped)
        * {
-       *   success: true,
-       *   data: { quote_id: '...', ... },
-       *   message: 'Quote created successfully'
+       *   quoteId: '...',
+       *   quoteNumber: '...',
+       *   premium: 1950,
+       *   createdAt: Date,
+       *   expiresAt: Date
        * }
-       *
-       * We return just the data portion
        */
-      return result.data;
+      return result;
 
     } catch (error) {
       /**
@@ -177,7 +174,7 @@ class QuoteApiService {
       }
 
       const result = await response.json();
-      return result.data;
+      return result;
 
     } catch (error) {
       console.error('[QuoteAPI] Error fetching quote:', error);
@@ -205,7 +202,7 @@ class QuoteApiService {
       }
 
       const result = await response.json();
-      return result.data;
+      return result;
 
     } catch (error) {
       console.error('[QuoteAPI] Error fetching quote by number:', error);
@@ -244,7 +241,7 @@ class QuoteApiService {
       }
 
       const result = await response.json();
-      return result.data;
+      return result;
 
     } catch (error) {
       console.error('[QuoteAPI] Error updating coverage:', error);
@@ -277,7 +274,7 @@ class QuoteApiService {
       }
 
       const result = await response.json();
-      return result.data;
+      return result;
 
     } catch (error) {
       console.error('[QuoteAPI] Error recalculating quote:', error);

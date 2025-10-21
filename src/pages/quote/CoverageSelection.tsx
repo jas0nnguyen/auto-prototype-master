@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AppTemplate,
@@ -22,7 +22,10 @@ import {
   List,
   ChevronLeft,
   DateInput,
+  Skeleton,
 } from '@sureapp/canary-design-system';
+import { useCreateQuote } from '../../hooks/useQuote';
+import type { CreateQuoteRequest } from '../../services/quote-api';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -42,6 +45,7 @@ interface CoverageData {
 
 const CoverageSelection: React.FC = () => {
   const navigate = useNavigate();
+  const createQuote = useCreateQuote();
   const [coverage, setCoverage] = useState<CoverageData>({
     coverageStartDate: undefined,
     bodilyInjuryLimit: '100/300',
@@ -55,6 +59,8 @@ const CoverageSelection: React.FC = () => {
     hasRental: false,
     rentalLimit: '50',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPricingLoading, setIsPricingLoading] = useState(false);
 
   useEffect(() => {
     // Check if previous steps completed
@@ -64,9 +70,37 @@ const CoverageSelection: React.FC = () => {
     }
   }, [navigate]);
 
-  // Calculate premium based on selections
-  const calculatePremium = (): { monthly: number; sixMonth: number } => {
+  // Simulate API latency when coverage changes
+  useEffect(() => {
+    setIsPricingLoading(true);
+    const timer = setTimeout(() => {
+      setIsPricingLoading(false);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [coverage]);
+
+  // Calculate premium based on selections - updates in real-time as coverage changes
+  const { monthly, sixMonth } = useMemo(() => {
     let basePrice = 95; // Base liability coverage
+
+    // Add coverage limits adjustments
+    const biLimitAdjustment = {
+      '25/50': 0,
+      '50/100': 15,
+      '100/300': 30,
+      '250/500': 50,
+      '500/1000': 75,
+    }[coverage.bodilyInjuryLimit] || 0;
+    basePrice += biLimitAdjustment;
+
+    const pdLimitAdjustment = {
+      '25000': 0,
+      '50000': 10,
+      '100000': 20,
+      '250000': 35,
+      '500000': 50,
+    }[coverage.propertyDamageLimit] || 0;
+    basePrice += pdLimitAdjustment;
 
     if (coverage.hasCollision) basePrice += 32;
     if (coverage.hasComprehensive) basePrice += 28;
@@ -99,11 +133,9 @@ const CoverageSelection: React.FC = () => {
       monthly: Math.max(basePrice, 50), // Minimum $50/month
       sixMonth: Math.max(basePrice * 6, 300),
     };
-  };
+  }, [coverage]); // Recalculates whenever coverage state changes
 
-  const { monthly, sixMonth } = calculatePremium();
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!coverage.coverageStartDate) {
@@ -111,17 +143,68 @@ const CoverageSelection: React.FC = () => {
       return;
     }
 
-    // Save coverage data
-    const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-    const updatedData = {
-      ...existingData,
-      coverage,
-      premium: { monthly, sixMonth },
-    };
-    sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
+    // Get data from previous steps
+    const storedData = sessionStorage.getItem('quoteData');
+    if (!storedData) {
+      alert('Session data lost. Please start over.');
+      navigate('/quote/vehicle-info');
+      return;
+    }
 
-    // Navigate to quote results
-    navigate('/quote/results');
+    const quoteData = JSON.parse(storedData);
+    const { vehicle, driver } = quoteData;
+
+    // Map frontend data to API request format
+    const quoteRequest: CreateQuoteRequest = {
+      // Driver info
+      driver_first_name: driver.firstName,
+      driver_last_name: driver.lastName,
+      driver_birth_date: driver.dob,
+      driver_email: driver.email,
+      driver_phone: '555-0100', // Default for now
+      driver_gender: driver.gender,
+
+      // Address
+      address_line_1: driver.address,
+      address_line_2: driver.apt || undefined,
+      address_city: driver.city,
+      address_state: driver.state,
+      address_zip: driver.zip,
+
+      // Vehicle
+      vehicle_year: parseInt(vehicle.year),
+      vehicle_make: vehicle.make,
+      vehicle_model: vehicle.model,
+      vehicle_vin: vehicle.vin || undefined,
+
+      // Coverage - map bodily injury limit
+      coverage_bodily_injury: coverage.bodilyInjuryLimit,
+      coverage_property_damage: coverage.propertyDamageLimit,
+      coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+      coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
+      include_uninsured_motorist: coverage.hasUninsured,
+      include_rental_reimbursement: coverage.hasRental,
+      include_roadside_assistance: coverage.hasRoadside,
+    };
+
+    try {
+      setIsSubmitting(true);
+
+      // Call the API to create the quote
+      const createdQuote = await createQuote.mutateAsync(quoteRequest);
+
+      // Store the quote ID and navigate to results
+      sessionStorage.setItem('quoteId', createdQuote.quoteId);
+      sessionStorage.setItem('quoteNumber', createdQuote.quoteNumber);
+
+      // Navigate to quote results
+      navigate('/quote/results');
+    } catch (error) {
+      console.error('Error creating quote:', error);
+      alert('Failed to create quote. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -182,9 +265,7 @@ const CoverageSelection: React.FC = () => {
                     id="bodily-injury"
                     label="Bodily Injury Limit"
                     size="small"
-                    required
-                    value={coverage.bodilyInjuryLimit}
-                    onChange={(e) => setCoverage({ ...coverage, bodilyInjuryLimit: e.target.value })}
+                    onChange={(value) => setCoverage({ ...coverage, bodilyInjuryLimit: value })}
                     options={[
                       { label: '$25,000 / $50,000', value: '25/50' },
                       { label: '$50,000 / $100,000', value: '50/100' },
@@ -196,9 +277,7 @@ const CoverageSelection: React.FC = () => {
                     id="property-damage"
                     label="Property Damage Limit"
                     size="small"
-                    required
-                    value={coverage.propertyDamageLimit}
-                    onChange={(e) => setCoverage({ ...coverage, propertyDamageLimit: e.target.value })}
+                    onChange={(value) => setCoverage({ ...coverage, propertyDamageLimit: value })}
                     options={[
                       { label: '$25,000', value: '25000' },
                       { label: '$50,000', value: '50000' },
@@ -233,8 +312,7 @@ const CoverageSelection: React.FC = () => {
                       id="collision-deductible"
                       label="Deductible"
                       size="small"
-                      value={coverage.collisionDeductible}
-                      onChange={(e) => setCoverage({ ...coverage, collisionDeductible: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, collisionDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
                         { label: '$500 (Recommended)', value: '500' },
@@ -271,8 +349,7 @@ const CoverageSelection: React.FC = () => {
                       id="comprehensive-deductible"
                       label="Deductible"
                       size="small"
-                      value={coverage.comprehensiveDeductible}
-                      onChange={(e) => setCoverage({ ...coverage, comprehensiveDeductible: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, comprehensiveDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
                         { label: '$500 (Recommended)', value: '500' },
@@ -350,8 +427,7 @@ const CoverageSelection: React.FC = () => {
                       id="rental-limit"
                       label="Daily Rental Limit"
                       size="small"
-                      value={coverage.rentalLimit}
-                      onChange={(e) => setCoverage({ ...coverage, rentalLimit: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, rentalLimit: value })}
                       options={[
                         { label: '$30 per day', value: '30' },
                         { label: '$50 per day (Recommended)', value: '50' },
@@ -363,64 +439,111 @@ const CoverageSelection: React.FC = () => {
               </Block>
             </Section>
 
-            <Form.Actions>
+            <div style={{ marginTop: '2rem' }}>
               <Button
                 type="submit"
                 size="large"
                 variant="primary"
                 isFullWidth
+                disabled={isSubmitting}
               >
-                See My Quote
+                {isSubmitting ? 'Creating Your Quote...' : 'See My Quote'}
               </Button>
-            </Form.Actions>
+            </div>
           </Form>
         </Content>
 
         <Aside>
-          <QuoteCard price={monthly.toString()} total={sixMonth.toString()}>
+          <QuoteCard
+            price={monthly.toString()}
+            total={sixMonth.toString()}
+            isLoading={isPricingLoading}
+          >
             <Button emphasis="strong" href="#" size="xsmall" variant="support">
               View sample policy
             </Button>
             <List title="Liability Coverage">
               <List.Row>
-                <List.Item>Bodily Injury: {coverage.bodilyInjuryLimit.replace('/', ' / ')}</List.Item>
+                <List.Item>
+                  {isPricingLoading ? (
+                    <Skeleton variant="text" width={150} />
+                  ) : (
+                    `Bodily Injury: ${coverage.bodilyInjuryLimit.replace('/', ' / ')}`
+                  )}
+                </List.Item>
               </List.Row>
               <List.Row>
-                <List.Item>Property Damage: ${parseInt(coverage.propertyDamageLimit).toLocaleString()}</List.Item>
+                <List.Item>
+                  {isPricingLoading ? (
+                    <Skeleton variant="text" width={180} />
+                  ) : (
+                    `Property Damage: $${parseInt(coverage.propertyDamageLimit).toLocaleString()}`
+                  )}
+                </List.Item>
               </List.Row>
             </List>
             {coverage.hasCollision && (
               <List title="Collision">
                 <List.Row>
-                  <List.Item>${coverage.collisionDeductible} deductible</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={120} />
+                    ) : (
+                      `$${coverage.collisionDeductible} deductible`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasComprehensive && (
               <List title="Comprehensive">
                 <List.Row>
-                  <List.Item>${coverage.comprehensiveDeductible} deductible</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={120} />
+                    ) : (
+                      `$${coverage.comprehensiveDeductible} deductible`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasUninsured && (
               <List title="Uninsured Motorist">
                 <List.Row>
-                  <List.Item>50k/100k coverage</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={100} />
+                    ) : (
+                      '50k/100k coverage'
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasRoadside && (
               <List title="Roadside Assistance">
                 <List.Row>
-                  <List.Item>24/7 service</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={80} />
+                    ) : (
+                      '24/7 service'
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasRental && (
               <List title="Rental Reimbursement">
                 <List.Row>
-                  <List.Item>${coverage.rentalLimit}/day limit</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={100} />
+                    ) : (
+                      `$${coverage.rentalLimit}/day limit`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}

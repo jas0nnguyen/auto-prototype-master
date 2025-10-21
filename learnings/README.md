@@ -31,6 +31,17 @@ This directory contains detailed phase-by-phase learning summaries for the Auto 
    - Complete quote generation system: Database schemas, mock services, rating engine, quote service, frontend integration
    - 63/63 tasks complete ✅
 
+6. **[Phase 3c: Option B Architecture & API Testing](./phases/phase-3c-option-b-api-testing.md)** (Tasks T069a-T069f + Testing)
+   - Completed: 2025-10-19
+   - Simplified QuoteService architecture (90% code reduction), human-readable IDs (QXXXXX format), full API testing
+   - 6/6 core tasks + comprehensive testing complete ✅
+
+7. **[Phase 3d: Option 1 - Frontend Integration](./phases/phase-3d-option-1-frontend-integration.md)** (Option 1 Implementation)
+   - Completed: 2025-10-20
+   - Connected React frontend to backend API, enabling real quote creation and retrieval
+   - ✅ **USER STORY 1 COMPLETE** - Full end-to-end quote generation working!
+   - 5/5 tasks complete ✅
+
 ### Pending Phases
 
 - Phase 4: Policy binding and payment (US2) - 22 tasks

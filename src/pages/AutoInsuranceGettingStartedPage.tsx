@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -36,6 +37,13 @@ const states = [
 ];
 
 const AutoInsuranceGettingStartedPage: React.FC = () => {
+  const navigate = useNavigate();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate('/auto-insurance/coverage');
+  };
+
   return (
     <AppTemplate preset="purchase-flow">
       <PageHeader>
@@ -58,10 +66,8 @@ const AutoInsuranceGettingStartedPage: React.FC = () => {
           </AppTemplate.Title>
 
           <Form
+            onSubmit={handleSubmit}
             buttonLabel="Continue"
-            buttonProps={{
-              href: "/auto-insurance/coverage",
-            }}
           >
             <Section title="Your Vehicle">
               <Select

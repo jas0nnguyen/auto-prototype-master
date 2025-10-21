@@ -75,7 +75,7 @@ export interface CreateQuoteInput {
  */
 export interface QuoteResult {
   quoteId: string;        // Human-readable quote ID (same as quote number for simplicity)
-  quoteNumber: string;    // Quote reference number (Q-20251019-ABC123)
+  quoteNumber: string;    // Quote reference number (format: QXXXXX, e.g., QA1B2C)
   premium: number;
   createdAt: Date;
   expiresAt: Date;
@@ -144,7 +144,7 @@ export class QuoteService {
       // Step 6: Create Vehicle (specific vehicle details)
       const vehicleData: any = {
         vehicle_identifier: newInsurableObject.insurable_object_identifier,
-        vin: input.vehicle.vin,
+        vin: input.vehicle.vin || null,  // Use null instead of empty string for unique constraint
         make: input.vehicle.make,
         model: input.vehicle.model,
         year: input.vehicle.year,
@@ -244,23 +244,16 @@ export class QuoteService {
   }
 
   /**
-   * Generate quote number in format: Q-YYYYMMDD-XXXXXX
+   * Generate quote number in format: QXXXXX (5 random alphanumeric characters)
    */
   private generateQuoteNumber(): string {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const dateStr = `${year}${month}${day}`;
-
-    // Generate 6 random alphanumeric characters
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
     let suffix = '';
-    for (let i = 0; i < 6; i++) {
+    for (let i = 0; i < 5; i++) {
       suffix += chars.charAt(Math.floor(Math.random() * chars.length));
     }
 
-    return `Q-${dateStr}-${suffix}`;
+    return `Q${suffix}`;
   }
 
   /**

@@ -59,9 +59,12 @@ const VehicleInfo: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
+    console.log('Form data:', formData);
+
     // Validate required fields
     if (!formData.year || !formData.make || !formData.model) {
       alert('Please fill in all required vehicle information');
+      console.log('Missing fields - year:', formData.year, 'make:', formData.make, 'model:', formData.model);
       return;
     }
 
@@ -107,9 +110,10 @@ const VehicleInfo: React.FC = () => {
                   label="Year"
                   size="small"
                   placeholder="Select year"
-                  required
-                  value={formData.year}
-                  onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+                  onChange={(value) => {
+                    console.log('Year selected:', value);
+                    setFormData({ ...formData, year: value });
+                  }}
                   options={[
                     { label: '2024', value: '2024' },
                     { label: '2023', value: '2023' },
@@ -133,9 +137,10 @@ const VehicleInfo: React.FC = () => {
                   label="Make"
                   size="small"
                   placeholder="Select make"
-                  required
-                  value={formData.make}
-                  onChange={(e) => setFormData({ ...formData, make: e.target.value })}
+                  onChange={(value) => {
+                    console.log('Make selected:', value);
+                    setFormData({ ...formData, make: value });
+                  }}
                   options={[
                     { label: 'Toyota', value: 'toyota' },
                     { label: 'Honda', value: 'honda' },
@@ -156,7 +161,6 @@ const VehicleInfo: React.FC = () => {
                 label="Model"
                 size="small"
                 placeholder="e.g., Camry, Civic, F-150"
-                required
                 value={formData.model}
                 onChange={(e) => setFormData({ ...formData, model: e.target.value })}
               />
@@ -173,7 +177,7 @@ const VehicleInfo: React.FC = () => {
               />
             </Section>
 
-            <Form.Actions>
+            <div style={{ marginTop: '2rem' }}>
               <Button
                 type="submit"
                 size="large"
@@ -182,7 +186,7 @@ const VehicleInfo: React.FC = () => {
               >
                 Continue to Driver Info
               </Button>
-            </Form.Actions>
+            </div>
           </Form>
         </Content>
       </Main>

@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppTemplate,
   AppHeader,
@@ -24,6 +25,8 @@ const featureImage3 = '/images/feature2.svg';
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
 const AutoInsuranceLandingPage: React.FC = () => {
+  const navigate = useNavigate();
+
   return (
     <AppTemplate preset="landing-page">
       <AppTemplate.Header>
@@ -33,7 +36,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
               <Button emphasis="subtle" size="medium" variant="support">
                 Log in
               </Button>
-              <Button size="medium" variant="primary" href="/auto-insurance/getting-started">
+              <Button size="medium" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
                 Get my quote
               </Button>
             </ButtonGroup>
@@ -44,7 +47,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
                 <Button size="small" variant="support">
                   Log in
                 </Button>
-                <Button size="small" variant="primary" href="/auto-insurance/getting-started">
+                <Button size="small" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
                   Get my quote
                 </Button>
               </ButtonGroup>
@@ -59,7 +62,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
         {/* Hero section */}
         <Hero
           cta={
-            <Button size="large" variant="primary" href="/auto-insurance/getting-started">
+            <Button size="large" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
               Get my quote
             </Button>
           }
@@ -193,7 +196,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
                 Get your personalized auto insurance <br />
                 quote in just 5 minutes.
               </Title>
-              <Button href="/auto-insurance/getting-started" size="large" variant="primary">
+              <Button onClick={() => navigate('/quote/vehicle-info')} size="large" variant="primary">
                 Get my quote
               </Button>
             </Layout>

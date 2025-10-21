@@ -273,7 +273,7 @@ export function useCreateQuote() {
        * Like pre-loading data into the cache.
        */
       queryClient.setQueryData(
-        quoteKeys.byId(newQuote.quote_id),
+        quoteKeys.byId(newQuote.quoteId),
         newQuote
       );
     },

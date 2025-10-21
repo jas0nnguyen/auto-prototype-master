@@ -21,6 +21,7 @@ import {
   ChevronLeft,
 } from '@sureapp/canary-design-system';
 import PremiumBreakdown from '../../components/insurance/PremiumBreakdown';
+import { useQuote } from '../../hooks/useQuote';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -59,36 +60,64 @@ interface QuoteData {
 
 const QuoteResults: React.FC = () => {
   const navigate = useNavigate();
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [quoteRefNumber, setQuoteRefNumber] = useState<string>('');
+  const [quoteId, setQuoteId] = useState<string | null>(null);
 
+  // Get quote ID from sessionStorage on mount
   useEffect(() => {
-    // Load quote data from session storage
-    const storedData = sessionStorage.getItem('quoteData');
-
-    if (!storedData) {
-      // Redirect back to start if no quote data
+    const storedQuoteId = sessionStorage.getItem('quoteId');
+    if (!storedQuoteId) {
+      // No quote ID, redirect to start
       navigate('/quote/vehicle-info');
       return;
     }
-
-    const data = JSON.parse(storedData);
-
-    // Validate that all required data is present
-    if (!data.vehicle || !data.driver || !data.coverage || !data.premium) {
-      navigate('/quote/vehicle-info');
-      return;
-    }
-
-    setQuoteData(data);
-
-    // Generate quote reference number (in production, this would come from backend)
-    const refNumber = `QT-${Date.now().toString().slice(-8)}`;
-    setQuoteRefNumber(refNumber);
-
-    // Save quote reference number
-    sessionStorage.setItem('quoteRefNumber', refNumber);
+    setQuoteId(storedQuoteId);
   }, [navigate]);
+
+  // Fetch quote data from API
+  const { data: quote, isLoading, error } = useQuote(quoteId);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <AppTemplate preset="purchase-flow">
+        <PageHeader>
+          <AppHeader logo={logoSrc} logoHref="/" />
+        </PageHeader>
+        <Main>
+          <Content>
+            <div style={{ textAlign: 'center', padding: '4rem' }}>
+              <Text variant="title-1">Loading your quote...</Text>
+            </div>
+          </Content>
+        </Main>
+      </AppTemplate>
+    );
+  }
+
+  // Show error state
+  if (error || !quote) {
+    return (
+      <AppTemplate preset="purchase-flow">
+        <PageHeader>
+          <AppHeader logo={logoSrc} logoHref="/" />
+        </PageHeader>
+        <Main>
+          <Content>
+            <div style={{ textAlign: 'center', padding: '4rem' }}>
+              <Text variant="title-1" color="danger">Failed to load quote</Text>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/quote/vehicle-info')}
+                style={{ marginTop: '2rem' }}
+              >
+                Start Over
+              </Button>
+            </div>
+          </Content>
+        </Main>
+      </AppTemplate>
+    );
+  }
 
   const handleContinue = () => {
     // Navigate to binding flow (Phase 4: US2)
@@ -96,15 +125,18 @@ const QuoteResults: React.FC = () => {
   };
 
   const handleSaveQuote = () => {
-    alert(`Your quote has been saved! Reference number: ${quoteRefNumber}\n\nWe've sent a copy to ${quoteData?.driver.email}`);
+    alert(`Your quote has been saved! Reference number: ${quote.quote_number}\n\nWe've sent a copy to ${quote.driver.email}`);
   };
 
-  if (!quoteData) {
-    return null; // Will redirect in useEffect
-  }
+  // Extract data from API response
+  const vehicleDisplay = quote.vehicle.description;
+  const quoteRefNumber = quote.quote_number;
+  const totalPremium = quote.premium?.total_premium || 0;
+  const monthlyPremium = Math.round(totalPremium / 6);
 
-  const { vehicle, driver, coverage, premium } = quoteData;
-  const vehicleDisplay = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  // Get stored coverage data for PremiumBreakdown component (temporary until backend returns full coverage details)
+  const storedData = sessionStorage.getItem('quoteData');
+  const localCoverage = storedData ? JSON.parse(storedData).coverage : null;
 
   return (
     <AppTemplate preset="purchase-flow">
@@ -141,7 +173,7 @@ const QuoteResults: React.FC = () => {
               <Layout display="flex-column" gap="medium">
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="display-2" weight="bold" color="primary">
-                    ${premium.monthly}
+                    ${monthlyPremium}
                   </Text>
                   <Text variant="body-regular" color="subtle">
                     per month
@@ -150,7 +182,7 @@ const QuoteResults: React.FC = () => {
 
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="body-large">
-                    ${premium.sixMonth} for 6 months
+                    ${totalPremium.toLocaleString()} for 6 months
                   </Text>
                 </div>
               </Layout>
@@ -165,9 +197,9 @@ const QuoteResults: React.FC = () => {
                     VEHICLE
                   </Text>
                   <Text variant="body-regular">{vehicleDisplay}</Text>
-                  {vehicle.vin && (
+                  {quote.vehicle.vin && (
                     <Text variant="caption-small" color="subtle">
-                      VIN: {vehicle.vin}
+                      VIN: {quote.vehicle.vin}
                     </Text>
                   )}
                 </div>
@@ -177,19 +209,24 @@ const QuoteResults: React.FC = () => {
                     POLICYHOLDER
                   </Text>
                   <Text variant="body-regular">
-                    {driver.firstName} {driver.lastName}
+                    {quote.driver.full_name}
                   </Text>
                   <Text variant="caption-small" color="subtle">
-                    {driver.city}, {driver.state}
+                    {quote.driver.email}
                   </Text>
                 </div>
               </Layout>
             </Card>
           </Section>
 
-          <Section title="Premium Breakdown">
-            <PremiumBreakdown coverage={coverage} premium={premium} />
-          </Section>
+          {localCoverage && (
+            <Section title="Premium Breakdown">
+              <PremiumBreakdown
+                coverage={localCoverage}
+                premium={{ monthly: monthlyPremium, sixMonth: totalPremium }}
+              />
+            </Section>
+          )}
 
           <Section title="Why This Rate?">
             <Card padding="medium" background="1">
@@ -205,17 +242,17 @@ const QuoteResults: React.FC = () => {
                   </li>
                   <li>
                     <Text variant="body-small">
-                      Location: {driver.city}, {driver.state} (local risk factors)
+                      Driver: {quote.driver.full_name} (driving history and experience)
                     </Text>
                   </li>
                   <li>
                     <Text variant="body-small">
-                      Coverage: {coverage.bodilyInjuryLimit} bodily injury, {coverage.hasCollision ? 'collision' : 'no collision'}, {coverage.hasComprehensive ? 'comprehensive' : 'no comprehensive'}
+                      Coverage: Comprehensive auto insurance package
                     </Text>
                   </li>
                 </ul>
                 <Text variant="caption-small" color="subtle">
-                  This quote is valid for 30 days from today.
+                  This quote is valid for 30 days. Quote Status: {quote.quote_status}
                 </Text>
               </Layout>
             </Card>
@@ -243,53 +280,55 @@ const QuoteResults: React.FC = () => {
 
         <Aside>
           <QuoteCard
-            price={premium.monthly.toString()}
-            total={premium.sixMonth.toString()}
+            price={monthlyPremium.toString()}
+            total={totalPremium.toString()}
             name="Your Quote"
           >
-            <List title="Coverage Summary">
-              <List.Row>
-                <List.Item>
-                  Bodily Injury: ${coverage.bodilyInjuryLimit.replace('/', ' / ')}
-                </List.Item>
-              </List.Row>
-              <List.Row>
-                <List.Item>
-                  Property Damage: ${parseInt(coverage.propertyDamageLimit).toLocaleString()}
-                </List.Item>
-              </List.Row>
-              {coverage.hasCollision && (
+            {localCoverage && (
+              <List title="Coverage Summary">
                 <List.Row>
                   <List.Item>
-                    Collision: ${coverage.collisionDeductible} deductible
+                    Bodily Injury: ${localCoverage.bodilyInjuryLimit.replace('/', ' / ')}
                   </List.Item>
                 </List.Row>
-              )}
-              {coverage.hasComprehensive && (
                 <List.Row>
                   <List.Item>
-                    Comprehensive: ${coverage.comprehensiveDeductible} deductible
+                    Property Damage: ${parseInt(localCoverage.propertyDamageLimit).toLocaleString()}
                   </List.Item>
                 </List.Row>
-              )}
-              {coverage.hasUninsured && (
-                <List.Row>
-                  <List.Item>Uninsured Motorist: $50k/$100k</List.Item>
-                </List.Row>
-              )}
-              {coverage.hasRoadside && (
-                <List.Row>
-                  <List.Item>24/7 Roadside Assistance</List.Item>
-                </List.Row>
-              )}
-              {coverage.hasRental && (
-                <List.Row>
-                  <List.Item>
-                    Rental Reimbursement: ${coverage.rentalLimit}/day
-                  </List.Item>
-                </List.Row>
-              )}
-            </List>
+                {localCoverage.hasCollision && (
+                  <List.Row>
+                    <List.Item>
+                      Collision: ${localCoverage.collisionDeductible} deductible
+                    </List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasComprehensive && (
+                  <List.Row>
+                    <List.Item>
+                      Comprehensive: ${localCoverage.comprehensiveDeductible} deductible
+                    </List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasUninsured && (
+                  <List.Row>
+                    <List.Item>Uninsured Motorist: $50k/$100k</List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasRoadside && (
+                  <List.Row>
+                    <List.Item>24/7 Roadside Assistance</List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasRental && (
+                  <List.Row>
+                    <List.Item>
+                      Rental Reimbursement: ${localCoverage.rentalLimit}/day
+                    </List.Item>
+                  </List.Row>
+                )}
+              </List>
+            )}
 
             <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px' }}>
               <Text variant="caption-small" align="center" weight="bold" color="primary">

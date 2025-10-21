@@ -25,45 +25,43 @@ import { QuoteService } from '../../services/quote/quote.service';
 import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.service';
 
 /**
- * DTO for creating a quote
+ * DTO for creating a quote (flat structure from frontend)
  * This defines what data the frontend must send
  */
-class CreateQuoteDTO implements CreateQuoteInput {
-  driver!: {
-    firstName: string;
-    lastName: string;
-    birthDate: Date;
-    email: string;
-    phone: string;
-    gender?: string;
-    yearsLicensed?: number;
-    licenseNumber?: string;
-    licenseState?: string;
-  };
+class CreateQuoteDTO {
+  // Driver info
+  driver_first_name!: string;
+  driver_last_name!: string;
+  driver_birth_date!: string | Date;
+  driver_email!: string;
+  driver_phone!: string;
+  driver_gender?: string;
+  driver_years_licensed?: number;
 
-  address!: {
-    addressLine1: string;
-    addressLine2?: string;
-    city: string;
-    state: string;
-    zipCode: string;
-  };
+  // Address
+  address_line_1!: string;
+  address_line_2?: string;
+  address_city!: string;
+  address_state!: string;
+  address_zip!: string;
 
-  vehicle!: {
-    year: number;
-    make: string;
-    model: string;
-    vin: string;
-    bodyType?: string;
-    annualMileage?: number;
-  };
+  // Vehicle
+  vehicle_year!: number;
+  vehicle_make!: string;
+  vehicle_model!: string;
+  vehicle_vin?: string;
+  annual_mileage?: number;
+  vehicle_usage?: string;
 
-  coverages?: {
-    bodilyInjury?: boolean;
-    propertyDamage?: boolean;
-    collision?: boolean;
-    comprehensive?: boolean;
-  };
+  // Coverage
+  coverage_bodily_injury?: string;
+  coverage_property_damage?: string;
+  coverage_collision_deductible?: number;
+  coverage_comprehensive_deductible?: number;
+  include_uninsured_motorist?: boolean;
+  include_medical_payments?: boolean;
+  include_rental_reimbursement?: boolean;
+  include_roadside_assistance?: boolean;
 }
 
 @Controller('api/v1/quotes')
@@ -110,17 +108,47 @@ export class QuotesController {
    * }
    */
   @Post()
-  async createQuote(@Body() input: CreateQuoteDTO): Promise<QuoteResult> {
+  async createQuote(@Body() dto: CreateQuoteDTO): Promise<QuoteResult> {
     try {
       this.logger.log('Creating new quote', {
-        driverEmail: input.driver.email,
-        vehicleVin: input.vehicle.vin
+        driverEmail: dto.driver_email,
+        vehicleVin: dto.vehicle_vin
       });
 
-      // Convert birthDate string to Date if needed
-      if (typeof input.driver.birthDate === 'string') {
-        input.driver.birthDate = new Date(input.driver.birthDate);
-      }
+      // Transform flat DTO into nested structure for QuoteService
+      const input: CreateQuoteInput = {
+        driver: {
+          firstName: dto.driver_first_name,
+          lastName: dto.driver_last_name,
+          birthDate: typeof dto.driver_birth_date === 'string'
+            ? new Date(dto.driver_birth_date)
+            : dto.driver_birth_date,
+          email: dto.driver_email,
+          phone: dto.driver_phone,
+          gender: dto.driver_gender,
+          yearsLicensed: dto.driver_years_licensed,
+        },
+        address: {
+          addressLine1: dto.address_line_1,
+          addressLine2: dto.address_line_2,
+          city: dto.address_city,
+          state: dto.address_state,
+          zipCode: dto.address_zip,
+        },
+        vehicle: {
+          year: dto.vehicle_year,
+          make: dto.vehicle_make,
+          model: dto.vehicle_model,
+          vin: dto.vehicle_vin || '',  // Will be converted to null in QuoteService
+          annualMileage: dto.annual_mileage,
+        },
+        coverages: {
+          bodilyInjury: !!dto.coverage_bodily_injury,
+          propertyDamage: !!dto.coverage_property_damage,
+          collision: !!dto.coverage_collision_deductible,
+          comprehensive: !!dto.coverage_comprehensive_deductible,
+        },
+      };
 
       const result = await this.quoteService.createQuote(input);
 
@@ -151,7 +179,7 @@ export class QuotesController {
    * @example Response:
    * {
    *   "policy_identifier": "123e4567-e89b-12d3-a456-426614174000",
-   *   "policy_number": "Q-20251019-AB12CD",
+   *   "policy_number": "QA1B2C",
    *   "status_code": "QUOTED",
    *   "effective_date": "2025-10-19",
    *   "expiration_date": "2026-10-19"
@@ -194,7 +222,7 @@ export class QuotesController {
    * @example Response:
    * {
    *   "policy_identifier": "123e4567-e89b-12d3-a456-426614174000",
-   *   "policy_number": "Q-20251019-AB12CD",
+   *   "policy_number": "QA1B2C",
    *   "status_code": "QUOTED",
    *   "effective_date": "2025-10-19",
    *   "expiration_date": "2026-10-19"

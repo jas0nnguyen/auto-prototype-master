@@ -141,6 +141,11 @@ drizzle/
 # Test coverage
 .nyc_output/
 
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/
+
 # Lock files (keep package-lock.json, ignore yarn.lock if not using Yarn)
 yarn.lock
 pnpm-lock.yaml

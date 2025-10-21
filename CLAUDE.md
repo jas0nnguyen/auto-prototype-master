@@ -168,27 +168,34 @@ Constitution is stored in `.specify/memory/constitution.md` (Version 1.1.0).
 
 **Feature**: 001-auto-insurance-flow
 **Branch**: `001-auto-insurance-flow`
-**Status**: Phase 1, 2 & 3 COMPLETE ✅ (85/170 tasks completed - 50%)
+**Status**: Phase 3 US1 Backend API COMPLETE ✅ (91/183 tasks - 50%)
 **Last Updated**: 2025-10-19
 
 **Completed Phases**:
-- ✅ **Phase 1** (12/12 tasks - 100%): Project setup complete - backend structure, dependencies, configuration
-- ✅ **Phase 2** (10/10 tasks - 100%): Foundational infrastructure complete - database connection, ORM, entity types, validation, error handling, middleware
-- ✅ **Phase 3** (63/63 tasks - 100% COMPLETE):
-  - **Database Schemas** (24/24): All OMG P&C entity schemas created (Party, Person, Policy, Coverage, Vehicle, Rating Factor, Discount, Surcharge, Premium Calculation, etc.)
-  - **Mock Services** (6/6): VIN decoder, vehicle valuation, safety ratings, delay simulator with LogNormal distribution
-  - **Rating Engine** (12/12): All calculators complete - vehicle/driver/location/coverage rating, discount (7 types), surcharge (8 types), premium orchestrator, tax/fee calculator, rating tables seed
-  - **Quote Service** (7/7): Complete quote CRUD, policy creation, party creation, vehicle enrichment, coverage assignment, quote expiration tracking, API controller
-  - **Frontend** (14/14): Complete quote flow UI - VehicleInfo, DriverInfo, CoverageSelection, QuoteResults pages, reusable components (PremiumBreakdown, CoverageCard, VehicleCard), API client, custom hooks, React Router integration
-  - **Testing Infrastructure**: Automated test script, TESTING.md guide, API test collection
+- ✅ **Phase 1** (12/12 tasks): Project setup complete
+- ✅ **Phase 2** (10/10 tasks): Foundational infrastructure complete
+- ✅ **Phase 3 - Option B** (69/69 tasks): **Backend API fully functional with human-readable IDs**
+  - **Database Schemas** (24/24): All 27 OMG P&C entity tables deployed to Neon PostgreSQL ✅
+  - **Simplified Architecture** (6/6): QuoteService, QuotesController, QuoteModule with inline business logic (90% less code than original plan)
+  - **API Endpoints** (3/3): POST /quotes, GET /quotes/:id, GET /quotes/reference/:number - **ALL TESTED ✅**
+  - **Human-Readable IDs**: QXXXXX format (e.g., QAUETY, Q3AMNT, Q8ICON)
+  - **Frontend Pages** (14/14): VehicleInfo, DriverInfo, CoverageSelection, QuoteResults with sessionStorage
+  - **Zero Errors**: TypeScript compiles clean, server runs stable, all endpoints working
 
-**Pending Phases**:
-- ⏳ **Phase 4**: Policy binding and payment (US2) - 22 tasks
-- ⏳ **Phase 5**: Portal access (US3) - 20 tasks
-- ⏳ **Phase 6**: Polish and production features - 7 tasks
-- ⏳ **Phase 7**: Comprehensive testing - 57 tasks
+**Testing Results** (2025-10-19):
+- ✅ POST /api/v1/quotes - Creates quotes successfully (QAUETY $1,300, Q3AMNT $1,000, Q8ICON $1,300)
+- ✅ GET /api/v1/quotes/:id - Retrieves by quote number (e.g., /quotes/QAUETY)
+- ✅ GET /api/v1/quotes/reference/:number - Alternative retrieval endpoint
+- ✅ Backend server running on port 3000
+- ✅ Full OMG entity flow: Party → Person → Communication Identity → Vehicle → Policy
 
-**Critical Path**: Phase 3 COMPLETE ✅ (100%) - All foundational work done! Database schemas, rating engine, mock services, quote service, and full frontend flow implemented. Database migrations run successfully ✅. Ready to move to Phase 4 (Policy Binding).
+**Next Steps** (See tasks.md for detailed options):
+1. **Frontend Integration** - Connect pages to real API (2-4 hours)
+2. **Enhanced Rating Engine** - Add discounts/surcharges/taxes (4-6 hours)
+3. **Phase 4: Policy Binding** - Payment & policy activation (8-12 hours)
+4. **Deploy to Vercel** - Public demo URL (1-2 hours)
+
+**Critical Path**: Backend API ready ✅. Recommend frontend integration next to complete US1 end-to-end.
 
 ## Working with This Codebase
 
@@ -221,6 +228,73 @@ Constitution is stored in `.specify/memory/constitution.md` (Version 1.1.0).
 - Error handling and loading states implemented
 - No sensitive data hardcoded
 
+### Bug Tracking
+**IMPORTANT**: All bugs encountered during development must be documented in `bugs.md` using the standardized template.
+
+**When to log a bug**:
+- Any error that blocks user functionality
+- HTTP errors (4xx, 5xx responses)
+- Database errors
+- Runtime exceptions
+- UI/UX issues that prevent task completion
+- Integration issues between frontend and backend
+
+**Bug Logging Process**:
+1. **Reproduce the bug** - Understand the exact steps that trigger it
+2. **Investigate** - Check logs, use debugging tools, trace the error
+3. **Document in bugs.md** - Use the template below
+4. **Fix the bug** - Implement the solution
+5. **Update the bug entry** - Mark as RESOLVED and document the fix
+6. **Write up the solution** - Include code examples and lessons learned
+
+**Bug Template** (from `bugs.md`):
+```markdown
+## Bug #X: [Short Description]
+
+**Date**: YYYY-MM-DD
+**Status**: 🔴 OPEN / 🟡 IN PROGRESS / ✅ RESOLVED
+**Severity**: Critical / High / Medium / Low
+
+### Symptoms
+[What the user experienced - error messages, unexpected behavior, etc.]
+
+### Root Cause
+[Technical explanation of why it happened - code issue, configuration, etc.]
+
+### Investigation Steps
+1. [First thing you checked]
+2. [Second thing you checked]
+3. [How you identified the root cause]
+
+### Solution
+[Detailed explanation of what you changed to fix it, including code examples]
+
+### Files Modified
+- `path/to/file1.ts` - [What changed]
+- `path/to/file2.ts` - [What changed]
+
+### Lessons Learned
+- [Key takeaway 1]
+- [Key takeaway 2]
+- [What to avoid in the future]
+
+### Testing
+[How to verify the fix works]
+
+### Related Issues
+[Links to related bugs or tasks]
+```
+
+**Example Usage**:
+See `bugs.md` for complete examples of Bug #1 (Frontend-Backend Data Format Mismatch) and Bug #2 (Duplicate VIN Constraint Violation).
+
+**Benefits of Bug Tracking**:
+- Creates a knowledge base of problems and solutions
+- Helps avoid repeating mistakes
+- Provides learning material for junior developers
+- Documents technical debt and system quirks
+- Assists with debugging similar issues in the future
+
 ## Key Technical Constraints
 
 - **Node.js**: >=22.0.0 <25.0.0 (engine constraint)
@@ -235,6 +309,7 @@ Constitution is stored in `.specify/memory/constitution.md` (Version 1.1.0).
 - `README.md` - Template quickstart and deployment basics
 - `VERCEL_SETUP.md` - Vercel deployment with GitHub Package Registry
 - `TEMPLATE_USAGE.md` - Original Canary template usage guide
+- `bugs.md` - **Bug tracker with all documented issues and solutions**
 - `specs/001-auto-insurance-flow/quickstart.md` - Developer onboarding for this feature
 - `.specify/memory/constitution.md` - Project constitution (version 1.1.0)
 - `.cursorrules` - MCP-first enforcement rules for design system

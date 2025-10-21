@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -26,6 +27,7 @@ import {
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
 const AutoInsuranceCheckoutPage: React.FC = () => {
+  const navigate = useNavigate();
   const [billingAddress, setBillingAddress] = useState('same');
   const [termsAccepted, setTermsAccepted] = useState(false);
 
@@ -35,6 +37,15 @@ const AutoInsuranceCheckoutPage: React.FC = () => {
 
   const handleTermsAccepted = (event: React.ChangeEvent<HTMLInputElement>) => {
     setTermsAccepted(event.target.checked);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!termsAccepted) {
+      alert('Please accept the terms and conditions');
+      return;
+    }
+    navigate('/auto-insurance/confirmation');
   };
 
   return (
@@ -67,9 +78,9 @@ const AutoInsuranceCheckoutPage: React.FC = () => {
           </AppTemplate.Title>
 
           <Form
+            onSubmit={handleSubmit}
             buttonLabel="Purchase Policy"
             buttonProps={{
-              href: "/auto-insurance/confirmation",
               disabled: !termsAccepted,
             }}
           >
