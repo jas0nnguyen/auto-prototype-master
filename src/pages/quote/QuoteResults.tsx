@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -21,6 +21,7 @@ import {
   ChevronLeft,
 } from '@sureapp/canary-design-system';
 import PremiumBreakdown from '../../components/insurance/PremiumBreakdown';
+import { useQuoteByNumber } from '../../hooks/useQuote';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -59,36 +60,73 @@ interface QuoteData {
 
 const QuoteResults: React.FC = () => {
   const navigate = useNavigate();
-  const [quoteData, setQuoteData] = useState<QuoteData | null>(null);
-  const [quoteRefNumber, setQuoteRefNumber] = useState<string>('');
+  const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
+  // Redirect if no quote number in URL
   useEffect(() => {
-    // Load quote data from session storage
-    const storedData = sessionStorage.getItem('quoteData');
-
-    if (!storedData) {
-      // Redirect back to start if no quote data
-      navigate('/quote/vehicle-info');
-      return;
+    if (!quoteNumber) {
+      console.log('[QuoteResults] No quote number in URL, redirecting to start');
+      navigate('/quote/driver-info');
     }
+  }, [quoteNumber, navigate]);
 
-    const data = JSON.parse(storedData);
+  // Fetch quote data from API using quote number
+  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber);
 
-    // Validate that all required data is present
-    if (!data.vehicle || !data.driver || !data.coverage || !data.premium) {
-      navigate('/quote/vehicle-info');
-      return;
-    }
+  // Debug logging
+  console.log('[QuoteResults] Debug Info:', {
+    quoteNumber,
+    quote,
+    isLoading,
+    error,
+    hasQuote: !!quote,
+    quoteKeys: quote ? Object.keys(quote) : []
+  });
 
-    setQuoteData(data);
+  // Show loading state while fetching quote
+  if (!quoteNumber || isLoading) {
+    return (
+      <AppTemplate preset="purchase-flow">
+        <PageHeader>
+          <AppHeader logo={logoSrc} logoHref="/" />
+        </PageHeader>
+        <Main>
+          <Content>
+            <div style={{ textAlign: 'center', padding: '4rem' }}>
+              <Text variant="title-1">Loading your quote...</Text>
+            </div>
+          </Content>
+        </Main>
+      </AppTemplate>
+    );
+  }
 
-    // Generate quote reference number (in production, this would come from backend)
-    const refNumber = `QT-${Date.now().toString().slice(-8)}`;
-    setQuoteRefNumber(refNumber);
+  // Show error state
+  if (error || !quote) {
+    return (
+      <AppTemplate preset="purchase-flow">
+        <PageHeader>
+          <AppHeader logo={logoSrc} logoHref="/" />
+        </PageHeader>
+        <Main>
+          <Content>
+            <div style={{ textAlign: 'center', padding: '4rem' }}>
+              <Text variant="title-1" color="danger">Failed to load quote</Text>
+              <Button
+                variant="primary"
+                onClick={() => navigate('/quote/driver-info')}
+                style={{ marginTop: '2rem' }}
+              >
+                Start Over
+              </Button>
+            </div>
+          </Content>
+        </Main>
+      </AppTemplate>
+    );
+  }
 
-    // Save quote reference number
-    sessionStorage.setItem('quoteRefNumber', refNumber);
-  }, [navigate]);
+  // ✅ NOW it's safe to access quote properties because we've checked for loading/error/null above
 
   const handleContinue = () => {
     // Navigate to binding flow (Phase 4: US2)
@@ -96,15 +134,37 @@ const QuoteResults: React.FC = () => {
   };
 
   const handleSaveQuote = () => {
-    alert(`Your quote has been saved! Reference number: ${quoteRefNumber}\n\nWe've sent a copy to ${quoteData?.driver.email}`);
+    alert(`Your quote has been saved! Reference number: ${quote.quote_number}\n\nWe've sent a copy to ${quote.driver_email || 'your email'}`);
   };
 
-  if (!quoteData) {
-    return null; // Will redirect in useEffect
-  }
+  // Extract data from API response
+  const quoteRefNumber = quote.quote_number || '';
+  const quoteStatus = quote.quote_status || 'QUOTED';
+  const totalPremium = quote.premium?.total || 0;
+  const monthlyPremium = quote.premium?.monthly || Math.round(totalPremium / 6);
 
-  const { vehicle, driver, coverage, premium } = quoteData;
-  const vehicleDisplay = `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  // Get drivers and vehicles from API response
+  const drivers = quote.additionalDrivers || [];
+  const vehicles = quote.vehicles || [];
+
+  // Primary driver info - API returns nested object with camelCase
+  const primaryDriverName = `${quote.driver?.firstName || ''} ${quote.driver?.lastName || ''}`.trim();
+  const primaryDriverEmail = quote.driver?.email || '';
+
+  // Extract coverage data from API response for PremiumBreakdown component
+  const localCoverage = quote.coverages ? {
+    bodilyInjuryLimit: quote.coverages.bodilyInjuryLimit || '100/300',
+    propertyDamageLimit: quote.coverages.propertyDamageLimit || '50000',
+    hasCollision: quote.coverages.hasCollision || false,
+    collisionDeductible: quote.coverages.collisionDeductible?.toString() || '500',
+    hasComprehensive: quote.coverages.hasComprehensive || false,
+    comprehensiveDeductible: quote.coverages.comprehensiveDeductible?.toString() || '500',
+    hasUninsured: quote.coverages.hasUninsured || false,
+    hasRoadside: quote.coverages.hasRoadside || false,
+    hasRental: quote.coverages.hasRental || false,
+    rentalLimit: quote.coverages.rentalLimit?.toString() || '50',
+    coverageStartDate: quote.coverages.startDate ? new Date(quote.coverages.startDate) : new Date(),
+  } : null;
 
   return (
     <AppTemplate preset="purchase-flow">
@@ -121,7 +181,7 @@ const QuoteResults: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  href="/quote/coverage-selection"
+                  onClick={() => navigate(`/quote/coverage-selection/${quoteNumber}`)}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -141,7 +201,7 @@ const QuoteResults: React.FC = () => {
               <Layout display="flex-column" gap="medium">
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="display-2" weight="bold" color="primary">
-                    ${premium.monthly}
+                    ${monthlyPremium}
                   </Text>
                   <Text variant="body-regular" color="subtle">
                     per month
@@ -150,7 +210,7 @@ const QuoteResults: React.FC = () => {
 
                 <div style={{ textAlign: 'center' }}>
                   <Text variant="body-large">
-                    ${premium.sixMonth} for 6 months
+                    ${totalPremium.toLocaleString()} for 6 months
                   </Text>
                 </div>
               </Layout>
@@ -159,37 +219,85 @@ const QuoteResults: React.FC = () => {
 
           <Section title="What's Covered">
             <Card padding="medium">
-              <Layout grid="1-1">
+              <Layout grid="1-1" gap="large">
+                {/* Vehicles Column */}
                 <div>
                   <Text variant="body-small" weight="bold" color="subtle">
-                    VEHICLE
+                    VEHICLE{quote.vehicles && quote.vehicles.length > 1 ? 'S' : ''}
                   </Text>
-                  <Text variant="body-regular">{vehicleDisplay}</Text>
-                  {vehicle.vin && (
-                    <Text variant="caption-small" color="subtle">
-                      VIN: {vehicle.vin}
-                    </Text>
+                  {quote.vehicles && quote.vehicles.length > 0 ? (
+                    <Layout display="flex-column" gap="small" style={{ marginTop: '0.5rem' }}>
+                      {quote.vehicles.map((vehicle: any, index: number) => (
+                        <div key={index}>
+                          <Text variant="body-regular">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </Text>
+                          {vehicle.vin && (
+                            <Text variant="caption-small" color="subtle">
+                              VIN: {vehicle.vin}
+                            </Text>
+                          )}
+                        </div>
+                      ))}
+                    </Layout>
+                  ) : (
+                    <div style={{ marginTop: '0.5rem' }}>
+                      <Text variant="body-regular">{vehicleDisplay}</Text>
+                      {vehicleVin && (
+                        <Text variant="caption-small" color="subtle">
+                          VIN: {vehicleVin}
+                        </Text>
+                      )}
+                    </div>
                   )}
                 </div>
 
+                {/* Drivers Column */}
                 <div>
                   <Text variant="body-small" weight="bold" color="subtle">
-                    POLICYHOLDER
+                    DRIVER{quote.additionalDrivers && quote.additionalDrivers.length > 0 ? 'S' : ''}
                   </Text>
-                  <Text variant="body-regular">
-                    {driver.firstName} {driver.lastName}
-                  </Text>
-                  <Text variant="caption-small" color="subtle">
-                    {driver.city}, {driver.state}
-                  </Text>
+                  <Layout display="flex-column" gap="small" style={{ marginTop: '0.5rem' }}>
+                    {/* Primary Driver */}
+                    <div>
+                      <Text variant="body-regular">
+                        {primaryDriverName} {quote.driver?.isPrimary && <span style={{ color: '#0066cc', fontSize: '0.8em' }}>(Primary)</span>}
+                      </Text>
+                      <Text variant="caption-small" color="subtle">
+                        {primaryDriverEmail}
+                      </Text>
+                    </div>
+
+                    {/* Additional Drivers */}
+                    {quote.additionalDrivers && quote.additionalDrivers.length > 0 && (
+                      quote.additionalDrivers.map((driver: any, index: number) => (
+                        <div key={index}>
+                          <Text variant="body-regular">
+                            {driver.firstName} {driver.lastName}
+                            {driver.relationship && (
+                              <span style={{ color: '#666', fontSize: '0.8em' }}> ({driver.relationship})</span>
+                            )}
+                          </Text>
+                          <Text variant="caption-small" color="subtle">
+                            {driver.email}
+                          </Text>
+                        </div>
+                      ))
+                    )}
+                  </Layout>
                 </div>
               </Layout>
             </Card>
           </Section>
 
-          <Section title="Premium Breakdown">
-            <PremiumBreakdown coverage={coverage} premium={premium} />
-          </Section>
+          {localCoverage && (
+            <Section title="Premium Breakdown">
+              <PremiumBreakdown
+                coverage={localCoverage}
+                premium={{ monthly: monthlyPremium, sixMonth: totalPremium }}
+              />
+            </Section>
+          )}
 
           <Section title="Why This Rate?">
             <Card padding="medium" background="1">
@@ -198,24 +306,49 @@ const QuoteResults: React.FC = () => {
                   Your premium is calculated based on multiple factors including:
                 </Text>
                 <ul style={{ margin: '0.5rem 0', paddingLeft: '1.5rem' }}>
+                  {/* List all vehicles */}
+                  {quote.vehicles && quote.vehicles.length > 0 ? (
+                    quote.vehicles.map((vehicle: any, index: number) => (
+                      <li key={`vehicle-${index}`}>
+                        <Text variant="body-small">
+                          Vehicle {quote.vehicles.length > 1 ? `${index + 1}` : ''}: {vehicle.year} {vehicle.make} {vehicle.model} (age, make, model, safety features)
+                        </Text>
+                      </li>
+                    ))
+                  ) : (
+                    <li>
+                      <Text variant="body-small">
+                        Vehicle: {vehicleDisplay} (age, make, model, safety features)
+                      </Text>
+                    </li>
+                  )}
+
+                  {/* List primary driver */}
                   <li>
                     <Text variant="body-small">
-                      Vehicle: {vehicleDisplay} (age, make, model, safety features)
+                      Primary Driver: {primaryDriverName} (driving history and experience)
                     </Text>
                   </li>
+
+                  {/* List additional drivers */}
+                  {quote.additionalDrivers && quote.additionalDrivers.length > 0 && (
+                    quote.additionalDrivers.map((driver: any, index: number) => (
+                      <li key={`driver-${index}`}>
+                        <Text variant="body-small">
+                          Additional Driver: {driver.firstName} {driver.lastName} ({driver.relationship || 'household member'})
+                        </Text>
+                      </li>
+                    ))
+                  )}
+
                   <li>
                     <Text variant="body-small">
-                      Location: {driver.city}, {driver.state} (local risk factors)
-                    </Text>
-                  </li>
-                  <li>
-                    <Text variant="body-small">
-                      Coverage: {coverage.bodilyInjuryLimit} bodily injury, {coverage.hasCollision ? 'collision' : 'no collision'}, {coverage.hasComprehensive ? 'comprehensive' : 'no comprehensive'}
+                      Coverage: Comprehensive auto insurance package
                     </Text>
                   </li>
                 </ul>
                 <Text variant="caption-small" color="subtle">
-                  This quote is valid for 30 days from today.
+                  This quote is valid for 30 days. Quote Status: {quoteStatus}
                 </Text>
               </Layout>
             </Card>
@@ -243,53 +376,55 @@ const QuoteResults: React.FC = () => {
 
         <Aside>
           <QuoteCard
-            price={premium.monthly.toString()}
-            total={premium.sixMonth.toString()}
+            price={monthlyPremium.toFixed(2)}
+            total={totalPremium.toFixed(2)}
             name="Your Quote"
           >
-            <List title="Coverage Summary">
-              <List.Row>
-                <List.Item>
-                  Bodily Injury: ${coverage.bodilyInjuryLimit.replace('/', ' / ')}
-                </List.Item>
-              </List.Row>
-              <List.Row>
-                <List.Item>
-                  Property Damage: ${parseInt(coverage.propertyDamageLimit).toLocaleString()}
-                </List.Item>
-              </List.Row>
-              {coverage.hasCollision && (
+            {localCoverage && (
+              <List title="Coverage Summary">
                 <List.Row>
                   <List.Item>
-                    Collision: ${coverage.collisionDeductible} deductible
+                    Bodily Injury: ${localCoverage.bodilyInjuryLimit.replace('/', ' / ')}
                   </List.Item>
                 </List.Row>
-              )}
-              {coverage.hasComprehensive && (
                 <List.Row>
                   <List.Item>
-                    Comprehensive: ${coverage.comprehensiveDeductible} deductible
+                    Property Damage: ${parseInt(localCoverage.propertyDamageLimit).toLocaleString()}
                   </List.Item>
                 </List.Row>
-              )}
-              {coverage.hasUninsured && (
-                <List.Row>
-                  <List.Item>Uninsured Motorist: $50k/$100k</List.Item>
-                </List.Row>
-              )}
-              {coverage.hasRoadside && (
-                <List.Row>
-                  <List.Item>24/7 Roadside Assistance</List.Item>
-                </List.Row>
-              )}
-              {coverage.hasRental && (
-                <List.Row>
-                  <List.Item>
-                    Rental Reimbursement: ${coverage.rentalLimit}/day
-                  </List.Item>
-                </List.Row>
-              )}
-            </List>
+                {localCoverage.hasCollision && (
+                  <List.Row>
+                    <List.Item>
+                      Collision: ${localCoverage.collisionDeductible} deductible
+                    </List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasComprehensive && (
+                  <List.Row>
+                    <List.Item>
+                      Comprehensive: ${localCoverage.comprehensiveDeductible} deductible
+                    </List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasUninsured && (
+                  <List.Row>
+                    <List.Item>Uninsured Motorist: $50k/$100k</List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasRoadside && (
+                  <List.Row>
+                    <List.Item>24/7 Roadside Assistance</List.Item>
+                  </List.Row>
+                )}
+                {localCoverage.hasRental && (
+                  <List.Row>
+                    <List.Item>
+                      Rental Reimbursement: ${localCoverage.rentalLimit}/day
+                    </List.Item>
+                  </List.Row>
+                )}
+              </List>
+            )}
 
             <div style={{ marginTop: '1rem', padding: '1rem', background: '#f0f9ff', borderRadius: '8px' }}>
               <Text variant="caption-small" align="center" weight="bold" color="primary">

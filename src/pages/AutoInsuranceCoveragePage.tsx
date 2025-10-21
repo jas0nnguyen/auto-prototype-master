@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -26,12 +27,18 @@ import {
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
 const AutoInsuranceCoveragePage: React.FC = () => {
+  const navigate = useNavigate();
   const [coverageDate, setCoverageDate] = useState<Date | undefined>(undefined);
   const [hasCollision, setHasCollision] = useState(true);
   const [hasComprehensive, setHasComprehensive] = useState(true);
   const [hasUninsured, setHasUninsured] = useState(true);
   const [hasRoadside, setHasRoadside] = useState(false);
   const [hasRental, setHasRental] = useState(false);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    navigate('/auto-insurance/checkout');
+  };
 
   // Calculate price
   const calculatePrice = () => {
@@ -78,10 +85,8 @@ const AutoInsuranceCoveragePage: React.FC = () => {
           </AppTemplate.Title>
 
           <Form
+            onSubmit={handleSubmit}
             buttonLabel="Continue to Checkout"
-            buttonProps={{
-              href: "/auto-insurance/checkout",
-            }}
           >
             <Section>
               <DateInput

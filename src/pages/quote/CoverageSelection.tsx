@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
   AppTemplate,
   PageHeader,
@@ -22,7 +22,10 @@ import {
   List,
   ChevronLeft,
   DateInput,
+  Skeleton,
 } from '@sureapp/canary-design-system';
+import { useQuoteByNumber, useUpdateQuoteCoverage } from '../../hooks/useQuote';
+import { useQueryClient } from '@tanstack/react-query';
 
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
 
@@ -42,6 +45,11 @@ interface CoverageData {
 
 const CoverageSelection: React.FC = () => {
   const navigate = useNavigate();
+  const { quoteNumber } = useParams<{ quoteNumber: string }>();
+  const queryClient = useQueryClient();
+  const updateQuoteCoverage = useUpdateQuoteCoverage();
+  const { data: quote, isLoading: isLoadingQuote, refetch } = useQuoteByNumber(quoteNumber);
+
   const [coverage, setCoverage] = useState<CoverageData>({
     coverageStartDate: undefined,
     bodilyInjuryLimit: '100/300',
@@ -55,55 +63,102 @@ const CoverageSelection: React.FC = () => {
     hasRental: false,
     rentalLimit: '50',
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isPricingLoading, setIsPricingLoading] = useState(false);
+  const isInitialLoadRef = useRef(true);
 
   useEffect(() => {
-    // Check if previous steps completed
-    const quoteData = sessionStorage.getItem('quoteData');
-    if (!quoteData) {
-      navigate('/quote/vehicle-info');
+    if (!quoteNumber) {
+      navigate('/quote/driver-info');
+      return;
     }
-  }, [navigate]);
+  }, [navigate, quoteNumber]);
 
-  // Calculate premium based on selections
-  const calculatePremium = (): { monthly: number; sixMonth: number } => {
-    let basePrice = 95; // Base liability coverage
+  // Load initial coverage from quote when it loads
+  useEffect(() => {
+    if (quote && quote.coverages && isInitialLoadRef.current) {
+      setCoverage({
+        coverageStartDate: quote.coverages.startDate ? new Date(quote.coverages.startDate) : undefined,
+        bodilyInjuryLimit: quote.coverages.bodilyInjuryLimit || '100/300',
+        propertyDamageLimit: quote.coverages.propertyDamageLimit || '50000',
+        hasCollision: quote.coverages.hasCollision || false,
+        collisionDeductible: quote.coverages.collisionDeductible?.toString() || '500',
+        hasComprehensive: quote.coverages.hasComprehensive || false,
+        comprehensiveDeductible: quote.coverages.comprehensiveDeductible?.toString() || '500',
+        hasUninsured: quote.coverages.hasUninsured || false,
+        hasRoadside: quote.coverages.hasRoadside || false,
+        hasRental: quote.coverages.hasRental || false,
+        rentalLimit: quote.coverages.rentalLimit?.toString() || '50',
+      });
+      isInitialLoadRef.current = false; // Mark that initial data has been loaded
+    }
+  }, [quote?.quote_number]); // Only run when quote first loads
 
-    if (coverage.hasCollision) basePrice += 32;
-    if (coverage.hasComprehensive) basePrice += 28;
-    if (coverage.hasUninsured) basePrice += 15;
-    if (coverage.hasRoadside) basePrice += 5;
-    if (coverage.hasRental) basePrice += 8;
+  // Auto-update premium when coverage changes (with debounce)
+  useEffect(() => {
+    // Skip API call if this is the initial load
+    if (!quoteNumber || !coverage.coverageStartDate || isInitialLoadRef.current) return;
 
-    // Adjust for deductibles (higher deductible = lower premium)
-    if (coverage.hasCollision) {
-      const deductibleDiscount = {
-        '250': 0,
-        '500': -5,
-        '1000': -10,
-        '2500': -15,
-      }[coverage.collisionDeductible] || 0;
-      basePrice += deductibleDiscount;
+    setIsPricingLoading(true);
+
+    // Debounce API calls - wait 300ms after user stops making changes
+    const timer = setTimeout(async () => {
+      try {
+        await updateQuoteCoverage.mutateAsync({
+          quoteNumber,
+          coverageData: {
+            coverage_start_date: coverage.coverageStartDate.toISOString().split('T')[0],
+            coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
+            coverage_property_damage_limit: coverage.propertyDamageLimit,
+            coverage_collision: coverage.hasCollision,
+            coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+            coverage_comprehensive: coverage.hasComprehensive,
+            coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
+            coverage_uninsured_motorist: coverage.hasUninsured,
+            coverage_roadside_assistance: coverage.hasRoadside,
+            coverage_rental_reimbursement: coverage.hasRental,
+            coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
+          },
+        });
+        // Explicitly refetch the quote to get the updated premium
+        await refetch();
+      } catch (error) {
+        console.error('Failed to update coverage:', error);
+      } finally {
+        setIsPricingLoading(false);
+      }
+    }, 300); // Wait 300ms after last change for snappier updates
+
+    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [coverage, quoteNumber]); // Re-run when coverage or quoteNumber changes (refetch and updateQuoteCoverage are stable)
+
+  // Get premium from API quote - this is the actual calculated premium from the backend
+  const { monthly, sixMonth } = useMemo(() => {
+    if (!quote || !quote.premium) {
+      // Fallback to basic values while loading
+      return {
+        monthly: 100,
+        sixMonth: 600,
+      };
     }
 
-    if (coverage.hasComprehensive) {
-      const deductibleDiscount = {
-        '250': 0,
-        '500': -3,
-        '1000': -6,
-        '2500': -10,
-      }[coverage.comprehensiveDeductible] || 0;
-      basePrice += deductibleDiscount;
-    }
-
-    return {
-      monthly: Math.max(basePrice, 50), // Minimum $50/month
-      sixMonth: Math.max(basePrice * 6, 300),
+    const calculated = {
+      monthly: quote.premium.monthly || Math.round((quote.premium.total || 0) / 6),
+      sixMonth: quote.premium.sixMonth || quote.premium.total || 0,
     };
-  };
 
-  const { monthly, sixMonth } = calculatePremium();
+    console.log('[CoverageSelection] Premium updated:', {
+      monthly: calculated.monthly,
+      sixMonth: calculated.sixMonth,
+      total: quote.premium.total,
+      quoteNumber: quote.quote_number,
+    });
 
-  const handleSubmit = (e: React.FormEvent) => {
+    return calculated;
+  }, [quote]); // Updates when quote data changes from API
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!coverage.coverageStartDate) {
@@ -111,17 +166,37 @@ const CoverageSelection: React.FC = () => {
       return;
     }
 
-    // Save coverage data
-    const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
-    const updatedData = {
-      ...existingData,
-      coverage,
-      premium: { monthly, sixMonth },
-    };
-    sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
+    if (!quoteNumber) return;
 
-    // Navigate to quote results
-    navigate('/quote/results');
+    try {
+      setIsSubmitting(true);
+
+      // Update quote with coverage selections
+      const updatedQuote = await updateQuoteCoverage.mutateAsync({
+        quoteNumber,
+        coverageData: {
+          coverage_start_date: coverage.coverageStartDate?.toISOString().split('T')[0],
+          coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
+          coverage_property_damage_limit: coverage.propertyDamageLimit,
+          coverage_collision: coverage.hasCollision,
+          coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+          coverage_comprehensive: coverage.hasComprehensive,
+          coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
+          coverage_uninsured_motorist: coverage.hasUninsured,
+          coverage_roadside_assistance: coverage.hasRoadside,
+          coverage_rental_reimbursement: coverage.hasRental,
+          coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
+        },
+      });
+
+      // Navigate to quote results with quote number in URL
+      navigate(`/quote/results/${quoteNumber}`);
+    } catch (error) {
+      console.error('Error finalizing quote:', error);
+      alert('Failed to finalize quote. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -139,7 +214,7 @@ const CoverageSelection: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  href="/quote/driver-info"
+                  onClick={() => navigate(`/quote/vehicles/${quoteNumber}`)}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -182,9 +257,8 @@ const CoverageSelection: React.FC = () => {
                     id="bodily-injury"
                     label="Bodily Injury Limit"
                     size="small"
-                    required
                     value={coverage.bodilyInjuryLimit}
-                    onChange={(e) => setCoverage({ ...coverage, bodilyInjuryLimit: e.target.value })}
+                    onChange={(value) => setCoverage({ ...coverage, bodilyInjuryLimit: value })}
                     options={[
                       { label: '$25,000 / $50,000', value: '25/50' },
                       { label: '$50,000 / $100,000', value: '50/100' },
@@ -196,9 +270,8 @@ const CoverageSelection: React.FC = () => {
                     id="property-damage"
                     label="Property Damage Limit"
                     size="small"
-                    required
                     value={coverage.propertyDamageLimit}
-                    onChange={(e) => setCoverage({ ...coverage, propertyDamageLimit: e.target.value })}
+                    onChange={(value) => setCoverage({ ...coverage, propertyDamageLimit: value })}
                     options={[
                       { label: '$25,000', value: '25000' },
                       { label: '$50,000', value: '50000' },
@@ -234,7 +307,7 @@ const CoverageSelection: React.FC = () => {
                       label="Deductible"
                       size="small"
                       value={coverage.collisionDeductible}
-                      onChange={(e) => setCoverage({ ...coverage, collisionDeductible: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, collisionDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
                         { label: '$500 (Recommended)', value: '500' },
@@ -272,7 +345,7 @@ const CoverageSelection: React.FC = () => {
                       label="Deductible"
                       size="small"
                       value={coverage.comprehensiveDeductible}
-                      onChange={(e) => setCoverage({ ...coverage, comprehensiveDeductible: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, comprehensiveDeductible: value })}
                       options={[
                         { label: '$250', value: '250' },
                         { label: '$500 (Recommended)', value: '500' },
@@ -351,7 +424,7 @@ const CoverageSelection: React.FC = () => {
                       label="Daily Rental Limit"
                       size="small"
                       value={coverage.rentalLimit}
-                      onChange={(e) => setCoverage({ ...coverage, rentalLimit: e.target.value })}
+                      onChange={(value) => setCoverage({ ...coverage, rentalLimit: value })}
                       options={[
                         { label: '$30 per day', value: '30' },
                         { label: '$50 per day (Recommended)', value: '50' },
@@ -363,64 +436,111 @@ const CoverageSelection: React.FC = () => {
               </Block>
             </Section>
 
-            <Form.Actions>
+            <div style={{ marginTop: '2rem' }}>
               <Button
                 type="submit"
                 size="large"
                 variant="primary"
                 isFullWidth
+                disabled={isSubmitting || updateQuoteCoverage.isPending || isLoadingQuote}
               >
-                See My Quote
+                {isSubmitting || updateQuoteCoverage.isPending ? 'Finalizing Your Quote...' : 'See My Quote'}
               </Button>
-            </Form.Actions>
+            </div>
           </Form>
         </Content>
 
         <Aside>
-          <QuoteCard price={monthly.toString()} total={sixMonth.toString()}>
+          <QuoteCard
+            price={monthly.toFixed(2)}
+            total={sixMonth.toFixed(2)}
+            isLoading={isPricingLoading}
+          >
             <Button emphasis="strong" href="#" size="xsmall" variant="support">
               View sample policy
             </Button>
             <List title="Liability Coverage">
               <List.Row>
-                <List.Item>Bodily Injury: {coverage.bodilyInjuryLimit.replace('/', ' / ')}</List.Item>
+                <List.Item>
+                  {isPricingLoading ? (
+                    <Skeleton variant="text" width={150} />
+                  ) : (
+                    `Bodily Injury: ${coverage.bodilyInjuryLimit.replace('/', ' / ')}`
+                  )}
+                </List.Item>
               </List.Row>
               <List.Row>
-                <List.Item>Property Damage: ${parseInt(coverage.propertyDamageLimit).toLocaleString()}</List.Item>
+                <List.Item>
+                  {isPricingLoading ? (
+                    <Skeleton variant="text" width={180} />
+                  ) : (
+                    `Property Damage: $${parseInt(coverage.propertyDamageLimit).toLocaleString()}`
+                  )}
+                </List.Item>
               </List.Row>
             </List>
             {coverage.hasCollision && (
               <List title="Collision">
                 <List.Row>
-                  <List.Item>${coverage.collisionDeductible} deductible</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={120} />
+                    ) : (
+                      `$${coverage.collisionDeductible} deductible`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasComprehensive && (
               <List title="Comprehensive">
                 <List.Row>
-                  <List.Item>${coverage.comprehensiveDeductible} deductible</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={120} />
+                    ) : (
+                      `$${coverage.comprehensiveDeductible} deductible`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasUninsured && (
               <List title="Uninsured Motorist">
                 <List.Row>
-                  <List.Item>50k/100k coverage</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={100} />
+                    ) : (
+                      '50k/100k coverage'
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasRoadside && (
               <List title="Roadside Assistance">
                 <List.Row>
-                  <List.Item>24/7 service</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={80} />
+                    ) : (
+                      '24/7 service'
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}
             {coverage.hasRental && (
               <List title="Rental Reimbursement">
                 <List.Row>
-                  <List.Item>${coverage.rentalLimit}/day limit</List.Item>
+                  <List.Item>
+                    {isPricingLoading ? (
+                      <Skeleton variant="text" width={100} />
+                    ) : (
+                      `$${coverage.rentalLimit}/day limit`
+                    )}
+                  </List.Item>
                 </List.Row>
               </List>
             )}

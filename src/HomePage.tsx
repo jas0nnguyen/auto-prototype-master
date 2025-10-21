@@ -201,11 +201,11 @@ const HomePage: React.FC = () => {
 
           <Layout display="flex" gap="small" flexJustify="center">
             <Button
-              onClick={() => navigate('/auto-insurance/landing')}
+              onClick={() => navigate('/quote/driver-info')}
               variant="primary"
               size="medium"
             >
-              Start Auto Insurance Flow
+              Start Auto Insurance Quote (Working!)
             </Button>
             <Button
               onClick={() => navigate('/examples/landing-page')}

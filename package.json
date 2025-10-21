@@ -11,18 +11,33 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "setup-npmrc": "node scripts/setup-npmrc.js"
+    "setup-npmrc": "node scripts/setup-npmrc.js",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:headed": "playwright test --headed",
+    "test:e2e:debug": "playwright test --debug",
+    "test:e2e:chromium": "playwright test --project=chromium",
+    "test:e2e:firefox": "playwright test --project=firefox",
+    "test:e2e:webkit": "playwright test --project=webkit",
+    "test:e2e:report": "playwright show-report"
   },
   "devDependencies": {
+    "@playwright/mcp": "^0.0.43",
+    "@playwright/test": "^1.56.1",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.6.0",
+    "dotenv": "^17.2.3",
+    "drizzle-kit": "^0.31.5",
     "typescript": "^5.8.3",
     "vite": "^7.0.0"
   },
   "dependencies": {
+    "@neondatabase/serverless": "^1.0.2",
     "@sureapp/canary-design-system": "^3.12.2",
+    "@tanstack/react-query": "^5.17.19",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "drizzle-orm": "^0.44.6",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^7.6.2"
