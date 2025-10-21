@@ -65,9 +65,10 @@ const QuoteResults: React.FC = () => {
   // Get quote ID from sessionStorage on mount
   useEffect(() => {
     const storedQuoteId = sessionStorage.getItem('quoteId');
+    console.log('[QuoteResults] StoredQuoteId from sessionStorage:', storedQuoteId);
     if (!storedQuoteId) {
-      // No quote ID, redirect to start
-      navigate('/quote/vehicle-info');
+      // No quote ID, redirect to start (driver info is first page)
+      navigate('/quote/driver-info');
       return;
     }
     setQuoteId(storedQuoteId);
@@ -76,8 +77,18 @@ const QuoteResults: React.FC = () => {
   // Fetch quote data from API
   const { data: quote, isLoading, error } = useQuote(quoteId);
 
-  // Show loading state
-  if (isLoading) {
+  // Debug logging
+  console.log('[QuoteResults] Debug Info:', {
+    quoteId,
+    quote,
+    isLoading,
+    error,
+    hasQuote: !!quote,
+    quoteKeys: quote ? Object.keys(quote) : []
+  });
+
+  // Show loading state while getting quoteId from sessionStorage or fetching quote
+  if (!quoteId || isLoading) {
     return (
       <AppTemplate preset="purchase-flow">
         <PageHeader>
@@ -107,7 +118,7 @@ const QuoteResults: React.FC = () => {
               <Text variant="title-1" color="danger">Failed to load quote</Text>
               <Button
                 variant="primary"
-                onClick={() => navigate('/quote/vehicle-info')}
+                onClick={() => navigate('/quote/driver-info')}
                 style={{ marginTop: '2rem' }}
               >
                 Start Over
@@ -119,24 +130,49 @@ const QuoteResults: React.FC = () => {
     );
   }
 
+  // ✅ NOW it's safe to access quote properties because we've checked for loading/error/null above
+
   const handleContinue = () => {
     // Navigate to binding flow (Phase 4: US2)
     navigate('/binding/payment-info');
   };
 
   const handleSaveQuote = () => {
-    alert(`Your quote has been saved! Reference number: ${quote.quote_number}\n\nWe've sent a copy to ${quote.driver.email}`);
+    alert(`Your quote has been saved! Reference number: ${quote.quote_number}\n\nWe've sent a copy to ${quote.driver?.email || 'your email'}`);
   };
 
-  // Extract data from API response
-  const vehicleDisplay = quote.vehicle.description;
-  const quoteRefNumber = quote.quote_number;
-  const totalPremium = quote.premium?.total_premium || 0;
-  const monthlyPremium = Math.round(totalPremium / 6);
+  // Extract data from API response (with safe fallbacks)
+  const vehicleDisplay = quote.vehicle
+    ? `${quote.vehicle.year} ${quote.vehicle.make} ${quote.vehicle.model}`
+    : 'Vehicle';
+  const vehicleVin = quote.vehicle?.vin;
+  const driverFullName = quote.driver
+    ? `${quote.driver.firstName} ${quote.driver.lastName}`
+    : 'Driver';
+  const driverEmail = quote.driver?.email || '';
+  const quoteRefNumber = quote.quote_number || '';
+  const quoteStatus = quote.quote_status || 'QUOTED';
+  const totalPremium = quote.premium?.sixMonth || quote.premium?.total || 0;
+  const monthlyPremium = quote.premium?.monthly || Math.round(totalPremium / 6);
 
-  // Get stored coverage data for PremiumBreakdown component (temporary until backend returns full coverage details)
+  // Get stored data from sessionStorage (includes all drivers and vehicles)
   const storedData = sessionStorage.getItem('quoteData');
-  const localCoverage = storedData ? JSON.parse(storedData).coverage : null;
+  const parsedStoredData = storedData ? JSON.parse(storedData) : null;
+  const localCoverage = parsedStoredData?.coverage || null;
+
+  // Get all drivers and vehicles from sessionStorage (multi-driver/multi-vehicle support)
+  const primaryDriver = parsedStoredData?.primaryDriver;
+  const additionalDrivers = parsedStoredData?.additionalDrivers || [];
+  const allVehicles = parsedStoredData?.vehicles || [];
+
+  // Fallback to API data if sessionStorage doesn't have multi-driver/vehicle data
+  const drivers = primaryDriver
+    ? [{ ...primaryDriver, isPrimary: true }, ...additionalDrivers]
+    : (quote.driver ? [{ ...quote.driver, isPrimary: true }] : []);
+
+  const vehicles = allVehicles.length > 0
+    ? allVehicles
+    : (quote.vehicle ? [quote.vehicle] : []);
 
   return (
     <AppTemplate preset="purchase-flow">
@@ -153,7 +189,7 @@ const QuoteResults: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  href="/quote/coverage-selection"
+                  onClick={() => navigate('/quote/coverage-selection')}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -197,9 +233,9 @@ const QuoteResults: React.FC = () => {
                     VEHICLE
                   </Text>
                   <Text variant="body-regular">{vehicleDisplay}</Text>
-                  {quote.vehicle.vin && (
+                  {vehicleVin && (
                     <Text variant="caption-small" color="subtle">
-                      VIN: {quote.vehicle.vin}
+                      VIN: {vehicleVin}
                     </Text>
                   )}
                 </div>
@@ -209,10 +245,10 @@ const QuoteResults: React.FC = () => {
                     POLICYHOLDER
                   </Text>
                   <Text variant="body-regular">
-                    {quote.driver.full_name}
+                    {driverFullName}
                   </Text>
                   <Text variant="caption-small" color="subtle">
-                    {quote.driver.email}
+                    {driverEmail}
                   </Text>
                 </div>
               </Layout>
@@ -242,7 +278,7 @@ const QuoteResults: React.FC = () => {
                   </li>
                   <li>
                     <Text variant="body-small">
-                      Driver: {quote.driver.full_name} (driving history and experience)
+                      Driver: {driverFullName} (driving history and experience)
                     </Text>
                   </li>
                   <li>
@@ -252,7 +288,7 @@ const QuoteResults: React.FC = () => {
                   </li>
                 </ul>
                 <Text variant="caption-small" color="subtle">
-                  This quote is valid for 30 days. Quote Status: {quote.quote_status}
+                  This quote is valid for 30 days. Quote Status: {quoteStatus}
                 </Text>
               </Layout>
             </Card>

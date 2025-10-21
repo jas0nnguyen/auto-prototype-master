@@ -14,8 +14,10 @@ import AutoInsuranceCheckoutPage from './pages/AutoInsuranceCheckoutPage';
 import AutoInsuranceConfirmationPage from './pages/AutoInsuranceConfirmationPage';
 
 // Import quote flow pages (T079)
-import VehicleInfo from './pages/quote/VehicleInfo';
-import DriverInfo from './pages/quote/DriverInfo';
+import PrimaryDriverInfo from './pages/quote/PrimaryDriverInfo';
+import AdditionalDrivers from './pages/quote/AdditionalDrivers';
+import VehiclesList from './pages/quote/VehiclesList';
+import VehicleConfirmation from './pages/quote/VehicleConfirmation';
 import CoverageSelection from './pages/quote/CoverageSelection';
 import QuoteResults from './pages/quote/QuoteResults';
 
@@ -68,9 +70,11 @@ function App() {
           <Route path="/auto-insurance/checkout" element={<AutoInsuranceCheckoutPage />} />
           <Route path="/auto-insurance/confirmation" element={<AutoInsuranceConfirmationPage />} />
 
-          {/* Quote Flow Routes (T079) */}
-          <Route path="/quote/vehicle-info" element={<VehicleInfo />} />
-          <Route path="/quote/driver-info" element={<DriverInfo />} />
+          {/* Quote Flow Routes (PNI → Additional Drivers → Vehicles → Vehicle Confirmation → Coverage → Results) */}
+          <Route path="/quote/driver-info" element={<PrimaryDriverInfo />} />
+          <Route path="/quote/additional-drivers" element={<AdditionalDrivers />} />
+          <Route path="/quote/vehicles" element={<VehiclesList />} />
+          <Route path="/quote/vehicle-confirmation" element={<VehicleConfirmation />} />
           <Route path="/quote/coverage-selection" element={<CoverageSelection />} />
           <Route path="/quote/results" element={<QuoteResults />} />
 

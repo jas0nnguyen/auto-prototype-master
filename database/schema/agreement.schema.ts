@@ -4,7 +4,7 @@
  * A legally binding contract among identified parties. Policy is a subtype of Agreement.
  */
 
-import { pgTable, uuid, varchar, date, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, date, timestamp, numeric } from 'drizzle-orm/pg-core';
 import { product } from './product.schema';
 import { auditTimestamps } from './_base.schema';
 
@@ -21,6 +21,10 @@ export const agreement = pgTable('agreement', {
   product_identifier: uuid('product_identifier')
     .references(() => product.product_identifier)
     .notNull(),
+
+  // Quote-specific fields (for linking driver and storing premium)
+  driver_email: varchar('driver_email', { length: 255 }), // Email of primary driver/insured
+  premium_amount: numeric('premium_amount', { precision: 10, scale: 2 }), // Calculated premium
 
   // Audit Timestamps
   ...auditTimestamps,

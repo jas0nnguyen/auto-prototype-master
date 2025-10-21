@@ -36,7 +36,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
               <Button emphasis="subtle" size="medium" variant="support">
                 Log in
               </Button>
-              <Button size="medium" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
+              <Button size="medium" variant="primary" onClick={() => navigate('/quote/driver-info')}>
                 Get my quote
               </Button>
             </ButtonGroup>
@@ -47,7 +47,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
                 <Button size="small" variant="support">
                   Log in
                 </Button>
-                <Button size="small" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
+                <Button size="small" variant="primary" onClick={() => navigate('/quote/driver-info')}>
                   Get my quote
                 </Button>
               </ButtonGroup>
@@ -62,7 +62,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
         {/* Hero section */}
         <Hero
           cta={
-            <Button size="large" variant="primary" onClick={() => navigate('/quote/vehicle-info')}>
+            <Button size="large" variant="primary" onClick={() => navigate('/quote/driver-info')}>
               Get my quote
             </Button>
           }
@@ -196,7 +196,7 @@ const AutoInsuranceLandingPage: React.FC = () => {
                 Get your personalized auto insurance <br />
                 quote in just 5 minutes.
               </Title>
-              <Button onClick={() => navigate('/quote/vehicle-info')} size="large" variant="primary">
+              <Button onClick={() => navigate('/quote/driver-info')} size="large" variant="primary">
                 Get my quote
               </Button>
             </Layout>

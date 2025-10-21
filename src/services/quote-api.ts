@@ -15,35 +15,73 @@
  * Quote data types (matching backend DTOs)
  */
 export interface CreateQuoteRequest {
-  // Driver info
-  driver_first_name: string;
-  driver_last_name: string;
-  driver_birth_date: string;
-  driver_email: string;
-  driver_phone: string;
+  // NEW: Multi-driver/vehicle support
+  drivers?: Array<{
+    first_name: string;
+    last_name: string;
+    birth_date: string;
+    email: string;
+    phone: string;
+    gender?: string;
+    marital_status?: string;
+    years_licensed?: number;
+    relationship?: string;
+    is_primary?: boolean;
+  }>;
+  vehicles?: Array<{
+    year: number;
+    make: string;
+    model: string;
+    vin?: string;
+    annual_mileage?: number;
+    body_type?: string;
+    usage?: string;
+    primary_driver_id?: string;
+  }>;
+
+  // LEGACY: Single driver info (backward compatibility)
+  driver_first_name?: string;
+  driver_last_name?: string;
+  driver_birth_date?: string;
+  driver_email?: string;
+  driver_phone?: string;
   driver_gender?: string;
+  driver_marital_status?: string;
   driver_years_licensed?: number;
 
-  // Address
+  // Address (applies to primary driver)
   address_line_1: string;
   address_line_2?: string;
   address_city: string;
   address_state: string;
   address_zip: string;
 
-  // Vehicle
+  // LEGACY: Single vehicle info (backward compatibility)
   vehicle_year?: number;
   vehicle_make?: string;
   vehicle_model?: string;
   vehicle_vin?: string;
   annual_mileage?: number;
   vehicle_usage?: string;
+  vehicle_annual_mileage?: number;
+  vehicle_body_type?: string;
 
-  // Coverage
+  // Coverage selections (EXPANDED for complete quote data)
+  coverage_start_date?: string;  // NEW
+  coverage_bodily_injury_limit?: string;  // NEW
+  coverage_property_damage_limit?: string;  // NEW
+  coverage_has_collision?: boolean;  // NEW
+  coverage_collision_deductible?: number;
+  coverage_has_comprehensive?: boolean;  // NEW
+  coverage_comprehensive_deductible?: number;
+  coverage_has_uninsured?: boolean;  // NEW
+  coverage_has_roadside?: boolean;  // NEW
+  coverage_has_rental?: boolean;  // NEW
+  coverage_rental_limit?: number;  // NEW
+
+  // Keep legacy fields for backward compatibility
   coverage_bodily_injury?: string;
   coverage_property_damage?: string;
-  coverage_collision_deductible?: number;
-  coverage_comprehensive_deductible?: number;
   include_uninsured_motorist?: boolean;
   include_medical_payments?: boolean;
   include_rental_reimbursement?: boolean;
@@ -51,22 +89,85 @@ export interface CreateQuoteRequest {
 }
 
 export interface QuoteResponse {
-  quoteId: string;
-  quoteNumber: string;
-  quoteStatus?: string;
+  quote_number: string;
+  quote_status?: string;
+  policy_id?: string;
+  effective_date?: string;
+  expiration_date?: string;
+  created_at?: string;
+  // Primary driver (PNI)
   driver?: {
-    partyId: string;
-    fullName: string;
+    firstName: string;
+    lastName: string;
     email: string;
+    phone?: string;
+    gender?: string;
+    maritalStatus?: string;
+    birthDate?: string;
+    yearsLicensed?: number;
+    isPrimary?: boolean;
   };
+  // ALL additional drivers
+  additionalDrivers?: Array<{
+    firstName: string;
+    lastName: string;
+    email: string;
+    phone?: string;
+    gender?: string;
+    maritalStatus?: string;
+    birthDate?: string;
+    yearsLicensed?: number;
+    relationship?: string;
+  }>;
+  // Primary vehicle (backward compatibility)
   vehicle?: {
-    vehicleId: string;
-    description: string;
+    year: number;
+    make: string;
+    model: string;
     vin?: string;
+    bodyType?: string;
+    annualMileage?: number;
   };
-  premium?: number;  // Backend returns just the number
-  createdAt: Date;
-  expiresAt: Date;
+  // ALL vehicles
+  vehicles?: Array<{
+    year: number;
+    make: string;
+    model: string;
+    vin?: string;
+    bodyType?: string;
+    annualMileage?: number;
+    primaryDriverId?: string;
+  }>;
+  address?: {
+    addressLine1: string;
+    addressLine2?: string;
+    city: string;
+    state: string;
+    zipCode: string;
+  };
+  coverages?: {
+    startDate?: string;
+    bodilyInjuryLimit?: string;
+    propertyDamageLimit?: string;
+    hasCollision?: boolean;
+    collisionDeductible?: number;
+    hasComprehensive?: boolean;
+    comprehensiveDeductible?: number;
+    hasUninsured?: boolean;
+    hasRoadside?: boolean;
+    hasRental?: boolean;
+    rentalLimit?: number;
+  };
+  premium?: {
+    total: number;
+    monthly: number;
+    sixMonth: number;
+  };
+  // Legacy fields for backward compatibility
+  quoteId?: string;
+  quoteNumber?: string;
+  createdAt?: Date;
+  expiresAt?: Date;
 }
 
 /**

@@ -52,7 +52,7 @@ interface DriverFormData {
   zip: string;
 }
 
-const DriverInfo: React.FC = () => {
+const PrimaryDriverInfo: React.FC = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState<DriverFormData>({
     firstName: '',
@@ -68,14 +68,7 @@ const DriverInfo: React.FC = () => {
     zip: '',
   });
 
-  useEffect(() => {
-    // Check if vehicle info exists
-    const quoteData = sessionStorage.getItem('quoteData');
-    if (!quoteData) {
-      // Redirect back to vehicle info if no data
-      navigate('/quote/vehicle-info');
-    }
-  }, [navigate]);
+  // DriverInfo is now the first page in the flow - no validation needed
 
   const validateEmail = (email: string): boolean => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -102,16 +95,16 @@ const DriverInfo: React.FC = () => {
       return;
     }
 
-    // Merge with existing quote data
-    const existingData = JSON.parse(sessionStorage.getItem('quoteData') || '{}');
+    // Store primary driver data (PNI - first step in flow)
     const updatedData = {
-      ...existingData,
-      driver: formData,
+      primaryDriver: formData,
+      additionalDrivers: [], // Initialize empty array for additional drivers
+      vehicles: [], // Initialize empty array for vehicles
     };
     sessionStorage.setItem('quoteData', JSON.stringify(updatedData));
 
-    // Navigate to coverage selection
-    navigate('/quote/coverage-selection');
+    // Navigate to additional drivers page (next step)
+    navigate('/quote/additional-drivers');
   };
 
   return (
@@ -129,7 +122,7 @@ const DriverInfo: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  href="/quote/vehicle-info"
+                  onClick={() => navigate('/')}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >
@@ -306,4 +299,4 @@ const DriverInfo: React.FC = () => {
   );
 };
 
-export default DriverInfo;
+export default PrimaryDriverInfo;

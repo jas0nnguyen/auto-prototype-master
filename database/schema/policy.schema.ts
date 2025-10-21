@@ -5,9 +5,8 @@
  * A quote is represented as a Policy with status='QUOTED'.
  */
 
-import { pgTable, uuid, varchar, date, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, date, timestamp, jsonb } from 'drizzle-orm/pg-core';
 import { agreement } from './agreement.schema';
-import { geographicLocation } from './geographic-location.schema';
 import { auditTimestamps } from './_base.schema';
 
 export const policy = pgTable('policy', {
@@ -22,9 +21,10 @@ export const policy = pgTable('policy', {
   expiration_date: date('expiration_date').notNull(),
   status_code: varchar('status_code', { length: 50 }).notNull(), // QUOTED, BINDING, BOUND, ACTIVE, CANCELLED, EXPIRED
 
-  // Relationships
-  geographic_location_identifier: uuid('geographic_location_identifier')
-    .references(() => geographicLocation.geographic_location_identifier),
+  // Quote-specific fields (hybrid approach - JSONB + denormalized)
+  quote_snapshot: jsonb('quote_snapshot'), // Complete quote data for fast CRM retrieval
+  marital_status: varchar('marital_status', { length: 20 }), // Denormalized for query performance
+  coverage_start_date: date('coverage_start_date'), // Denormalized for query performance
 
   // Audit Timestamps
   ...auditTimestamps,

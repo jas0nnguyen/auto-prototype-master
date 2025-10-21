@@ -25,39 +25,87 @@ import { QuoteService } from '../../services/quote/quote.service';
 import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.service';
 
 /**
- * DTO for creating a quote (flat structure from frontend)
+ * Driver DTO
+ */
+class DriverDTO {
+  first_name!: string;
+  last_name!: string;
+  birth_date!: string | Date;
+  email!: string;
+  phone!: string;
+  gender?: string;
+  marital_status?: string;
+  years_licensed?: number;
+  relationship?: string; // For additional drivers: spouse, child, parent, sibling, other
+  is_primary?: boolean; // Indicates if this is the Primary Named Insured
+}
+
+/**
+ * Vehicle DTO
+ */
+class VehicleDTO {
+  year!: number;
+  make!: string;
+  model!: string;
+  vin?: string;
+  annual_mileage?: number;
+  body_type?: string;
+  usage?: string;
+  primary_driver_id?: string; // ID of the primary driver for this vehicle
+}
+
+/**
+ * DTO for creating a quote (supports both single and multi-driver/vehicle)
  * This defines what data the frontend must send
  */
 class CreateQuoteDTO {
-  // Driver info
-  driver_first_name!: string;
-  driver_last_name!: string;
-  driver_birth_date!: string | Date;
-  driver_email!: string;
-  driver_phone!: string;
+  // NEW: Multi-driver/vehicle support
+  drivers?: DriverDTO[];
+  vehicles?: VehicleDTO[];
+
+  // LEGACY: Single driver info (backward compatibility)
+  driver_first_name?: string;
+  driver_last_name?: string;
+  driver_birth_date?: string | Date;
+  driver_email?: string;
+  driver_phone?: string;
   driver_gender?: string;
+  driver_marital_status?: string;
   driver_years_licensed?: number;
 
-  // Address
+  // Address (applies to primary driver)
   address_line_1!: string;
   address_line_2?: string;
   address_city!: string;
   address_state!: string;
   address_zip!: string;
 
-  // Vehicle
-  vehicle_year!: number;
-  vehicle_make!: string;
-  vehicle_model!: string;
+  // LEGACY: Single vehicle info (backward compatibility)
+  vehicle_year?: number;
+  vehicle_make?: string;
+  vehicle_model?: string;
   vehicle_vin?: string;
   annual_mileage?: number;
+  vehicle_annual_mileage?: number;
+  vehicle_body_type?: string;
   vehicle_usage?: string;
 
-  // Coverage
+  // Coverage selections (EXPANDED)
+  coverage_start_date?: string;  // NEW
+  coverage_bodily_injury_limit?: string;  // NEW (renamed from coverage_bodily_injury)
+  coverage_property_damage_limit?: string;  // NEW (renamed from coverage_property_damage)
+  coverage_has_collision?: boolean;  // NEW
+  coverage_collision_deductible?: number;
+  coverage_has_comprehensive?: boolean;  // NEW
+  coverage_comprehensive_deductible?: number;
+  coverage_has_uninsured?: boolean;  // NEW
+  coverage_has_roadside?: boolean;  // NEW
+  coverage_has_rental?: boolean;  // NEW
+  coverage_rental_limit?: number;  // NEW
+
+  // Keep legacy fields for backward compatibility
   coverage_bodily_injury?: string;
   coverage_property_damage?: string;
-  coverage_collision_deductible?: number;
-  coverage_comprehensive_deductible?: number;
   include_uninsured_motorist?: boolean;
   include_medical_payments?: boolean;
   include_rental_reimbursement?: boolean;
@@ -110,24 +158,79 @@ export class QuotesController {
   @Post()
   async createQuote(@Body() dto: CreateQuoteDTO): Promise<QuoteResult> {
     try {
-      this.logger.log('Creating new quote', {
-        driverEmail: dto.driver_email,
-        vehicleVin: dto.vehicle_vin
-      });
+      // Determine if using new multi-driver/vehicle format or legacy single format
+      const useMultiFormat = dto.drivers && dto.drivers.length > 0;
 
-      // Transform flat DTO into nested structure for QuoteService
-      const input: CreateQuoteInput = {
-        driver: {
-          firstName: dto.driver_first_name,
-          lastName: dto.driver_last_name,
-          birthDate: typeof dto.driver_birth_date === 'string'
-            ? new Date(dto.driver_birth_date)
-            : dto.driver_birth_date,
+      let primaryDriver;
+      let additionalDrivers = [];
+      let vehicles = [];
+
+      if (useMultiFormat) {
+        // NEW FORMAT: Arrays of drivers and vehicles
+        this.logger.log('Creating new quote (multi-driver/vehicle)', {
+          driverCount: dto.drivers.length,
+          vehicleCount: dto.vehicles?.length || 0
+        });
+
+        // Find primary driver (marked with is_primary: true)
+        primaryDriver = dto.drivers.find(d => d.is_primary) || dto.drivers[0];
+        additionalDrivers = dto.drivers.filter(d => !d.is_primary && d !== primaryDriver);
+        vehicles = dto.vehicles || [];
+
+      } else {
+        // LEGACY FORMAT: Single driver and vehicle (backward compatibility)
+        this.logger.log('Creating new quote (legacy single driver/vehicle)', {
+          driverEmail: dto.driver_email,
+          vehicleVin: dto.vehicle_vin
+        });
+
+        primaryDriver = {
+          first_name: dto.driver_first_name,
+          last_name: dto.driver_last_name,
+          birth_date: dto.driver_birth_date,
           email: dto.driver_email,
           phone: dto.driver_phone,
           gender: dto.driver_gender,
-          yearsLicensed: dto.driver_years_licensed,
+          marital_status: dto.driver_marital_status,
+          years_licensed: dto.driver_years_licensed,
+          is_primary: true,
+        };
+
+        vehicles = [{
+          year: dto.vehicle_year,
+          make: dto.vehicle_make,
+          model: dto.vehicle_model,
+          vin: dto.vehicle_vin,
+          annual_mileage: dto.vehicle_annual_mileage || dto.annual_mileage,
+          body_type: dto.vehicle_body_type,
+        }];
+      }
+
+      // Transform to QuoteService input format
+      const input: CreateQuoteInput = {
+        driver: {
+          firstName: primaryDriver.first_name,
+          lastName: primaryDriver.last_name,
+          birthDate: typeof primaryDriver.birth_date === 'string'
+            ? new Date(primaryDriver.birth_date)
+            : primaryDriver.birth_date,
+          email: primaryDriver.email,
+          phone: primaryDriver.phone,
+          gender: primaryDriver.gender,
+          maritalStatus: primaryDriver.marital_status,
+          yearsLicensed: primaryDriver.years_licensed,
         },
+        additionalDrivers: additionalDrivers.map(d => ({
+          firstName: d.first_name,
+          lastName: d.last_name,
+          birthDate: typeof d.birth_date === 'string' ? new Date(d.birth_date) : d.birth_date,
+          email: d.email,
+          phone: d.phone,
+          gender: d.gender,
+          maritalStatus: d.marital_status,
+          yearsLicensed: d.years_licensed,
+          relationship: d.relationship,
+        })),
         address: {
           addressLine1: dto.address_line_1,
           addressLine2: dto.address_line_2,
@@ -135,18 +238,35 @@ export class QuotesController {
           state: dto.address_state,
           zipCode: dto.address_zip,
         },
-        vehicle: {
-          year: dto.vehicle_year,
-          make: dto.vehicle_make,
-          model: dto.vehicle_model,
-          vin: dto.vehicle_vin || '',  // Will be converted to null in QuoteService
-          annualMileage: dto.annual_mileage,
-        },
+        vehicle: vehicles[0] ? {
+          year: vehicles[0].year,
+          make: vehicles[0].make,
+          model: vehicles[0].model,
+          vin: vehicles[0].vin || '',
+          annualMileage: vehicles[0].annual_mileage,
+          bodyType: vehicles[0].body_type,
+        } : undefined,
+        vehicles: vehicles.map(v => ({
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          vin: v.vin || '',
+          annualMileage: v.annual_mileage,
+          bodyType: v.body_type,
+          primaryDriverId: v.primary_driver_id,
+        })),
         coverages: {
-          bodilyInjury: !!dto.coverage_bodily_injury,
-          propertyDamage: !!dto.coverage_property_damage,
-          collision: !!dto.coverage_collision_deductible,
-          comprehensive: !!dto.coverage_comprehensive_deductible,
+          startDate: dto.coverage_start_date,
+          bodilyInjuryLimit: dto.coverage_bodily_injury_limit || dto.coverage_bodily_injury,
+          propertyDamageLimit: dto.coverage_property_damage_limit || dto.coverage_property_damage,
+          collision: dto.coverage_has_collision ?? !!dto.coverage_collision_deductible,
+          collisionDeductible: dto.coverage_collision_deductible,
+          comprehensive: dto.coverage_has_comprehensive ?? !!dto.coverage_comprehensive_deductible,
+          comprehensiveDeductible: dto.coverage_comprehensive_deductible,
+          uninsuredMotorist: dto.coverage_has_uninsured ?? dto.include_uninsured_motorist,
+          roadsideAssistance: dto.coverage_has_roadside ?? dto.include_roadside_assistance,
+          rentalReimbursement: dto.coverage_has_rental ?? dto.include_rental_reimbursement,
+          rentalLimit: dto.coverage_rental_limit,
         },
       };
 

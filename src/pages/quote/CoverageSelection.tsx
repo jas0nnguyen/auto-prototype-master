@@ -66,7 +66,17 @@ const CoverageSelection: React.FC = () => {
     // Check if previous steps completed
     const quoteData = sessionStorage.getItem('quoteData');
     if (!quoteData) {
-      navigate('/quote/vehicle-info');
+      navigate('/quote/driver-info');
+      return;
+    }
+
+    const parsedData = JSON.parse(quoteData);
+    // Check for new data structure (primaryDriver + vehicles) or old structure (driver + vehicle)
+    const hasDriver = parsedData.primaryDriver || parsedData.driver;
+    const hasVehicle = (parsedData.vehicles && parsedData.vehicles.length > 0) || parsedData.vehicle;
+
+    if (!hasDriver || !hasVehicle) {
+      navigate('/quote/driver-info');
     }
   }, [navigate]);
 
@@ -152,39 +162,81 @@ const CoverageSelection: React.FC = () => {
     }
 
     const quoteData = JSON.parse(storedData);
-    const { vehicle, driver } = quoteData;
+
+    // Handle both old and new data structures
+    const primaryDriver = quoteData.primaryDriver || quoteData.driver;
+    const additionalDrivers = quoteData.additionalDrivers || [];
+    const allVehicles = quoteData.vehicles || (quoteData.vehicle ? [quoteData.vehicle] : []);
+
+    if (!primaryDriver || allVehicles.length === 0) {
+      alert('Missing driver or vehicle information. Please start over.');
+      navigate('/quote/driver-info');
+      return;
+    }
+
+    // Build drivers array for API (NEW FORMAT)
+    const driversArray = [
+      {
+        first_name: primaryDriver.firstName,
+        last_name: primaryDriver.lastName,
+        birth_date: primaryDriver.dob,
+        email: primaryDriver.email,
+        phone: primaryDriver.phone || '555-0100',
+        gender: primaryDriver.gender,
+        marital_status: primaryDriver.maritalStatus,
+        years_licensed: primaryDriver.yearsLicensed,
+        is_primary: true,
+      },
+      ...additionalDrivers.map((d: any) => ({
+        first_name: d.firstName,
+        last_name: d.lastName,
+        birth_date: d.dob,
+        email: d.email,
+        phone: d.phone || '555-0100',
+        gender: d.gender,
+        marital_status: d.maritalStatus,
+        years_licensed: d.yearsLicensed,
+        relationship: d.relationship,
+        is_primary: false,
+      })),
+    ];
+
+    // Build vehicles array for API (NEW FORMAT)
+    const vehiclesArray = allVehicles.map((v: any) => ({
+      year: parseInt(v.year),
+      make: v.make,
+      model: v.model,
+      vin: v.vin || undefined,
+      annual_mileage: v.annualMileage,
+      body_type: v.bodyType,
+      primary_driver_id: v.primaryDriverId,
+    }));
 
     // Map frontend data to API request format
     const quoteRequest: CreateQuoteRequest = {
-      // Driver info
-      driver_first_name: driver.firstName,
-      driver_last_name: driver.lastName,
-      driver_birth_date: driver.dob,
-      driver_email: driver.email,
-      driver_phone: '555-0100', // Default for now
-      driver_gender: driver.gender,
+      // NEW: Send all drivers and vehicles
+      drivers: driversArray,
+      vehicles: vehiclesArray,
 
-      // Address
-      address_line_1: driver.address,
-      address_line_2: driver.apt || undefined,
-      address_city: driver.city,
-      address_state: driver.state,
-      address_zip: driver.zip,
+      // Address (for PNI)
+      address_line_1: primaryDriver.address,
+      address_line_2: primaryDriver.apt || undefined,
+      address_city: primaryDriver.city,
+      address_state: primaryDriver.state,
+      address_zip: primaryDriver.zip,
 
-      // Vehicle
-      vehicle_year: parseInt(vehicle.year),
-      vehicle_make: vehicle.make,
-      vehicle_model: vehicle.model,
-      vehicle_vin: vehicle.vin || undefined,
-
-      // Coverage - map bodily injury limit
-      coverage_bodily_injury: coverage.bodilyInjuryLimit,
-      coverage_property_damage: coverage.propertyDamageLimit,
+      // Coverage selections (NEW field names)
+      coverage_start_date: coverage.coverageStartDate?.toISOString().split('T')[0],
+      coverage_bodily_injury_limit: coverage.bodilyInjuryLimit,
+      coverage_property_damage_limit: coverage.propertyDamageLimit,
+      coverage_has_collision: coverage.hasCollision,
       coverage_collision_deductible: coverage.hasCollision ? parseInt(coverage.collisionDeductible) : undefined,
+      coverage_has_comprehensive: coverage.hasComprehensive,
       coverage_comprehensive_deductible: coverage.hasComprehensive ? parseInt(coverage.comprehensiveDeductible) : undefined,
-      include_uninsured_motorist: coverage.hasUninsured,
-      include_rental_reimbursement: coverage.hasRental,
-      include_roadside_assistance: coverage.hasRoadside,
+      coverage_has_uninsured: coverage.hasUninsured,
+      coverage_has_roadside: coverage.hasRoadside,
+      coverage_has_rental: coverage.hasRental,
+      coverage_rental_limit: coverage.hasRental ? parseInt(coverage.rentalLimit) : undefined,
     };
 
     try {
@@ -222,7 +274,7 @@ const CoverageSelection: React.FC = () => {
             <Header
               breadcrumbs={
                 <Button
-                  href="/quote/driver-info"
+                  onClick={() => navigate('/quote/vehicle-confirmation')}
                   emphasis="text"
                   startIcon={ChevronLeft}
                 >

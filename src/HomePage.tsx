@@ -201,7 +201,7 @@ const HomePage: React.FC = () => {
 
           <Layout display="flex" gap="small" flexJustify="center">
             <Button
-              onClick={() => navigate('/quote/vehicle-info')}
+              onClick={() => navigate('/quote/driver-info')}
               variant="primary"
               size="medium"
             >
