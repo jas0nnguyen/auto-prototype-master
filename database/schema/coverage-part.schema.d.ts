@@ -1,0 +1,165 @@
+export declare const coveragePart: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "coverage_part";
+    schema: undefined;
+    columns: {
+        created_at: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "coverage_part";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updated_at: import("drizzle-orm/pg-core").PgColumn<{
+            name: "updated_at";
+            tableName: "coverage_part";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        coverage_part_identifier: import("drizzle-orm/pg-core").PgColumn<{
+            name: "coverage_part_identifier";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgUUID";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        coverage_part_code: import("drizzle-orm/pg-core").PgColumn<{
+            name: "coverage_part_code";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 50;
+        }>;
+        coverage_part_name: import("drizzle-orm/pg-core").PgColumn<{
+            name: "coverage_part_name";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 255;
+        }>;
+        coverage_part_description: import("drizzle-orm/pg-core").PgColumn<{
+            name: "coverage_part_description";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgText";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        coverage_category: import("drizzle-orm/pg-core").PgColumn<{
+            name: "coverage_category";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 50;
+        }>;
+        is_required: import("drizzle-orm/pg-core").PgColumn<{
+            name: "is_required";
+            tableName: "coverage_part";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: false;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 10;
+        }>;
+    };
+    dialect: "pg";
+}>;
+export type CoveragePart = typeof coveragePart.$inferSelect;
+export type NewCoveragePart = typeof coveragePart.$inferInsert;
+export declare const StandardCoverageParts: {
+    readonly BI: "BODILY_INJURY";
+    readonly PD: "PROPERTY_DAMAGE";
+    readonly COLL: "COLLISION";
+    readonly COMP: "COMPREHENSIVE";
+    readonly UM_BI: "UNINSURED_MOTORIST_BI";
+    readonly UM_PD: "UNINSURED_MOTORIST_PD";
+    readonly MEDICAL: "MEDICAL_PAYMENTS";
+    readonly PIP: "PERSONAL_INJURY_PROTECTION";
+    readonly RENTAL: "RENTAL_REIMBURSEMENT";
+    readonly ROADSIDE: "ROADSIDE_ASSISTANCE";
+};
