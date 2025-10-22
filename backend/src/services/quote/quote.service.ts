@@ -43,7 +43,7 @@ export interface CreateQuoteInput {
     lastName: string;
     birthDate: Date;
     email: string;
-    phone: string;
+    phone?: string; // Optional phone number
     gender?: string;
     maritalStatus?: string;  // NEW: For CRM
     yearsLicensed?: number;
@@ -57,7 +57,7 @@ export interface CreateQuoteInput {
     lastName: string;
     birthDate: Date;
     email: string;
-    phone: string;
+    phone?: string; // Optional phone number
     gender?: string;
     maritalStatus?: string;
     yearsLicensed?: number;
@@ -175,12 +175,14 @@ export class QuoteService {
         communication_value: input.driver.email,
       }).returning();
 
-      // Step 4: Create Communication Identity (phone)
-      await this.db.insert(communicationIdentity).values({
-        party_identifier: newParty.party_identifier,
-        communication_type_code: 'PHONE',
-        communication_value: input.driver.phone,
-      }).returning();
+      // Step 4: Create Communication Identity (phone) - only if provided
+      if (input.driver.phone) {
+        await this.db.insert(communicationIdentity).values({
+          party_identifier: newParty.party_identifier,
+          communication_type_code: 'PHONE',
+          communication_value: input.driver.phone,
+        }).returning();
+      }
 
       // Step 5: Create Insurable Object (generic object)
       const [newInsurableObject] = await this.db.insert(insurableObject).values({
@@ -714,7 +716,7 @@ export class QuoteService {
       lastName: string;
       birthDate: Date;
       email: string;
-      phone: string;
+      phone?: string; // Optional phone number
       gender?: string;
       maritalStatus?: string;
       yearsLicensed?: number;
