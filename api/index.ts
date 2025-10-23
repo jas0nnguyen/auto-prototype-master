@@ -20,9 +20,10 @@ import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
-import { AppModule } from '../backend/src/app.module';
-import { AllExceptionsFilter } from '../backend/src/api/middleware/error-handler';
-import { getCorsConfig, getSecurityHeaders } from '../backend/src/api/middleware/cors';
+// Import from compiled JavaScript (not TypeScript source)
+import { AppModule } from '../backend/dist/backend/src/app.module';
+import { AllExceptionsFilter } from '../backend/dist/backend/src/api/middleware/error-handler';
+import { getCorsConfig, getSecurityHeaders } from '../backend/dist/backend/src/api/middleware/cors';
 import express, { Request, Response } from 'express';
 
 /**
