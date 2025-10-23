@@ -47,14 +47,21 @@ export function getCorsConfig(): CorsOptions {
     origin: (origin, callback) => {
       const allowedOrigins = [
         frontendUrl,
+        // Vercel deployment URLs
+        'https://auto-prototype-master.vercel.app',
+        'https://auto-prototype-master-*.vercel.app', // Preview deployments
         // Add production domains here
         'https://yourdomain.com',
         'https://www.yourdomain.com',
       ];
 
-      if (!origin || allowedOrigins.includes(origin)) {
+      // Allow same-origin requests (when frontend and API are on same domain)
+      if (!origin || allowedOrigins.some(allowed =>
+        allowed.includes('*') ? origin.match(new RegExp(allowed.replace('*', '.*'))) : origin === allowed
+      )) {
         callback(null, true);
       } else {
+        console.error(`❌ CORS blocked origin: ${origin}`);
         callback(new Error(`Origin ${origin} not allowed by CORS`));
       }
     },
