@@ -14,6 +14,9 @@
  * Vercel Serverless = Pop-up restaurant that opens when customers arrive
  */
 
+// IMPORTANT: Import reflect-metadata first for NestJS decorators
+import 'reflect-metadata';
+
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
