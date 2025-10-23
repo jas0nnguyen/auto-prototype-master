@@ -866,7 +866,245 @@ For future entity implementations:
 
 ---
 
-**Total Bugs**: 5
-**Resolved**: 5 (1 with temporary workaround)
+## Bug #6: Vercel Deployment CORS Error - Browser Requests Blocked
+
+**Date**: 2025-10-23
+**Status**: ✅ RESOLVED
+**Severity**: Critical (Blocking - production deployment completely broken for browser users)
+
+### Symptoms
+- Quote creation fails on Vercel deployment: https://auto-prototype-master.vercel.app
+- Browser requests to `/api/v1/quotes` return HTTP 500 Internal Server Error
+- Frontend displays error: "Failed to save driver information. Please try again."
+- Console error: `[QuoteAPI] Error creating quote: Error: An internal server error occurred`
+- **Curl requests to the same endpoint work perfectly** (returns 201 with valid quote)
+
+### Root Cause
+**CORS (Cross-Origin Resource Sharing) configuration in production was rejecting browser requests from the Vercel deployment URL.**
+
+The production CORS config in `backend/src/api/middleware/cors.ts` only allowed placeholder origins:
+```typescript
+const allowedOrigins = [
+  frontendUrl,  // Environment variable (not set in Vercel)
+  'https://yourdomain.com',  // Placeholder
+  'https://www.yourdomain.com',  // Placeholder
+];
+```
+
+The actual Vercel URL `https://auto-prototype-master.vercel.app` was **NOT** in the allowed origins list, so the NestJS CORS middleware rejected all browser requests with a 500 error.
+
+**Why curl worked but browser failed:**
+- CORS is a **browser-only security feature**
+- Browsers enforce Same-Origin Policy and check CORS headers
+- Curl and other HTTP clients bypass CORS entirely
+- Server responded to curl but rejected browser requests due to origin mismatch
+
+### Investigation Steps
+1. **User reported 405 error** on deployed site (initial symptom)
+2. **Deployed backend as Vercel serverless function** to fix missing API
+3. **Tested with curl** - API responded successfully, created quotes
+4. **Tested with Playwright E2E** - Browser form submission failed with 500 error
+5. **Compared curl vs browser behavior** - curl succeeded, browser failed
+6. **Identified CORS as the differentiator** - browser enforces CORS, curl doesn't
+7. **Reviewed CORS configuration** - found production config missing Vercel URLs
+8. **Verified local development worked** - dev CORS config allows localhost origins
+
+### Solution
+
+**Updated `backend/src/api/middleware/cors.ts` to include Vercel URLs in production:**
+
+```typescript
+// Production configuration
+return {
+  origin: (origin, callback) => {
+    const allowedOrigins = [
+      frontendUrl,
+      // Vercel deployment URLs
+      'https://auto-prototype-master.vercel.app',
+      'https://auto-prototype-master-*.vercel.app', // Preview deployments
+      // Add production domains here
+      'https://yourdomain.com',
+      'https://www.yourdomain.com',
+    ];
+
+    // Allow same-origin requests with wildcard support
+    if (!origin || allowedOrigins.some(allowed =>
+      allowed.includes('*') ? origin.match(new RegExp(allowed.replace('*', '.*'))) : origin === allowed
+    )) {
+      callback(null, true);
+    } else {
+      console.error(`❌ CORS blocked origin: ${origin}`);
+      callback(new Error(`Origin ${origin} not allowed by CORS`));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
+  allowedHeaders: [
+    'Content-Type',
+    'Authorization',
+    'X-Requested-With',
+    'Accept',
+    'Origin',
+  ],
+  exposedHeaders: ['X-Total-Count', 'X-Page', 'X-Per-Page'],
+  credentials: true,
+  maxAge: 86400, // Cache preflight requests for 24 hours in production
+};
+```
+
+**Key improvements:**
+1. ✅ Added `https://auto-prototype-master.vercel.app` to allowed origins
+2. ✅ Added wildcard support for preview deployments (`*-*.vercel.app`)
+3. ✅ Improved origin matching with regex support
+4. ✅ Added error logging for blocked CORS requests (debugging aid)
+
+### Files Modified
+- `backend/src/api/middleware/cors.ts` - Updated production CORS allowed origins
+
+### Deployment
+```bash
+# Commit the fix
+git add backend/src/api/middleware/cors.ts
+git commit -m "Fix CORS configuration for Vercel deployment"
+
+# Push to trigger automatic Vercel deployment
+git push origin master
+```
+
+**Commit**: `0676082`
+**Deployment**: Automatic via Vercel GitHub integration
+
+### Testing
+
+**Pre-Fix:**
+```bash
+# Curl test (worked)
+curl -X POST https://auto-prototype-master.vercel.app/api/v1/quotes -d '{...}'
+# ✅ Result: {"quoteId":"DZL1Z7JVN0",...}
+
+# Browser test (failed)
+# Navigate to /quote/driver-info, fill form, submit
+# ❌ Result: 500 error, "An internal server error occurred"
+```
+
+**Post-Fix:**
+```bash
+# Curl test (still works)
+curl -X POST https://auto-prototype-master.vercel.app/api/v1/quotes \
+  -H "Content-Type: application/json" \
+  -H "Origin: https://auto-prototype-master.vercel.app" \
+  -d '{
+    "driver_first_name": "Test",
+    "driver_last_name": "User",
+    "driver_birth_date": "01/15/1990",
+    "driver_email": "test@example.com",
+    "driver_phone": "(555) 123-4567",
+    "driver_gender": "male",
+    "driver_marital_status": "married",
+    "address_line_1": "123 Main St",
+    "address_city": "San Francisco",
+    "address_state": "CA",
+    "address_zip": "94102",
+    "vehicle_year": 2020,
+    "vehicle_make": "Toyota",
+    "vehicle_model": "Camry",
+    "vehicle_vin": "TEST123456789"
+  }'
+# ✅ Result: {"quoteId":"DZYXHHBEES",...}
+
+# Browser E2E test with Playwright (now works!)
+# 1. Navigate to https://auto-prototype-master.vercel.app/quote/driver-info
+# 2. Fill form: Jane Smith, jane.smith@example.com, etc.
+# 3. Submit form
+# ✅ Result: Successfully created quote DZB838KMD2
+# ✅ Result: Navigated to /quote/additional-drivers/DZB838KMD2
+# ✅ Result: No errors in console
+```
+
+### Verification Results
+
+**Tested with Playwright E2E on production deployment:**
+
+1. ✅ **Page Load**: Quote flow page loads successfully
+2. ✅ **Form Interaction**: All fields fillable (text inputs, dropdowns)
+3. ✅ **API Call**: POST to `/api/v1/quotes` succeeds
+4. ✅ **Response**: Returns quote ID `DZB838KMD2`
+5. ✅ **Navigation**: Redirects to next page `/quote/additional-drivers/DZB838KMD2`
+6. ✅ **Console**: No CORS errors, no 500 errors
+7. ✅ **Production Status**: Fully functional
+
+**Test data submitted:**
+- Name: Jane Smith
+- Email: jane.smith@example.com
+- Phone: (555) 987-6543
+- Address: 456 Oak Avenue, Los Angeles, CA 90001
+- Quote created: `DZB838KMD2`
+
+### Lessons Learned
+
+1. **CORS is browser-specific**:
+   - Server-to-server calls (curl, Postman) ignore CORS
+   - Only browsers enforce CORS policy
+   - If curl works but browser fails → Check CORS configuration
+
+2. **Environment-specific configuration**:
+   - Development CORS allows `localhost` origins
+   - Production CORS must include actual deployment URLs
+   - Don't rely on environment variables that aren't set
+
+3. **Vercel deployment patterns**:
+   - Production: `https://project-name.vercel.app`
+   - Previews: `https://project-name-*.vercel.app` (unique hash per deployment)
+   - Use wildcards for preview deployment support
+
+4. **Debugging strategy**:
+   - Compare working (curl) vs failing (browser) requests
+   - Check browser DevTools Network tab for CORS errors
+   - Look for preflight OPTIONS requests
+   - Verify actual vs expected origins
+
+5. **Testing best practices**:
+   - Test on deployed environment, not just locally
+   - Use E2E tests with real browsers (Playwright)
+   - Verify both API functionality AND browser integration
+   - Don't assume local success means production success
+
+6. **CORS configuration best practices**:
+   - Explicitly list all allowed origins
+   - Use environment variables for flexibility
+   - Add logging for blocked origins (debugging aid)
+   - Support wildcard patterns for preview deployments
+   - Document CORS decisions in code comments
+
+### Prevention Strategy
+
+For future deployments:
+
+1. ✅ **Set environment variables**: Configure `FRONTEND_URL` in Vercel dashboard
+2. ✅ **E2E testing**: Always test deployed applications with Playwright
+3. ✅ **CORS monitoring**: Log blocked origins to identify misconfigurations
+4. ✅ **Deployment checklist**: Verify CORS config before deploying
+5. ✅ **Documentation**: Document allowed origins in deployment guides
+
+### Related Issues
+- Initial issue: User reported 405 error (missing backend API)
+- Root cause investigation led to discovering CORS blocking
+- Related to deployment architecture (serverless function setup)
+
+### Why This Happened
+1. Backend was deployed as Vercel serverless function
+2. Production CORS config had placeholder domains only
+3. Actual Vercel URL was never added to allowed origins
+4. No E2E tests on deployed environment to catch the issue
+5. Curl testing gave false confidence (bypasses CORS)
+
+### Documentation Created
+- [DEPLOYMENT_FIX.md](./DEPLOYMENT_FIX.md) - Complete troubleshooting guide
+- [DEPLOYMENT_SUCCESS.md](./DEPLOYMENT_SUCCESS.md) - Deployment overview
+- This bug entry documenting the issue and resolution
+
+---
+
+**Total Bugs**: 6
+**Resolved**: 6 (1 with temporary workaround)
 **Open**: 0
 **Technical Debt**: 1 (Bug #5 needs proper table joins)
