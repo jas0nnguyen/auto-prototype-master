@@ -103,19 +103,33 @@ async function bootstrap() {
  */
 export default async function handler(req: Request, res: Response) {
   try {
+    console.log('🔧 Function invoked:', req.method, req.url);
+    console.log('📦 Environment check:', {
+      NODE_ENV: process.env.NODE_ENV,
+      hasDatabase: !!process.env.DATABASE_URL,
+    });
+
     // Get or create the NestJS app
+    console.log('⏳ Bootstrapping NestJS app...');
     const app = await bootstrap();
+    console.log('✅ NestJS app ready');
 
     // Pass the request to Express/NestJS
     app(req, res);
 
   } catch (error) {
     console.error('❌ Serverless function error:', error);
+    console.error('📋 Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack,
+    });
 
     res.status(500).json({
       success: false,
       message: 'Internal server error',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
     });
   }
 }
