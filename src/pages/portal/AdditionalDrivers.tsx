@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Text } from '@sureapp/canary-design-system';
 import { usePortalDashboard } from '../../hooks/usePortal';
 import { PortalLayout } from '../../components/portal/PortalLayout';
+import { formatDateDisplay } from '../../utils/dateFormatter';
 
 export default function AdditionalDrivers() {
   const { policyNumber } = useParams<{ policyNumber: string }>();
@@ -19,14 +20,6 @@ export default function AdditionalDrivers() {
   }
 
   const { additional_drivers } = dashboardData;
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-  };
 
   return (
     <PortalLayout policyNumber={policyNumber!} activePage="drivers">

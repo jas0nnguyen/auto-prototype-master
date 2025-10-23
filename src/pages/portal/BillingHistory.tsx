@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Text } from '@sureapp/canary-design-system';
 import { usePortalDashboard } from '../../hooks/usePortal';
 import { PortalLayout } from '../../components/portal/PortalLayout';
+import { formatDateDisplay } from '../../utils/dateFormatter';
 
 export default function BillingHistory() {
   const { policyNumber } = useParams<{ policyNumber: string }>();
@@ -23,16 +24,6 @@ export default function BillingHistory() {
   }
 
   const { payment_history, premium } = dashboardData;
-
-  // Format dates as MM/DD/YYYY
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-    });
-  };
 
   // Format currency
   const formatCurrency = (amount: string | number) => {
@@ -75,7 +66,11 @@ export default function BillingHistory() {
     const nextDate = new Date(lastDate);
     nextDate.setDate(nextDate.getDate() + 30);
 
-    return formatDate(nextDate.toISOString());
+    // Format as YYYY-MM-DD first, then display
+    const year = nextDate.getFullYear();
+    const month = String(nextDate.getMonth() + 1).padStart(2, '0');
+    const day = String(nextDate.getDate()).padStart(2, '0');
+    return formatDateDisplay(`${year}-${month}-${day}`);
   };
 
   const nextPaymentDate = premium?.paymentPlan === 'monthly' ? getNextPaymentDate() : null;

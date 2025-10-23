@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Text } from '@sureapp/canary-design-system';
 import { usePortalDashboard } from '../../hooks/usePortal';
 import { PortalLayout } from '../../components/portal/PortalLayout';
+import { formatDateDisplay } from '../../utils/dateFormatter';
 
 export default function Dashboard() {
   const { policyNumber } = useParams<{ policyNumber: string }>();
@@ -19,15 +20,6 @@ export default function Dashboard() {
   }
 
   const { policy, premium } = dashboardData;
-
-  // Format dates
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-  };
 
   // Format currency
   const formatCurrency = (amount: string | number) => {
@@ -72,7 +64,7 @@ export default function Dashboard() {
               </td>
               <td className="p-6 text-right">
                 <Text>
-                  {formatDate(policy.effective_date)} - {formatDate(policy.expiration_date)}
+                  {formatDateDisplay(policy.effective_date)} - {formatDateDisplay(policy.expiration_date)}
                 </Text>
               </td>
             </tr>

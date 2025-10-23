@@ -9,6 +9,7 @@ import { useParams } from 'react-router-dom';
 import { Card, Text } from '@sureapp/canary-design-system';
 import { usePortalDashboard } from '../../hooks/usePortal';
 import { PortalLayout } from '../../components/portal/PortalLayout';
+import { formatDateDisplay } from '../../utils/dateFormatter';
 
 export default function PersonalInfo() {
   const { policyNumber } = useParams<{ policyNumber: string }>();
@@ -19,14 +20,6 @@ export default function PersonalInfo() {
   }
 
   const { primary_driver } = dashboardData;
-
-  const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-    });
-  };
 
   const formatPhone = (phone: string) => {
     // Format as (XXX) XXX-XXXX
@@ -61,7 +54,7 @@ export default function PersonalInfo() {
           {primary_driver.birthDate && (
             <div className="grid grid-cols-2 p-6">
               <Text>Date of birth</Text>
-              <Text className="text-right">{formatDate(primary_driver.birthDate)}</Text>
+              <Text className="text-right">{formatDateDisplay(primary_driver.birthDate)}</Text>
             </div>
           )}
 

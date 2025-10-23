@@ -28,6 +28,7 @@ import {
   PaymentBadge,
   Visa,
 } from '@sureapp/canary-design-system';
+import { formatDateDisplay } from '../../utils/dateFormatter';
 
 // Logo for consistent branding
 const logoSrc = '/images/sureMiniLogo.2be6cd5d.svg';
@@ -38,16 +39,6 @@ export default function Confirmation() {
 
   // Load quote data (which now has policy info after binding)
   const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber || '');
-
-  // Format date for display
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', {
-      month: '2-digit',
-      day: '2-digit',
-      year: 'numeric',
-    });
-  };
 
   if (isLoading) {
     return (
@@ -110,7 +101,7 @@ export default function Confirmation() {
           </AppTemplate.Title>
 
           <Section
-            title={`Policy #${quote.quote_number} is effective ${formatDate(quote.effective_date)}`}
+            title={`Policy #${quote.quote_number} is effective ${formatDateDisplay(quote.effective_date)}`}
             supportText={`Your policy details have been sent to ${driver?.email || 'your email'}.`}
           >
             <Card padding="medium">
@@ -145,7 +136,7 @@ export default function Confirmation() {
                 <List title="Coverage period">
                   <List.Row>
                     <List.Item>
-                      {formatDate(quote.effective_date)} - {formatDate(quote.expiration_date)}
+                      {formatDateDisplay(quote.effective_date)} - {formatDateDisplay(quote.expiration_date)}
                     </List.Item>
                   </List.Row>
                 </List>
