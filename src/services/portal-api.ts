@@ -2,11 +2,14 @@
  * Portal API Client Service
  *
  * Handles all HTTP requests to portal endpoints.
+ *
+ * In production (Vercel), uses relative URLs (same domain as frontend).
+ * In development, uses localhost:3000 or VITE_API_BASE_URL if set.
  */
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
   ? import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
-  : 'http://localhost:3000';
+  : (import.meta.env.PROD ? '' : 'http://localhost:3000');
 
 /**
  * Get dashboard data (policy, drivers, vehicles, payments, claims)
