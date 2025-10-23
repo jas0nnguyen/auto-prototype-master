@@ -1,13 +1,14 @@
 {
   "version": 2,
-  "installCommand": "node scripts/setup-npmrc.js && npm install --legacy-peer-deps && cd backend && npm install --legacy-peer-deps",
-  "buildCommand": "npm run build && cd backend && npm run build",
+  "installCommand": "node scripts/setup-npmrc.js && npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
   "devCommand": "npm run dev",
   "framework": "vite",
   "functions": {
     "api/**/*.ts": {
       "memory": 1024,
-      "maxDuration": 10
+      "maxDuration": 10,
+      "includeFiles": "backend/dist/**"
     }
   },
   "rewrites": [

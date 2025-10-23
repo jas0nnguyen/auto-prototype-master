@@ -9,7 +9,9 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "vite build && cd backend && npm install --legacy-peer-deps && npm run build",
+    "build:frontend": "vite build",
+    "build:backend": "cd backend && npm install --legacy-peer-deps && npm run build",
     "preview": "vite preview",
     "setup-npmrc": "node scripts/setup-npmrc.js",
     "test:e2e": "playwright test",
