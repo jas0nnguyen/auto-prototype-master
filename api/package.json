@@ -1,0 +1,7 @@
+{
+  "name": "api-functions",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Vercel serverless functions - dependencies installed at root",
+  "dependencies": {}
+}
