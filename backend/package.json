@@ -2,7 +2,7 @@
   "name": "auto-insurance-backend",
   "version": "1.0.0",
   "description": "Auto Insurance Purchase Flow - OMG P&C Compliant Backend API",
-  "main": "dist/main.js",
+  "main": "dist/backend/src/main.js",
   "scripts": {
     "prebuild": "rimraf dist",
     "build": "nest build",
@@ -10,7 +10,7 @@
     "start": "nest start",
     "start:dev": "nest start --watch",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/backend/src/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
     "test": "vitest run",
     "test:watch": "vitest",

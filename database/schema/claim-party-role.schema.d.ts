@@ -1,0 +1,117 @@
+export declare const claimPartyRole: import("drizzle-orm/pg-core").PgTableWithColumns<{
+    name: "claim_party_role";
+    schema: undefined;
+    columns: {
+        created_at: import("drizzle-orm/pg-core").PgColumn<{
+            name: "created_at";
+            tableName: "claim_party_role";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        updated_at: import("drizzle-orm/pg-core").PgColumn<{
+            name: "updated_at";
+            tableName: "claim_party_role";
+            dataType: "date";
+            columnType: "PgTimestamp";
+            data: Date;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        claim_party_role_id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "claim_party_role_id";
+            tableName: "claim_party_role";
+            dataType: "string";
+            columnType: "PgUUID";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: true;
+            isPrimaryKey: true;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        claim_id: import("drizzle-orm/pg-core").PgColumn<{
+            name: "claim_id";
+            tableName: "claim_party_role";
+            dataType: "string";
+            columnType: "PgUUID";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        party_identifier: import("drizzle-orm/pg-core").PgColumn<{
+            name: "party_identifier";
+            tableName: "claim_party_role";
+            dataType: "string";
+            columnType: "PgUUID";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: undefined;
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {}>;
+        role_type_code: import("drizzle-orm/pg-core").PgColumn<{
+            name: "role_type_code";
+            tableName: "claim_party_role";
+            dataType: "string";
+            columnType: "PgVarchar";
+            data: string;
+            driverParam: string;
+            notNull: true;
+            hasDefault: false;
+            isPrimaryKey: false;
+            isAutoincrement: false;
+            hasRuntimeDefault: false;
+            enumValues: [string, ...string[]];
+            baseColumn: never;
+            identity: undefined;
+            generated: undefined;
+        }, {}, {
+            length: 30;
+        }>;
+    };
+    dialect: "pg";
+}>;
+export declare const claimPartyRoleRelations: import("drizzle-orm").Relations<"claim_party_role", {
+    claim: import("drizzle-orm").One<"claim", true>;
+    party: import("drizzle-orm").One<"party", true>;
+}>;
+export type ClaimPartyRole = typeof claimPartyRole.$inferSelect;
+export type NewClaimPartyRole = typeof claimPartyRole.$inferInsert;

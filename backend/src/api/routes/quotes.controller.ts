@@ -34,7 +34,7 @@ class DriverDTO {
   last_name!: string;
   birth_date!: string | Date;
   email!: string;
-  phone!: string;
+  phone?: string; // Optional phone number
   gender?: string;
   marital_status?: string;
   years_licensed?: number;
@@ -294,9 +294,9 @@ export class QuotesController {
 
       } else {
         // LEGACY FORMAT: Single driver and vehicle (backward compatibility)
-        // Validate required legacy fields
+        // Validate required legacy fields (phone is optional)
         if (!dto.driver_first_name || !dto.driver_last_name || !dto.driver_birth_date ||
-            !dto.driver_email || !dto.driver_phone) {
+            !dto.driver_email) {
           throw new HttpException('Missing required driver fields', HttpStatus.BAD_REQUEST);
         }
 
@@ -314,7 +314,7 @@ export class QuotesController {
           last_name: dto.driver_last_name,
           birth_date: dto.driver_birth_date,
           email: dto.driver_email,
-          phone: dto.driver_phone,
+          phone: dto.driver_phone || undefined,
           gender: dto.driver_gender,
           marital_status: dto.driver_marital_status,
           years_licensed: dto.driver_years_licensed,
@@ -331,9 +331,9 @@ export class QuotesController {
         }];
       }
 
-      // Validate required fields
+      // Validate required fields (phone is optional)
       if (!primaryDriver.first_name || !primaryDriver.last_name || !primaryDriver.birth_date ||
-          !primaryDriver.email || !primaryDriver.phone) {
+          !primaryDriver.email) {
         throw new HttpException('Missing required driver fields', HttpStatus.BAD_REQUEST);
       }
 
@@ -356,13 +356,13 @@ export class QuotesController {
           yearsLicensed: primaryDriver.years_licensed,
         },
         additionalDrivers: additionalDrivers
-          .filter(d => d.first_name && d.last_name && d.birth_date && d.email && d.phone)
+          .filter(d => d.first_name && d.last_name && d.birth_date && d.email)
           .map(d => ({
             firstName: d.first_name!,
             lastName: d.last_name!,
             birthDate: typeof d.birth_date === 'string' ? new Date(d.birth_date) : d.birth_date!,
             email: d.email!,
-            phone: d.phone!,
+            phone: d.phone,
             gender: d.gender,
             maritalStatus: d.marital_status,
             yearsLicensed: d.years_licensed,

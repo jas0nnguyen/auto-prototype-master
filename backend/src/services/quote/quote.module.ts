@@ -8,11 +8,17 @@
 import { Module } from '@nestjs/common';
 import { QuoteService } from './quote.service';
 import { QuotesController } from '../../api/routes/quotes.controller';
+import { PoliciesController } from '../../api/routes/policies.controller';
+import { PortalController } from '../../api/routes/portal.controller';
 import { DatabaseModule } from '../../database/database.module';
 
 @Module({
   imports: [DatabaseModule], // Import database connection
-  controllers: [QuotesController], // Register REST API endpoints
+  controllers: [
+    QuotesController, // Quote generation endpoints
+    PoliciesController, // Policy binding endpoints (Phase 4)
+    PortalController, // Portal access endpoints (Phase 5)
+  ],
   providers: [QuoteService], // Register business logic service
   exports: [QuoteService], // Make QuoteService available to other modules
 })

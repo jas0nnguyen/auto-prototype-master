@@ -97,10 +97,10 @@ backend/
 └── README.md            # Backend documentation ✅
 ```
 
-### Database (Phase 2 Complete ✅, Migrations Generated ✅)
+### Database (Phase 2-5 Complete ✅, All Migrations Generated ✅)
 ```
 database/
-├── schema/              # Drizzle schema definitions (27 tables defined ✅)
+├── schema/              # Drizzle schema definitions (31 tables defined ✅)
 │   ├── README.md        # Schema documentation ✅
 │   ├── _base.schema.ts  # Base schema helpers and types ✅
 │   ├── party.schema.ts, person.schema.ts, communication-identity.schema.ts ✅
@@ -108,11 +108,14 @@ database/
 │   ├── vehicle.schema.ts, insurable-object.schema.ts ✅
 │   ├── coverage*.schema.ts (6 coverage tables) ✅
 │   ├── rating-*.schema.ts, discount.schema.ts, surcharge.schema.ts ✅
-│   └── party-roles.schema.ts, assessment.schema.ts ✅
-├── seeds/               # Mock data and rating tables (pending Phase 3)
+│   ├── party-roles.schema.ts, assessment.schema.ts ✅
+│   ├── payment.schema.ts, event.schema.ts, policy-event.schema.ts, document.schema.ts ✅ (Phase 4)
+│   └── user-account.schema.ts, claim.schema.ts, claim-party-role.schema.ts, claim-event.schema.ts ✅ (Phase 5)
+├── seeds/               # Mock data and rating tables (optional)
 │   └── README.md        # Seeds documentation ✅
 └── migrations/          # Migration history ✅
     ├── 0000_large_ink.sql  # Initial migration (27 tables, 27 FKs) ✅
+    ├── 0001_add_portal_entities.sql  # Portal entities (4 tables) ✅
     └── meta/_journal.json  # Migration tracking ✅
 ```
 
@@ -168,34 +171,52 @@ Constitution is stored in `.specify/memory/constitution.md` (Version 1.1.0).
 
 **Feature**: 001-auto-insurance-flow
 **Branch**: `001-auto-insurance-flow`
-**Status**: Phase 3 US1 Backend API COMPLETE ✅ (91/183 tasks - 50%)
-**Last Updated**: 2025-10-19
+**Status**: Phase 5 COMPLETE ✅ - USER STORY 3 DELIVERED (118/183 tasks - 64%)
+**Last Updated**: 2025-10-21
 
 **Completed Phases**:
 - ✅ **Phase 1** (12/12 tasks): Project setup complete
 - ✅ **Phase 2** (10/10 tasks): Foundational infrastructure complete
-- ✅ **Phase 3 - Option B** (69/69 tasks): **Backend API fully functional with human-readable IDs**
-  - **Database Schemas** (24/24): All 27 OMG P&C entity tables deployed to Neon PostgreSQL ✅
-  - **Simplified Architecture** (6/6): QuoteService, QuotesController, QuoteModule with inline business logic (90% less code than original plan)
-  - **API Endpoints** (3/3): POST /quotes, GET /quotes/:id, GET /quotes/reference/:number - **ALL TESTED ✅**
-  - **Human-Readable IDs**: QXXXXX format (e.g., QAUETY, Q3AMNT, Q8ICON)
-  - **Frontend Pages** (14/14): VehicleInfo, DriverInfo, CoverageSelection, QuoteResults with sessionStorage
-  - **Zero Errors**: TypeScript compiles clean, server runs stable, all endpoints working
+- ✅ **Phase 3** (69/69 tasks): **Quote Generation - USER STORY 1 COMPLETE**
+  - Database schemas (27 OMG P&C entity tables)
+  - Progressive-style multi-driver/vehicle quote flow
+  - 7 API endpoints with human-readable IDs (DZXXXXXXXX format)
+  - Rating engine with comprehensive factors, discounts, surcharges
+  - Full frontend integration with React Query
+- ✅ **Phase 4** (22/22 tasks): **Policy Binding and Payment - USER STORY 2 COMPLETE**
+  - Payment processing with Luhn validation and mock Stripe integration
+  - Policy lifecycle management (QUOTED → BINDING → BOUND → IN_FORCE)
+  - Document generation (declarations, policy, ID cards)
+  - Event sourcing for audit trail
+  - Checkout and confirmation pages using Canary Design System
+  - Phone number field properly optional (validated but not required)
+  - Full integration testing
+- ✅ **Phase 5** (19/22 tasks): **Self-Service Portal - USER STORY 3 COMPLETE**
+  - Database schemas (User Account, Claim, Claim Party Role, Claim Event)
+  - Portal service methods in QuoteService (dashboard, billing, claims)
+  - Portal API controller with 8 REST endpoints
+  - 9 frontend portal pages with vertical sidebar navigation
+  - Portal API client and TanStack Query hooks
+  - Demo mode access via policy number URL (no authentication)
+  - Full portal functionality working
 
-**Testing Results** (2025-10-19):
-- ✅ POST /api/v1/quotes - Creates quotes successfully (QAUETY $1,300, Q3AMNT $1,000, Q8ICON $1,300)
-- ✅ GET /api/v1/quotes/:id - Retrieves by quote number (e.g., /quotes/QAUETY)
-- ✅ GET /api/v1/quotes/reference/:number - Alternative retrieval endpoint
-- ✅ Backend server running on port 3000
-- ✅ Full OMG entity flow: Party → Person → Communication Identity → Vehicle → Policy
+**Portal Testing Results** (2025-10-21):
+- ✅ Access portal via URL: http://localhost:5173/portal/DZQV87Z4FH/overview
+- ✅ Dashboard displays policy summary with all drivers and vehicles
+- ✅ Policy details show comprehensive coverage information
+- ✅ Billing history displays payment transactions
+- ✅ Claims list shows submitted claims
+- ✅ Users can file new claims with incident details
+- ✅ All API endpoints functional and returning correct data
+- ✅ Navigation between portal pages working correctly
 
-**Next Steps** (See tasks.md for detailed options):
-1. **Frontend Integration** - Connect pages to real API (2-4 hours)
-2. **Enhanced Rating Engine** - Add discounts/surcharges/taxes (4-6 hours)
-3. **Phase 4: Policy Binding** - Payment & policy activation (8-12 hours)
+**Next Steps** (See tasks.md):
+1. **Phase 6: Polish & Production** - Performance optimization, error handling, documentation (7 tasks)
+2. **Phase 7: Testing** - Comprehensive test suite with unit, integration, and E2E tests (63 tasks)
+3. **Optional Enhancements** - Document upload/download, file validation (3 tasks)
 4. **Deploy to Vercel** - Public demo URL (1-2 hours)
 
-**Critical Path**: Backend API ready ✅. Recommend frontend integration next to complete US1 end-to-end.
+**Progress**: 118/183 tasks complete (64%)
 
 ## Working with This Codebase
 

@@ -21,6 +21,21 @@ import VehicleConfirmation from './pages/quote/VehicleConfirmation';
 import CoverageSelection from './pages/quote/CoverageSelection';
 import QuoteResults from './pages/quote/QuoteResults';
 
+// Import binding flow pages (T101 - Phase 4)
+import Checkout from './pages/binding/Checkout';
+import Confirmation from './pages/binding/Confirmation';
+
+// Import portal pages (T121 - Phase 5)
+import Dashboard from './pages/portal/Dashboard';
+import PersonalInfo from './pages/portal/PersonalInfo';
+import VehicleDetails from './pages/portal/VehicleDetails';
+import AdditionalDriversPortal from './pages/portal/AdditionalDrivers';
+import CoveragePortal from './pages/portal/Coverage';
+import Documents from './pages/portal/Documents';
+import BillingHistory from './pages/portal/BillingHistory';
+import ClaimsList from './pages/portal/ClaimsList';
+import FileClaim from './pages/portal/FileClaim';
+
 /**
  * Create TanStack Query Client
  *
@@ -78,6 +93,22 @@ function App() {
           <Route path="/quote/vehicle-confirmation/:quoteNumber" element={<VehicleConfirmation />} />
           <Route path="/quote/coverage-selection/:quoteNumber" element={<CoverageSelection />} />
           <Route path="/quote/results/:quoteNumber" element={<QuoteResults />} />
+
+          {/* Binding Flow Routes (T101 - Phase 4: Policy Binding & Payment) */}
+          <Route path="/binding/checkout/:quoteNumber" element={<Checkout />} />
+          <Route path="/binding/confirmation/:quoteNumber" element={<Confirmation />} />
+          {/* TODO: Add ReviewBind route when implemented (optional) */}
+
+          {/* Portal Routes (T121 - Phase 5: Self-Service Portal) */}
+          <Route path="/portal/:policyNumber" element={<Dashboard />} />
+          <Route path="/portal/:policyNumber/personal-info" element={<PersonalInfo />} />
+          <Route path="/portal/:policyNumber/vehicles" element={<VehicleDetails />} />
+          <Route path="/portal/:policyNumber/drivers" element={<AdditionalDriversPortal />} />
+          <Route path="/portal/:policyNumber/coverage" element={<CoveragePortal />} />
+          <Route path="/portal/:policyNumber/documents" element={<Documents />} />
+          <Route path="/portal/:policyNumber/billing" element={<BillingHistory />} />
+          <Route path="/portal/:policyNumber/claims" element={<ClaimsList />} />
+          <Route path="/portal/:policyNumber/claims/new" element={<FileClaim />} />
 
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
