@@ -179,10 +179,16 @@ class QuoteApiService {
   /**
    * Base API URL
    *
-   * In development, Vite proxy forwards /api to http://localhost:3000
-   * In production, this would be the actual API domain
+   * Uses VITE_API_BASE_URL environment variable if set, otherwise falls back to:
+   * - Development: '/api/v1' (proxied by Vite to localhost:3000)
+   * - Production: Must set VITE_API_BASE_URL to deployed backend URL
+   *
+   * For Vercel deployment without backend, you can:
+   * 1. Run backend locally and use ngrok/tunnel
+   * 2. Deploy backend separately and set VITE_API_BASE_URL
+   * 3. Use Vercel serverless functions (requires backend conversion)
    */
-  private baseUrl = '/api/v1';
+  private baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
 
   /**
    * Create a new quote
