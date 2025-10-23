@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "installCommand": "node scripts/setup-npmrc.js && npm install && cd backend && npm install",
+  "installCommand": "node scripts/setup-npmrc.js && npm install --legacy-peer-deps && cd backend && npm install --legacy-peer-deps",
   "buildCommand": "npm run build && cd backend && npm run build",
   "devCommand": "npm run dev",
   "framework": "vite",
