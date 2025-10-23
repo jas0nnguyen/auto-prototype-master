@@ -1,0 +1,47 @@
+# Dependencies
+node_modules
+backend/node_modules
+
+# Build artifacts
+.next
+.turbo
+dist
+backend/dist
+
+# Development files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Testing
+coverage
+.vitest
+backend/tests
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Skip directories (incomplete features)
+backend/src/**/*.skip
+
+# Documentation (not needed for runtime)
+*.md
+!README.md
+specs/
+learnings/
+bugs.md
