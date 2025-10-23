@@ -12,6 +12,7 @@
 
 import { Injectable, Logger, Inject, NotFoundException, BadRequestException } from '@nestjs/common';
 import { eq, and, sql, gte, lte } from 'drizzle-orm';
+import { formatDateToYYYYMMDD } from '../../utils/validators';
 import {
   party,
   person,
@@ -164,7 +165,7 @@ export class QuoteService {
         person_identifier: newParty.party_identifier, // Subtype shares PK
         first_name: input.driver.firstName,
         last_name: input.driver.lastName,
-        birth_date: input.driver.birthDate.toISOString().split('T')[0],
+        birth_date: formatDateToYYYYMMDD(input.driver.birthDate),
         gender_code: input.driver.gender || null,
       }).returning();
 
@@ -242,7 +243,7 @@ export class QuoteService {
         driver: {
           firstName: input.driver.firstName,
           lastName: input.driver.lastName,
-          birthDate: input.driver.birthDate.toISOString().split('T')[0],
+          birthDate: formatDateToYYYYMMDD(input.driver.birthDate),
           email: input.driver.email,
           phone: input.driver.phone,
           gender: input.driver.gender || null,
@@ -254,7 +255,7 @@ export class QuoteService {
         additionalDrivers: (input.additionalDrivers || []).map(d => ({
           firstName: d.firstName,
           lastName: d.lastName,
-          birthDate: d.birthDate.toISOString().split('T')[0],
+          birthDate: formatDateToYYYYMMDD(d.birthDate),
           email: d.email,
           phone: d.phone,
           gender: d.gender || null,
@@ -306,8 +307,8 @@ export class QuoteService {
       const [newPolicy] = await this.db.insert(policy).values({
         policy_identifier: newAgreement.agreement_identifier,
         policy_number: quoteNumber,
-        effective_date: new Date().toISOString().split('T')[0],
-        expiration_date: this.calculateExpirationDate().toISOString().split('T')[0],
+        effective_date: formatDateToYYYYMMDD(new Date()),
+        expiration_date: formatDateToYYYYMMDD(this.calculateExpirationDate()),
         status_code: 'QUOTED',
         quote_snapshot: quoteSnapshot,  // ✅ Complete quote data
         marital_status: input.driver.maritalStatus || null,  // ✅ Denormalized for queries
@@ -639,7 +640,7 @@ export class QuoteService {
         driver: {
           firstName: driver.firstName,
           lastName: driver.lastName,
-          birthDate: driver.birthDate.toISOString().split('T')[0],
+          birthDate: formatDateToYYYYMMDD(driver.birthDate),
           email: driver.email,
           phone: driver.phone,
           gender: driver.gender || null,
@@ -769,7 +770,7 @@ export class QuoteService {
         additionalDrivers: filteredDrivers.map(d => ({
           firstName: d.firstName,
           lastName: d.lastName,
-          birthDate: d.birthDate.toISOString().split('T')[0],
+          birthDate: formatDateToYYYYMMDD(d.birthDate),
           email: d.email,
           phone: d.phone,
           gender: d.gender || null,
@@ -1034,7 +1035,7 @@ export class QuoteService {
         .set({
           quote_snapshot: updatedSnapshot,
           status_code: 'QUOTED',  // ← Status change from INCOMPLETE to QUOTED
-          expiration_date: expirationDate.toISOString().split('T')[0],
+          expiration_date: formatDateToYYYYMMDD(expirationDate),
           coverage_start_date: coverages.startDate || null,
         })
         .where(eq(policy.policy_number, quoteNumber));

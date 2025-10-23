@@ -48,6 +48,35 @@ export function isValidUSPhoneNumber(phone: string): boolean {
 }
 
 /**
+ * Format Date to YYYY-MM-DD without timezone conversion
+ *
+ * IMPORTANT: This function avoids timezone issues by working with the Date object's
+ * local date components rather than converting to ISO/UTC.
+ *
+ * Problem: When you use `new Date("01/01/1990").toISOString().split('T')[0]`,
+ * JavaScript interprets "01/01/1990" as midnight local time, then toISOString()
+ * converts to UTC. If you're in PST (UTC-8), midnight Jan 1 becomes 8am Dec 31 UTC.
+ *
+ * Solution: Use the Date object's getFullYear(), getMonth(), getDate() methods
+ * which return local time components without timezone conversion.
+ *
+ * @param date - Date object to format
+ * @returns Date string in YYYY-MM-DD format (local timezone, no conversion)
+ *
+ * @example
+ * const date = new Date("01/01/1990"); // Midnight local time Jan 1, 1990
+ * formatDateToYYYYMMDD(date); // "1990-01-01" (correct!)
+ * date.toISOString().split('T')[0]; // "1989-12-31" (wrong if in PST!)
+ */
+export function formatDateToYYYYMMDD(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // getMonth() is 0-indexed
+  const day = String(date.getDate()).padStart(2, '0');
+
+  return `${year}-${month}-${day}`;
+}
+
+/**
  * Validate US ZIP code format
  *
  * Accepts 5-digit (12345) or 9-digit (12345-6789) formats.
