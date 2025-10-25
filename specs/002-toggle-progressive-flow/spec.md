@@ -139,6 +139,12 @@ A customer wants to add rental reimbursement coverage to one vehicle but not oth
 
 - How does the system handle expiration of prefilled quote data? Should maintain quote for 30 days and send reminder emails before expiration.
 
+- How does the system handle mock service failures or timeouts? System should log errors, use fallback defaults (e.g., default safety rating, medium risk driver), and continue quote flow without blocking the customer.
+
+- What happens when VIN decoder returns incomplete data? System should populate available fields and allow customer to manually enter missing vehicle details.
+
+- How does the system handle MVR check failures for drivers? System should default to medium risk level and calculate premium with conservative surcharges, then allow manual override if customer provides proof of clean record.
+
 ## Requirements
 
 ### Functional Requirements
@@ -146,12 +152,21 @@ A customer wants to add rental reimbursement coverage to one vehicle but not oth
 #### Progressive Prefill System
 
 - **FR-001**: System MUST provide a search interface for customers to look up prior policy information using last name and ZIP code
-- **FR-002**: System MUST integrate with mock prior policy database to retrieve existing carrier policy data including vehicles, drivers, and coverage history
+- **FR-002**: System MUST integrate with mock prior policy database to retrieve existing carrier policy data including vehicles, drivers, and coverage history. The prefill system MUST call the Prior Policy Lookup integration to search for existing policies by last name and ZIP code.
 - **FR-003**: System MUST display an animated loading screen with progress indicators showing each prefill step (e.g., "Insurance history ✓", "Checking vehicle information...")
 - **FR-004**: System MUST auto-populate a quote with prefilled vehicle data including year, make, model, VIN, and ownership type when prior policy is found
 - **FR-005**: System MUST auto-populate a quote with prefilled driver data including name, date of birth, and relationship to primary insured when prior policy is found
 - **FR-006**: System MUST allow customers to proceed with manual entry if no prior policy is found or if they choose to skip prefill
 - **FR-007**: System MUST handle prefill service failures gracefully by falling back to manual entry without blocking the quote flow
+
+#### Mock Service Integration
+
+- **FR-007a**: System MUST integrate with VIN Decoder service to automatically populate vehicle year, make, model, trim, and body style when VIN is entered
+- **FR-007b**: System MUST integrate with Vehicle Valuation service to determine replacement cost for comprehensive and collision coverage calculations
+- **FR-007c**: System MUST integrate with Vehicle Safety Ratings service to apply safety discounts (5-star: 10%, 4-star: 5%) to premiums
+- **FR-007d**: System MUST integrate with Motor Vehicle Record (MVR) service to retrieve driver history and calculate risk-based surcharges
+- **FR-007e**: All mock service integrations MUST include realistic latency (1-3 seconds) and error scenarios (5-10% failure rate) to simulate production behavior
+- **FR-007f**: All mock service integrations MUST be feature-flagged to allow enabling/disabling without code changes
 
 #### Card-Based Summary and Edit-In-Place
 
@@ -214,6 +229,53 @@ A customer wants to add rental reimbursement coverage to one vehicle but not oth
 - **FR-046**: System MUST create a vehicle_coverage table to store per-vehicle add-on selections with vehicle_id FK, coverage_type, enabled boolean, and coverage_amount
 - **FR-047**: System MUST create a mock_prior_policies table to simulate external carrier policy data with fields for policy_number, last_name, zip_code, vehicles (JSONB), drivers (JSONB)
 
+### External Integrations (Simulated for Demo)
+
+This feature requires integration with external data sources that will be simulated for the demo application. In production, these would connect to real third-party APIs.
+
+#### Prior Policy Lookup Integration
+
+- **Purpose**: Retrieve existing auto insurance policy data from other carriers to prefill customer quotes
+- **Input**: Customer last name and ZIP code
+- **Output**: Policy data including vehicles (year, make, model, VIN, ownership type, annual mileage) and drivers (name, date of birth, relationship)
+- **Behavior**: 70% success rate (policy found), 30% no results (proceed to manual entry), 2-second simulated latency
+- **Error Handling**: Graceful fallback to manual entry if integration is unavailable
+- **Demo Implementation**: Mock database table with 15-20 sample policies indexed by last name and ZIP code
+
+#### VIN Decoder Integration
+
+- **Purpose**: Decode Vehicle Identification Numbers to retrieve vehicle specifications
+- **Input**: 17-character VIN
+- **Output**: Vehicle details (year, make, model, trim, body style, engine, transmission, fuel type, manufacturer)
+- **Validation**: VIN checksum validation (9th digit algorithm), year decoding from position 10
+- **Error Handling**: Return error message for invalid VINs, allow manual entry override
+- **Demo Implementation**: Mock database with 50+ common vehicles, VIN validation algorithm
+
+#### Vehicle Valuation Integration
+
+- **Purpose**: Estimate market value and replacement cost for rating calculations
+- **Input**: Year, make, model, trim, mileage, condition
+- **Output**: Trade-in value, private party value, dealer retail value, replacement cost
+- **Calculation Logic**: Depreciation curves (20% first year, exponential decay), mileage adjustments (12k miles/year baseline), condition factors
+- **Demo Implementation**: Mathematical model with realistic depreciation curves and base MSRP data
+
+#### Vehicle Safety Ratings Integration
+
+- **Purpose**: Retrieve safety ratings for insurance premium discounts
+- **Input**: Year, make, model
+- **Output**: NHTSA 5-star ratings (overall, frontal, side, rollover), IIHS ratings (crash tests, crash avoidance), advanced safety features
+- **Rating Impact**: Higher safety ratings result in premium discounts (5-star: 10% discount, 4-star: 5% discount)
+- **Demo Implementation**: Mock database with safety ratings for 100+ common vehicles
+
+#### Motor Vehicle Record (MVR) Check Integration
+
+- **Purpose**: Retrieve driver history for risk assessment and surcharge calculation
+- **Input**: Driver license number, license state, date of birth
+- **Output**: Driving score (0-100), risk level (LOW/MEDIUM/HIGH), incidents (accidents, violations, DUI), years licensed
+- **Behavior**: 90% clean records (score 80-100, LOW risk), 8% moderate risk (1-2 violations), 2% high risk (accidents/DUI)
+- **Error Handling**: Default to medium risk if MVR check fails
+- **Demo Implementation**: Random generation based on statistical distribution of driver risk profiles
+
 ### Key Entities
 
 - **Prior Policy Record**: Represents a customer's existing insurance policy from another carrier, containing vehicle and driver information used for prefill. Key attributes: policy number, carrier name, last name, ZIP code, vehicles array, drivers array, effective date, expiration date
@@ -227,6 +289,14 @@ A customer wants to add rental reimbursement coverage to one vehicle but not oth
 - **Driver Assessment**: Represents evaluation of driver risk factors including MVR check results (mock in demo mode). Key attributes: driver ID, accident count, violation count, DUI status, driving score (0-100), risk level (LOW/MEDIUM/HIGH), assessment date
 
 - **Vehicle Assessment**: Represents evaluation of vehicle risk factors including safety ratings and theft risk (mock in demo mode). Key attributes: vehicle ID, safety rating (1-5 stars), theft risk level, repair cost category, market value, assessment date
+
+- **VIN Decode Result**: Represents the output from the VIN decoder integration. Key attributes: VIN, valid flag, year, make, model, trim, body style, engine, transmission, fuel type, vehicle class, manufacturer, decode timestamp
+
+- **Vehicle Valuation Result**: Represents the output from the vehicle valuation integration. Key attributes: year, make, model, mileage, condition, trade-in value, private party value, dealer retail value, replacement cost, confidence score, valuation date
+
+- **Safety Rating Result**: Represents the output from the safety ratings integration. Key attributes: year, make, model, NHTSA overall rating, NHTSA frontal rating, NHTSA side rating, NHTSA rollover rating, IIHS crash test ratings, advanced safety features array, rating date
+
+- **MVR Check Result**: Represents the output from the motor vehicle record integration. Key attributes: license number, license state, driving score, risk level, incidents array, years licensed, accident count, violation count, DUI status, check date
 
 ## Success Criteria
 
