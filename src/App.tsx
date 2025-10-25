@@ -36,6 +36,9 @@ import BillingHistory from './pages/portal/BillingHistory';
 import ClaimsList from './pages/portal/ClaimsList';
 import FileClaim from './pages/portal/FileClaim';
 
+// Import debug panel (T128 - Phase 6)
+import { QuoteDebugPanel } from './components/debug/QuoteDebugPanel';
+
 /**
  * Create TanStack Query Client
  *
@@ -114,6 +117,8 @@ function App() {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Router>
+      {/* Debug Panel (T128 - Phase 6, dev mode only) */}
+      <QuoteDebugPanel />
     </QueryClientProvider>
   );
 }

@@ -1,9 +1,9 @@
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { AllExceptionsFilter } from './api/middleware/error-handler';
 import { getCorsConfig, getSecurityHeaders } from './api/middleware/cors';
+import { setupSwagger } from './api/swagger';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -36,19 +36,7 @@ async function bootstrap() {
   );
 
   // Swagger API documentation setup
-  const config = new DocumentBuilder()
-    .setTitle('Auto Insurance API')
-    .setDescription('OMG P&C Data Model v1.0 Compliant Auto Insurance Purchase Flow API')
-    .setVersion('1.0')
-    .addTag('quotes', 'Quote generation and management')
-    .addTag('policies', 'Policy binding and management')
-    .addTag('portal', 'Self-service portal endpoints')
-    .addTag('rating', 'Premium calculation and rating engine')
-    .addTag('mock-services', 'Simulated third-party services')
-    .build();
-
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  setupSwagger(app);
 
   const port = process.env.PORT || 3000;
   await app.listen(port);

@@ -4,16 +4,25 @@ An OMG Property & Casualty Data Model v1.0 compliant insurance purchase platform
 
 ## Project Status
 
-**Current Phase**: Phase 3 Complete ✅ (50% overall progress)
+**Current Phase**: Phase 6 Complete ✅ (68% overall progress)
 - ✅ Phase 1: Project Setup (12/12 tasks)
 - ✅ Phase 2: Foundational Infrastructure (10/10 tasks)
-- ✅ Phase 3: User Story 1 - Quote Generation (63/63 tasks)
-- ⏳ Phase 4: Policy Binding and Payment (22 tasks)
-- ⏳ Phase 5: Portal Access (20 tasks)
-- ⏳ Phase 6: Polish and Production Features (7 tasks)
-- ⏳ Phase 7: Comprehensive Testing (57 tasks)
+- ✅ Phase 3: User Story 1 - Quote Generation (69/69 tasks)
+- ✅ Phase 4: User Story 2 - Policy Binding and Payment (22/22 tasks)
+- ✅ Phase 5: User Story 3 - Self-Service Portal (19/22 tasks - core features complete)
+- ✅ Phase 6: Polish and Production Features (7/7 tasks) **🎉 JUST COMPLETED**
+- ⏳ Phase 7: Comprehensive Testing (63 tasks)
 
 **Branch**: `001-auto-insurance-flow`
+
+**Phase 6 Deliverables** ✅:
+- Swagger/OpenAPI documentation at `/api/docs`
+- Comprehensive error handling with user-friendly messages
+- Request validation DTOs for all endpoints
+- Request timing middleware (warns on >3s responses)
+- API rate limiting (100 req/15min general, 20 req/15min POST)
+- Database performance indexes for common queries
+- Developer debug panel (Cmd+D / Ctrl+D in dev mode)
 
 ## Getting Started
 
@@ -148,15 +157,16 @@ auto-prototype-master/
 
 ## Features
 
-### ✅ Completed (Phase 1-3)
+### ✅ Completed (Phases 1-6)
 
-**Quote Generation (User Story 1)**
-- Multi-step quote form with vehicle, driver, and coverage information
+**Quote Generation (User Story 1)** ✅
+- Progressive-style multi-driver/vehicle quote flow (5 steps)
+- Human-readable quote numbers (DZXXXXXXXX format)
 - VIN decoding with checksum validation (mock service)
 - Vehicle valuation with depreciation curves (mock service)
 - Safety ratings from NHTSA/IIHS (mock service)
 - Premium calculation with multiplicative rating model:
-  - Vehicle rating factors (age, make, model)
+  - Vehicle rating factors (age, make, model, safety)
   - Driver rating factors (age, experience, violations)
   - Location rating factors (zip code, urban/rural)
   - Coverage rating factors (limits, deductibles)
@@ -164,32 +174,63 @@ auto-prototype-master/
   - 8 surcharge types (At-Fault Accident, DUI, Speeding, etc.)
   - State taxes and fees
 - Quote expiration tracking (30-day validity)
-- Complete OMG P&C Data Model implementation (27 entities)
+- Complete OMG P&C Data Model implementation (31 entities)
 - In-memory caching with 24-hour TTL
 - Realistic API latency simulation (LogNormal distribution)
 
-### 🚧 In Progress (Phase 4-7)
+**Policy Binding (User Story 2)** ✅
+- Payment processing with Luhn validation (mock Stripe gateway)
+- Policy lifecycle management (QUOTED → BINDING → BOUND → IN_FORCE)
+- Document generation (declarations, policy, ID cards)
+- Event sourcing for audit trail
+- Checkout and confirmation pages
+- Phone number field validation (optional)
+- Full integration testing
 
-**Policy Binding (User Story 2)** - Phase 4
-- Payment processing (mock payment gateway)
-- Policy document generation (PDF, ID cards)
-- Email notifications
-- Policy status transitions (QUOTED → BINDING → BOUND → ACTIVE)
+**Portal Access (User Story 3)** ✅
+- Self-service portal with policy number URL access (demo mode)
+- Dashboard with comprehensive policy summary
+- Billing/payment history display
+- Claims filing with incident details
+- 9 portal pages with vertical sidebar navigation
+- 8 REST API endpoints
+- Full portal functionality working
 
-**Portal Access (User Story 3)** - Phase 5
-- Self-service portal with policy number access (no authentication)
-- Dashboard with policy summary
-- Billing history
-- Claims filing with document upload
+**Production Features (Phase 6)** ✅
+- Swagger/OpenAPI documentation at `/api/docs`
+- Enhanced error handling:
+  - ValidationError, DatabaseError, NotFoundError
+  - BusinessRuleError with rule codes
+  - InvalidStatusTransitionError
+  - ExpiredQuoteError
+  - HTTP status codes: 400, 404, 409, 410, 500
+- Request validation with class-validator DTOs:
+  - CreateQuoteDto (multi-driver/vehicle)
+  - UpdatePrimaryDriverDto, UpdateDriversDto, UpdateVehiclesDto
+  - UpdateCoverageDto
+  - BindPolicyDto (payment data)
+  - FileClaimDto
+- Request timing middleware (logs duration, warns >3s)
+- API rate limiting:
+  - 100 requests/15min (general endpoints)
+  - 20 requests/15min (POST endpoints)
+  - Localhost whitelisted for development
+- Database performance indexes:
+  - Policy lookups (quote_number, policy_number, status)
+  - Party deduplication (email_address)
+  - Date range queries (effective_date, expiration_date)
+  - Composite indexes for common patterns
+- Developer debug panel:
+  - Toggle with Cmd+D / Ctrl+D
+  - API call history (last 10 requests)
+  - Request/response inspection
+  - Premium calculation breakdown
+  - Dev mode only
 
-**Production Features** - Phase 6
-- API documentation (Swagger/OpenAPI)
-- Rate limiting
-- Performance optimization
-- Comprehensive error handling
+### 🚧 In Progress (Phase 7)
 
 **Testing** - Phase 7
-- 57 test tasks covering:
+- 63 test tasks covering:
   - Backend unit tests (rating engine, services, mock services)
   - API integration tests
   - Frontend component tests
@@ -226,22 +267,113 @@ auto-prototype-master/
 4. **Demo Mode**: No authentication, mock external services (payment, email, VIN decoder)
 5. **Production Patterns**: Error handling, validation, loading states, transactions
 
+## ID Format
+
+All quotes and policies use human-readable identifiers:
+
+- **Quote Numbers**: `DZXXXXXXXX` (8 characters after DZ prefix)
+  - Example: `DZQV87Z4FH`
+  - Used for quote retrieval and customer service
+- **Policy Numbers**: `DZXXXXXXXX` (same format as quote numbers)
+  - Example: `DZQV87Z4FH`
+  - Used for portal access via URL: `/portal/{policyNumber}`
+
+**Progressive-Style Quote Flow** (5 steps):
+1. Primary Driver Info → Basic information
+2. Additional Drivers → Add multiple drivers (optional)
+3. Vehicles List → Add multiple vehicles
+4. Vehicle Confirmation → Review vehicles
+5. Coverage Selection → Select limits and deductibles
+6. Quote Results → Review premium and bind policy
+
+**Policy Status Transitions**:
+```
+QUOTED → BINDING → BOUND → IN_FORCE
+```
+
+- **QUOTED**: Initial quote generated
+- **BINDING**: Payment processing in progress
+- **BOUND**: Payment successful, policy created
+- **IN_FORCE**: Policy active and effective
+
 ## API Endpoints
 
+**📚 Full API documentation available at `/api/docs` (Swagger UI)**
+
 ### Quote Endpoints
-- `POST /api/v1/quotes` - Create new quote
+- `POST /api/v1/quotes` - Create new quote (multi-driver/vehicle support)
 - `GET /api/v1/quotes/:id` - Get quote by UUID
-- `GET /api/v1/quotes/reference/:refNumber` - Get quote by quote number
+- `GET /api/v1/quotes/reference/:quoteNumber` - Get quote by DZXXXXXXXX number
+- `PUT /api/v1/quotes/:id/primary-driver` - Update primary driver
+- `PUT /api/v1/quotes/:id/drivers` - Update additional drivers
+- `PUT /api/v1/quotes/:id/vehicles` - Update vehicles list
 - `PUT /api/v1/quotes/:id/coverage` - Update coverage selections
 - `POST /api/v1/quotes/:id/calculate` - Recalculate premium
+
+### Policy Endpoints
+- `POST /api/v1/policies/bind` - Bind policy with payment
+- `GET /api/v1/policies/:policyNumber` - Get policy by number
+- `GET /api/v1/policies/:policyNumber/status` - Get policy status
+
+### Portal Endpoints
+- `GET /api/v1/portal/:policyNumber/dashboard` - Dashboard data
+- `GET /api/v1/portal/:policyNumber/billing` - Billing history
+- `GET /api/v1/portal/:policyNumber/claims` - Claims list
+- `POST /api/v1/portal/:policyNumber/claims` - File new claim
+- `GET /api/v1/portal/:policyNumber/documents` - Policy documents
 
 ### Rating Engine
 - `POST /api/v1/rating/calculate` - Calculate premium for quote
 
 ### Mock Services
-- `POST /api/v1/mock/vin-decoder` - Decode VIN
-- `POST /api/v1/mock/vehicle-valuation` - Get vehicle market value
-- `POST /api/v1/mock/safety-ratings` - Get safety ratings
+- `POST /api/v1/mock/vin-decoder` - Decode VIN (mock)
+- `POST /api/v1/mock/vehicle-valuation` - Get vehicle market value (mock)
+- `POST /api/v1/mock/safety-ratings` - Get safety ratings (mock)
+
+### Testing API with curl
+
+**Create Quote:**
+```bash
+curl -X POST http://localhost:3000/api/v1/quotes \
+  -H "Content-Type: application/json" \
+  -d '{
+    "primaryDriver": {
+      "firstName": "John",
+      "lastName": "Doe",
+      "dateOfBirth": "1990-01-15",
+      "gender": "Male",
+      "licenseNumber": "D1234567"
+    },
+    "email": "john.doe@example.com",
+    "vehicles": [{
+      "vin": "1HGCM82633A123456",
+      "year": 2020,
+      "make": "Honda",
+      "model": "Accord"
+    }],
+    "zipCode": "12345"
+  }'
+```
+
+**Get Quote by Number:**
+```bash
+curl http://localhost:3000/api/v1/quotes/reference/DZXXXXXXXX
+```
+
+**Bind Policy:**
+```bash
+curl -X POST http://localhost:3000/api/v1/policies/bind \
+  -H "Content-Type: application/json" \
+  -d '{
+    "quoteNumber": "DZXXXXXXXX",
+    "paymentMethod": {
+      "type": "credit_card",
+      "number": "4111111111111111",
+      "expirationDate": "12/25",
+      "cvv": "123"
+    }
+  }'
+```
 
 ## Testing
 
