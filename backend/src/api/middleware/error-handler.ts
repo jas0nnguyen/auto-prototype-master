@@ -71,6 +71,27 @@ export class BusinessRuleError extends Error {
   }
 }
 
+export class InvalidStatusTransitionError extends BusinessRuleError {
+  constructor(
+    public currentStatus: string,
+    public attemptedStatus: string,
+    public resourceType: string = 'Policy'
+  ) {
+    super(
+      `Cannot transition ${resourceType} from ${currentStatus} to ${attemptedStatus}`,
+      'INVALID_STATUS_TRANSITION'
+    );
+    this.name = 'InvalidStatusTransitionError';
+  }
+}
+
+export class ExpiredQuoteError extends BusinessRuleError {
+  constructor(public quoteId: string) {
+    super('This quote has expired. Please generate a new quote.', 'QUOTE_EXPIRED');
+    this.name = 'ExpiredQuoteError';
+  }
+}
+
 export class UnauthorizedError extends Error {
   constructor(message: string = 'Unauthorized access') {
     super(message);
@@ -163,6 +184,37 @@ export class AllExceptionsFilter implements ExceptionFilter {
         statusCode: HttpStatus.NOT_FOUND,
         message: exception.message,
         error: 'NotFoundError',
+      };
+    }
+
+    // Handle expired quote errors
+    if (exception instanceof ExpiredQuoteError) {
+      return {
+        ...baseResponse,
+        statusCode: HttpStatus.GONE,
+        message: exception.message,
+        error: 'ExpiredQuoteError',
+        details: {
+          ruleCode: exception.ruleCode,
+          quoteId: exception.quoteId,
+          action: 'Please generate a new quote',
+        },
+      };
+    }
+
+    // Handle invalid status transition errors
+    if (exception instanceof InvalidStatusTransitionError) {
+      return {
+        ...baseResponse,
+        statusCode: HttpStatus.CONFLICT,
+        message: exception.message,
+        error: 'InvalidStatusTransitionError',
+        details: {
+          ruleCode: exception.ruleCode,
+          currentStatus: exception.currentStatus,
+          attemptedStatus: exception.attemptedStatus,
+          resourceType: exception.resourceType,
+        },
       };
     }
 

@@ -55,10 +55,19 @@ This directory contains detailed phase-by-phase learning summaries for the Auto 
    - Payment processing (Luhn validation, mock Stripe), policy lifecycle (QUOTED→BINDING→BOUND), event sourcing, document generation
    - 22/22 tasks complete ✅
 
+10. **[Phase 6: Swagger/OpenAPI Documentation](./phases/phase-6-swagger-documentation.md)** (Task T123)
+    - Completed: 2025-10-24
+    - Comprehensive API documentation for all 18 endpoints using Swagger/OpenAPI decorators
+    - Added @ApiOperation, @ApiParam, @ApiBody, @ApiResponse to all endpoints
+    - Enhanced 9 DTOs with @ApiProperty decorators and realistic example values
+    - Interactive documentation available at http://localhost:3000/api/docs
+    - Organized with tags: Quotes (7 endpoints), Policies (3 endpoints), Portal (8 endpoints)
+    - 1/1 task complete ✅
+
 ### Pending Phases
 
-- Phase 5: Portal access (US3) - 20 tasks
-- Phase 6: Polish and production features - 7 tasks
+- Phase 5: Portal access (US3) - 20 tasks (✅ COMPLETE but learnings not yet documented)
+- Phase 6: Polish and production features - 6 remaining tasks (T124-T129 except T123)
 - Phase 7: Comprehensive testing - 63 tasks
 
 ## How to Use These Documents

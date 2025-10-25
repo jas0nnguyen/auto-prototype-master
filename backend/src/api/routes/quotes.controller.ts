@@ -22,6 +22,7 @@ import {
   UsePipes,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
 import { IsArray, IsEmail, IsOptional, IsBoolean, IsNumber, IsString } from 'class-validator';
 import { QuoteService } from '../../services/quote/quote.service';
 import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.service';
@@ -30,30 +31,64 @@ import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.s
  * Driver DTO
  */
 class DriverDTO {
+  @ApiProperty({ example: 'John', description: 'Driver first name' })
   first_name!: string;
+
+  @ApiProperty({ example: 'Doe', description: 'Driver last name' })
   last_name!: string;
+
+  @ApiProperty({ example: '1990-01-15', description: 'Date of birth (YYYY-MM-DD)' })
   birth_date!: string | Date;
+
+  @ApiProperty({ example: 'john.doe@example.com', description: 'Email address' })
   email!: string;
-  phone?: string; // Optional phone number
+
+  @ApiProperty({ example: '555-123-4567', required: false, description: 'Phone number (optional)' })
+  phone?: string;
+
+  @ApiProperty({ example: 'Male', required: false, description: 'Gender' })
   gender?: string;
+
+  @ApiProperty({ example: 'Single', required: false, description: 'Marital status' })
   marital_status?: string;
+
+  @ApiProperty({ example: 10, required: false, description: 'Years licensed' })
   years_licensed?: number;
-  relationship?: string; // For additional drivers: spouse, child, parent, sibling, other
-  is_primary?: boolean; // Indicates if this is the Primary Named Insured
+
+  @ApiProperty({ example: 'spouse', required: false, description: 'Relationship to primary (for additional drivers)' })
+  relationship?: string;
+
+  @ApiProperty({ example: true, required: false, description: 'Is this the primary named insured?' })
+  is_primary?: boolean;
 }
 
 /**
  * Vehicle DTO
  */
 class VehicleDTO {
+  @ApiProperty({ example: 2020, description: 'Vehicle year' })
   year!: number;
+
+  @ApiProperty({ example: 'Honda', description: 'Vehicle make' })
   make!: string;
+
+  @ApiProperty({ example: 'Accord', description: 'Vehicle model' })
   model!: string;
+
+  @ApiProperty({ example: '1HGCM82633A123456', required: false, description: 'Vehicle Identification Number (VIN)' })
   vin?: string;
+
+  @ApiProperty({ example: 12000, required: false, description: 'Annual mileage' })
   annual_mileage?: number;
+
+  @ApiProperty({ example: 'Sedan', required: false, description: 'Body type' })
   body_type?: string;
+
+  @ApiProperty({ example: 'commute', required: false, description: 'Vehicle usage (commute, pleasure, business)' })
   usage?: string;
-  primary_driver_id?: string; // ID of the primary driver for this vehicle
+
+  @ApiProperty({ example: 'driver-uuid-123', required: false, description: 'ID of primary driver for this vehicle' })
+  primary_driver_id?: string;
 }
 
 /**
@@ -171,34 +206,103 @@ class UpdateCoverageDTO {
  */
 class CreateQuoteDTO {
   // NEW: Multi-driver/vehicle support
+  @ApiProperty({
+    type: [DriverDTO],
+    required: false,
+    description: 'List of drivers (multi-driver support)',
+    example: [{
+      first_name: 'John',
+      last_name: 'Doe',
+      birth_date: '1990-01-15',
+      email: 'john.doe@example.com',
+      phone: '555-123-4567',
+      gender: 'Male',
+      marital_status: 'Married',
+      is_primary: true
+    }]
+  })
   drivers?: DriverDTO[];
+
+  @ApiProperty({
+    type: [VehicleDTO],
+    required: false,
+    description: 'List of vehicles (multi-vehicle support)',
+    example: [{
+      year: 2020,
+      make: 'Honda',
+      model: 'Accord',
+      vin: '1HGCM82633A123456',
+      annual_mileage: 12000,
+      body_type: 'Sedan',
+      usage: 'commute'
+    }]
+  })
   vehicles?: VehicleDTO[];
 
   // LEGACY: Single driver info (backward compatibility)
+  @ApiProperty({ example: 'John', required: false, description: 'Driver first name (legacy)' })
   driver_first_name?: string;
+
+  @ApiProperty({ example: 'Doe', required: false, description: 'Driver last name (legacy)' })
   driver_last_name?: string;
+
+  @ApiProperty({ example: '1990-01-15', required: false, description: 'Driver date of birth (legacy)' })
   driver_birth_date?: string | Date;
+
+  @ApiProperty({ example: 'john.doe@example.com', required: false, description: 'Driver email (legacy)' })
   driver_email?: string;
+
+  @ApiProperty({ example: '555-123-4567', required: false, description: 'Driver phone (legacy)' })
   driver_phone?: string;
+
+  @ApiProperty({ example: 'Male', required: false, description: 'Driver gender (legacy)' })
   driver_gender?: string;
+
+  @ApiProperty({ example: 'Single', required: false, description: 'Marital status (legacy)' })
   driver_marital_status?: string;
+
+  @ApiProperty({ example: 10, required: false, description: 'Years licensed (legacy)' })
   driver_years_licensed?: number;
 
   // Address (applies to primary driver)
+  @ApiProperty({ example: '123 Main St', description: 'Street address' })
   address_line_1!: string;
+
+  @ApiProperty({ example: 'Apt 4B', required: false, description: 'Address line 2 (optional)' })
   address_line_2?: string;
+
+  @ApiProperty({ example: 'Los Angeles', description: 'City' })
   address_city!: string;
+
+  @ApiProperty({ example: 'CA', description: 'State (2-letter code)' })
   address_state!: string;
+
+  @ApiProperty({ example: '90001', description: 'ZIP code' })
   address_zip!: string;
 
   // LEGACY: Single vehicle info (backward compatibility)
+  @ApiProperty({ example: 2020, required: false, description: 'Vehicle year (legacy)' })
   vehicle_year?: number;
+
+  @ApiProperty({ example: 'Honda', required: false, description: 'Vehicle make (legacy)' })
   vehicle_make?: string;
+
+  @ApiProperty({ example: 'Accord', required: false, description: 'Vehicle model (legacy)' })
   vehicle_model?: string;
+
+  @ApiProperty({ example: '1HGCM82633A123456', required: false, description: 'VIN (legacy)' })
   vehicle_vin?: string;
+
+  @ApiProperty({ example: 12000, required: false, description: 'Annual mileage (legacy)' })
   annual_mileage?: number;
+
+  @ApiProperty({ example: 12000, required: false, description: 'Vehicle annual mileage (legacy)' })
   vehicle_annual_mileage?: number;
+
+  @ApiProperty({ example: 'Sedan', required: false, description: 'Body type (legacy)' })
   vehicle_body_type?: string;
+
+  @ApiProperty({ example: 'commute', required: false, description: 'Usage (legacy)' })
   vehicle_usage?: string;
 
   // Coverage selections (EXPANDED)
@@ -223,6 +327,7 @@ class CreateQuoteDTO {
   include_roadside_assistance?: boolean;
 }
 
+@ApiTags('Quotes')
 @Controller('api/v1/quotes')
 export class QuotesController {
   private readonly logger = new Logger(QuotesController.name);
@@ -267,6 +372,14 @@ export class QuotesController {
    * }
    */
   @Post()
+  @ApiOperation({
+    summary: 'Create new quote',
+    description: 'Create a new auto insurance quote with multi-driver/vehicle support. Returns quote number in DZXXXXXXXX format.'
+  })
+  @ApiBody({ type: CreateQuoteDTO, description: 'Quote creation data with driver, vehicle, and address information' })
+  @ApiResponse({ status: 201, description: 'Quote created successfully' })
+  @ApiResponse({ status: 400, description: 'Validation error - invalid input data' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async createQuote(@Body() dto: CreateQuoteDTO): Promise<QuoteResult> {
     try {
       // Determine if using new multi-driver/vehicle format or legacy single format
@@ -445,6 +558,14 @@ export class QuotesController {
    * }
    */
   @Get(':id')
+  @ApiOperation({
+    summary: 'Get quote by ID',
+    description: 'Retrieve a quote by its UUID or quote number (DZXXXXXXXX format)'
+  })
+  @ApiParam({ name: 'id', description: 'Quote UUID or quote number (DZXXXXXXXX)', example: 'DZQV87Z4FH' })
+  @ApiResponse({ status: 200, description: 'Quote retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async getQuote(@Param('id') id: string) {
     try {
       this.logger.debug('Fetching quote by number', { quoteNumber: id });
@@ -488,6 +609,14 @@ export class QuotesController {
    * }
    */
   @Get('reference/:quoteNumber')
+  @ApiOperation({
+    summary: 'Get quote by reference number',
+    description: 'Retrieve a quote using its human-readable quote number (DZXXXXXXXX format)'
+  })
+  @ApiParam({ name: 'quoteNumber', description: 'Quote number in DZXXXXXXXX format', example: 'DZQV87Z4FH' })
+  @ApiResponse({ status: 200, description: 'Quote retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async getQuoteByNumber(@Param('quoteNumber') quoteNumber: string) {
     try {
       this.logger.debug('Fetching quote by number', { quoteNumber });
@@ -521,6 +650,15 @@ export class QuotesController {
    * Update primary driver information for an existing quote
    */
   @Put(':quoteNumber/primary-driver')
+  @ApiOperation({
+    summary: 'Update primary driver',
+    description: 'Update the primary driver information for an existing quote'
+  })
+  @ApiParam({ name: 'quoteNumber', description: 'Quote number in DZXXXXXXXX format', example: 'DZQV87Z4FH' })
+  @ApiBody({ type: UpdatePrimaryDriverDTO, description: 'Updated driver information' })
+  @ApiResponse({ status: 200, description: 'Primary driver updated successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async updatePrimaryDriver(
     @Param('quoteNumber') quoteNumber: string,
     @Body() dto: UpdatePrimaryDriverDTO
@@ -579,6 +717,15 @@ export class QuotesController {
    * Update additional drivers for an existing quote
    */
   @Put(':quoteNumber/drivers')
+  @ApiOperation({
+    summary: 'Update additional drivers',
+    description: 'Update the list of additional drivers for an existing quote (multi-driver support)'
+  })
+  @ApiParam({ name: 'quoteNumber', description: 'Quote number in DZXXXXXXXX format', example: 'DZQV87Z4FH' })
+  @ApiBody({ type: UpdateDriversDTO, description: 'Additional drivers information' })
+  @ApiResponse({ status: 200, description: 'Drivers updated successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateDrivers(
     @Param('quoteNumber') quoteNumber: string,
     @Body() dto: UpdateDriversDTO
@@ -635,6 +782,15 @@ export class QuotesController {
    * Update vehicles for an existing quote
    */
   @Put(':quoteNumber/vehicles')
+  @ApiOperation({
+    summary: 'Update vehicles',
+    description: 'Update the list of vehicles for an existing quote (multi-vehicle support)'
+  })
+  @ApiParam({ name: 'quoteNumber', description: 'Quote number in DZXXXXXXXX format', example: 'DZQV87Z4FH' })
+  @ApiBody({ type: UpdateVehiclesDTO, description: 'Vehicles information' })
+  @ApiResponse({ status: 200, description: 'Vehicles updated successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateVehicles(
     @Param('quoteNumber') quoteNumber: string,
     @Body() dto: UpdateVehiclesDTO
@@ -689,6 +845,15 @@ export class QuotesController {
    * Update coverage selections and finalize quote (status: INCOMPLETE → QUOTED)
    */
   @Put(':quoteNumber/coverage')
+  @ApiOperation({
+    summary: 'Update coverage selections',
+    description: 'Update coverage options for a quote and finalize it (transitions status from INCOMPLETE → QUOTED)'
+  })
+  @ApiParam({ name: 'quoteNumber', description: 'Quote number in DZXXXXXXXX format', example: 'DZQV87Z4FH' })
+  @ApiBody({ type: UpdateCoverageDTO, description: 'Coverage selections including liability limits, deductibles, and optional coverages' })
+  @ApiResponse({ status: 200, description: 'Coverage updated and quote finalized successfully' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async updateCoverage(
     @Param('quoteNumber') quoteNumber: string,
     @Body() dto: UpdateCoverageDTO

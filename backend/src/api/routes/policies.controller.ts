@@ -16,23 +16,45 @@ import {
   HttpStatus,
   Logger,
 } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiResponse, ApiBody, ApiParam, ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { QuoteService } from '../../services/quote/quote.service';
 
 /**
  * DTO for binding a quote to a policy
  */
 export class BindQuoteDto {
+  @ApiProperty({ example: 'DZQV87Z4FH', description: 'Quote number in DZXXXXXXXX format' })
   quoteNumber: string;
+
+  @ApiProperty({
+    example: 'credit_card',
+    description: 'Payment method type',
+    enum: ['credit_card', 'ach']
+  })
   paymentMethod: 'credit_card' | 'ach';
 
   // Credit card fields
+  @ApiPropertyOptional({ example: '4242424242424242', description: 'Credit card number (required if paymentMethod is credit_card)' })
   cardNumber?: string;
+
+  @ApiPropertyOptional({ example: '12/25', description: 'Card expiration date MM/YY (required if paymentMethod is credit_card)' })
   cardExpiry?: string;
+
+  @ApiPropertyOptional({ example: '123', description: 'Card CVV (required if paymentMethod is credit_card)' })
   cardCvv?: string;
 
   // ACH fields
+  @ApiPropertyOptional({ example: '110000000', description: 'Bank routing number (required if paymentMethod is ach)' })
   routingNumber?: string;
+
+  @ApiPropertyOptional({ example: '000123456789', description: 'Bank account number (required if paymentMethod is ach)' })
   accountNumber?: string;
+
+  @ApiPropertyOptional({
+    example: 'checking',
+    description: 'Account type (required if paymentMethod is ach)',
+    enum: ['checking', 'savings']
+  })
   accountType?: 'checking' | 'savings';
 }
 
@@ -40,6 +62,7 @@ export class BindQuoteDto {
  * T095: Policies Controller
  * Endpoints for policy binding, activation, and retrieval
  */
+@ApiTags('Policies')
 @Controller('api/v1/policies')
 export class PoliciesController {
   private readonly logger = new Logger(PoliciesController.name);
@@ -73,6 +96,15 @@ export class PoliciesController {
    * }
    */
   @Post('bind')
+  @ApiOperation({
+    summary: 'Bind quote to policy',
+    description: 'Convert a quote to a bound policy by processing payment. Supports credit card and ACH payments. Transitions quote status from QUOTED → BINDING → BOUND.'
+  })
+  @ApiBody({ type: BindQuoteDto, description: 'Payment information and quote number' })
+  @ApiResponse({ status: 200, description: 'Policy bound successfully with payment confirmation and generated documents' })
+  @ApiResponse({ status: 400, description: 'Invalid payment details or quote not in QUOTED status' })
+  @ApiResponse({ status: 404, description: 'Quote not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.OK)
   async bindQuote(@Body() bindQuoteDto: BindQuoteDto) {
     this.logger.log(`Binding quote ${bindQuoteDto.quoteNumber}`);
@@ -114,6 +146,15 @@ export class PoliciesController {
    * }
    */
   @Post(':id/activate')
+  @ApiOperation({
+    summary: 'Activate policy',
+    description: 'Activate a bound policy (transitions status from BOUND → IN_FORCE). This happens automatically on the effective date.'
+  })
+  @ApiParam({ name: 'id', description: 'Policy ID (UUID) or policy number (DZXXXXXXXX format)', example: 'DZQV87Z4FH' })
+  @ApiResponse({ status: 200, description: 'Policy activated successfully' })
+  @ApiResponse({ status: 400, description: 'Policy not in BOUND status' })
+  @ApiResponse({ status: 404, description: 'Policy not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   @HttpCode(HttpStatus.OK)
   async activatePolicy(@Param('id') policyId: string) {
     this.logger.log(`Activating policy ${policyId}`);
@@ -144,6 +185,14 @@ export class PoliciesController {
    * }
    */
   @Get(':id')
+  @ApiOperation({
+    summary: 'Get policy details',
+    description: 'Retrieve complete policy details including payments, documents, and events by policy ID or policy number'
+  })
+  @ApiParam({ name: 'id', description: 'Policy ID (UUID) or policy number (DZXXXXXXXX format)', example: 'DZQV87Z4FH' })
+  @ApiResponse({ status: 200, description: 'Policy details retrieved successfully' })
+  @ApiResponse({ status: 404, description: 'Policy not found' })
+  @ApiResponse({ status: 500, description: 'Internal server error' })
   async getPolicy(@Param('id') policyId: string) {
     this.logger.log(`Getting policy ${policyId}`);
 

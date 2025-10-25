@@ -14,6 +14,10 @@
     "build:backend": "cd backend && npm install --legacy-peer-deps && npm run build",
     "preview": "vite preview",
     "setup-npmrc": "node scripts/setup-npmrc.js",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
@@ -26,12 +30,21 @@
   "devDependencies": {
     "@playwright/mcp": "^0.0.43",
     "@playwright/test": "^1.56.1",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^4.6.0",
+    "@vitest/coverage-v8": "^4.0.3",
+    "@vitest/ui": "^4.0.3",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",
+    "happy-dom": "^20.0.8",
+    "jsdom": "^27.0.1",
     "typescript": "^5.8.3",
-    "vite": "^7.0.0"
+    "vite": "^7.0.0",
+    "vitest": "^3.2.4"
   },
   "dependencies": {
     "@neondatabase/serverless": "^0.9.0",
