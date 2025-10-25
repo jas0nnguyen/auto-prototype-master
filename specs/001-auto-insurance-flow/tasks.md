@@ -683,12 +683,21 @@ After completing the basic Option B implementation, we built comprehensive Progr
 **Tasks**:
 
 - [x] T123 [P] Setup Swagger/OpenAPI documentation at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/swagger.ts ✅ 2025-10-24:
-  - Document all 7+ API endpoints (quotes, policies, portal)
-  - Include request/response examples for multi-driver/vehicle quotes
-  - Document DZXXXXXXXX ID format
-  - Document status transitions: QUOTED → BINDING → BOUND → IN_FORCE
-  - Add examples for Progressive-style quote flow (5-step process)
-  - Accessible at /api/docs when server running
+  - ✅ Documented ALL 18 API endpoints with @ApiOperation, @ApiParam, @ApiBody, @ApiResponse decorators
+  - ✅ Quotes Controller (7 endpoints): POST create, GET by ID, GET by number, PUT primary driver, PUT drivers, PUT vehicles, PUT coverage
+  - ✅ Policies Controller (3 endpoints): POST bind, POST activate, GET details
+  - ✅ Portal Controller (8 endpoints): GET dashboard, GET policy, GET billing, GET/POST claims, POST upload, GET download
+  - ✅ Created DTOs with @ApiProperty decorators and example values:
+    - DriverDTO, VehicleDTO, CreateQuoteDTO (multi-driver/vehicle support)
+    - UpdatePrimaryDriverDTO, UpdateDriversDTO, UpdateVehiclesDTO, UpdateCoverageDTO
+    - BindQuoteDto (credit card/ACH payment)
+    - FileClaimDto (incident details)
+  - ✅ Include request/response examples for multi-driver/vehicle quotes
+  - ✅ Document DZXXXXXXXX ID format with examples in all parameter descriptions
+  - ✅ Document status transitions: QUOTED → BINDING → BOUND → IN_FORCE in descriptions
+  - ✅ Add examples for Progressive-style quote flow (5-step process)
+  - ✅ Organized with @ApiTags: Quotes, Policies, Portal, Rating
+  - ✅ Accessible at /api/docs when server running with full interactive documentation
 - [x] T124 [P] Create comprehensive error handling with user-friendly messages at /Users/jasonnguyen/CascadeProjects/auto-prototype-master/backend/src/api/middleware/error-handler.ts ✅ 2025-10-24:
   - Handle validation errors (invalid email, bad VIN, etc.)
   - Handle database errors (connection issues, constraint violations)
