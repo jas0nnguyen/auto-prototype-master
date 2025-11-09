@@ -48,10 +48,10 @@ class DocumentAPIClient {
   private readonly baseURL: string;
 
   constructor() {
-    // Use Vite environment variable for API base URL
-    // In development: http://localhost:3000
-    // In production: auto-configured by Vercel
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    // Use relative URL to work in both dev and production
+    // In development: Vite proxy redirects /api/v1 -> http://localhost:3000/api/v1
+    // In production: /api/v1 routes to Vercel serverless function
+    this.baseURL = '';
   }
 
   /**
