@@ -6,7 +6,7 @@
 **Input**: User description: "Document render and download feature for insurance policy documents. Users can download declarations pages and other policy documents from their self-service portal. The system merges policyholder information into HTML templates and stores generated documents in Vercel Blob. Users access documents from the portal dashboard with download capability."
 
 ## User Scenarios & Testing *(mandatory)*
-
+we 
 ### User Story 1 - View and Download Policy Documents (Priority: P1)
 
 A policyholder logs into their self-service portal and wants to view and download their insurance documents (declarations page, policy document, insurance ID cards). They navigate to the documents section, see a list of available documents, and can download any document with a single click.
@@ -123,7 +123,7 @@ A policyholder wants to view historical versions of their policy documents to co
 1. **Document Format**: Documents will be generated as PDF files from HTML templates, as PDF is the industry standard for insurance documents and ensures consistent formatting across devices
 2. **Document Generation Timing**: Documents are generated both at policy creation time (initial set) and on-demand when policy changes occur
 3. **Storage Solution**: Vercel Blob storage will be used for document storage, providing serverless file storage integrated with the Vercel platform
-4. **Authentication**: Document access uses the existing demo portal authentication pattern (policy number-based URL access, e.g., `/portal/DZQV87Z4FH/documents`). No session management, OAuth, JWT tokens, or user login/logout flows are implemented. This is explicitly allowed per the project constitution v1.1.0 for demo applications
+4. **Authentication**: Document access uses the existing demo portal authentication pattern (policy number-based access) without additional security layers for this initial implementation
 5. **Document Retention**: Documents are retained indefinitely for active policies and for 7 years after policy expiration/cancellation, following standard insurance industry practices
 6. **HTML to PDF Conversion**: A server-side HTML-to-PDF rendering solution will be required (technology to be determined in planning phase)
 7. **Template Management**: HTML templates will be stored in the codebase initially, with potential for database storage in future iterations
