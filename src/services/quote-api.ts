@@ -188,7 +188,7 @@ class QuoteApiService {
    *
    * You can override with VITE_API_BASE_URL environment variable if needed.
    */
-  private baseUrl = import.meta.env.VITE_API_BASE_URL || '/api/v1';
+  private baseUrl = '/api/v1';
 
   /**
    * Create a new quote

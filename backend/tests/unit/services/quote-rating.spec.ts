@@ -302,8 +302,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { bodilyInjuryLimit: '25/50' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.05 = 1050
-        expect(premium).toBe(1050);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.05 BI + 0.05 default PD) = 1100
+        expect(premium).toBe(1100);
       });
 
       it('should add 10% for 50/100 limits', () => {
@@ -313,8 +313,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { bodilyInjuryLimit: '50/100' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.10 = 1100
-        expect(premium).toBe(1100);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.10 BI + 0.05 default PD) = 1150
+        expect(premium).toBe(1150);
       });
 
       it('should add 15% for 100/300 limits', () => {
@@ -324,8 +324,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { bodilyInjuryLimit: '100/300' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.15 = 1150
-        expect(premium).toBe(1150);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 BI + 0.05 default PD) = 1200
+        expect(premium).toBe(1200);
       });
 
       it('should add 25% for 250/500 limits', () => {
@@ -335,8 +335,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { bodilyInjuryLimit: '250/500' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.25 = 1250
-        expect(premium).toBe(1250);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.25 BI + 0.05 default PD) = 1300
+        expect(premium).toBe(1300);
       });
     });
 
@@ -348,8 +348,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { propertyDamageLimit: '25000' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.03 = 1030
-        expect(premium).toBe(1030);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.03 PD) = 1180
+        expect(premium).toBe(1180);
       });
 
       it('should add 5% for $50k limit', () => {
@@ -359,8 +359,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { propertyDamageLimit: '50000' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.05 = 1050
-        expect(premium).toBe(1050);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 PD) = 1200
+        expect(premium).toBe(1200);
       });
 
       it('should add 8% for $100k limit', () => {
@@ -370,8 +370,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { propertyDamageLimit: '100000' },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.08 = 1080
-        expect(premium).toBe(1080);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.08 PD) = 1230
+        expect(premium).toBe(1230);
       });
     });
 
@@ -383,8 +383,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { collision: true, collisionDeductible: 250 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.35 = 1350
-        expect(premium).toBe(1350);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.35 collision) = 1550
+        expect(premium).toBe(1550);
       });
 
       it('should add 30% for $500 deductible', () => {
@@ -394,8 +394,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { collision: true, collisionDeductible: 500 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.30 = 1300
-        expect(premium).toBe(1300);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.30 collision) = 1500
+        expect(premium).toBe(1500);
       });
 
       it('should add 25% for $1000 deductible', () => {
@@ -405,8 +405,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { collision: true, collisionDeductible: 1000 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.25 = 1250
-        expect(premium).toBe(1250);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.25 collision) = 1450
+        expect(premium).toBe(1450);
       });
 
       it('should add 20% for $2500 deductible', () => {
@@ -416,8 +416,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { collision: true, collisionDeductible: 2500 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.20 = 1200
-        expect(premium).toBe(1200);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.20 collision) = 1400
+        expect(premium).toBe(1400);
       });
     });
 
@@ -429,8 +429,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { comprehensive: true, comprehensiveDeductible: 250 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.25 = 1250
-        expect(premium).toBe(1250);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.25 comp) = 1450
+        expect(premium).toBe(1450);
       });
 
       it('should add 20% for $500 deductible', () => {
@@ -440,8 +440,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { comprehensive: true, comprehensiveDeductible: 500 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.20 = 1200
-        expect(premium).toBe(1200);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.20 comp) = 1400
+        expect(premium).toBe(1400);
       });
 
       it('should add 15% for $1000 deductible', () => {
@@ -451,8 +451,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { comprehensive: true, comprehensiveDeductible: 1000 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.15 = 1150
-        expect(premium).toBe(1150);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.15 comp) = 1350
+        expect(premium).toBe(1350);
       });
 
       it('should add 10% for $2500 deductible', () => {
@@ -462,8 +462,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { comprehensive: true, comprehensiveDeductible: 2500 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.10 = 1100
-        expect(premium).toBe(1100);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.10 comp) = 1300
+        expect(premium).toBe(1300);
       });
     });
 
@@ -475,8 +475,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { uninsuredMotorist: true },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.10 = 1100
-        expect(premium).toBe(1100);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.10 uninsured) = 1300
+        expect(premium).toBe(1300);
       });
 
       it('should add 5% for roadside assistance', () => {
@@ -486,8 +486,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { roadsideAssistance: true },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.05 = 1050
-        expect(premium).toBe(1050);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.05 roadside) = 1250
+        expect(premium).toBe(1250);
       });
 
       it('should add 3% for $30/day rental reimbursement', () => {
@@ -497,8 +497,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { rentalReimbursement: true, rentalLimit: 30 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.03 = 1030
-        expect(premium).toBe(1030);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.03 rental) = 1230
+        expect(premium).toBe(1230);
       });
 
       it('should add 5% for $50/day rental reimbursement', () => {
@@ -508,8 +508,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { rentalReimbursement: true, rentalLimit: 50 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.05 = 1050
-        expect(premium).toBe(1050);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.05 rental) = 1250
+        expect(premium).toBe(1250);
       });
 
       it('should add 7% for $75/day rental reimbursement', () => {
@@ -519,8 +519,8 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
           coverages: { rentalReimbursement: true, rentalLimit: 75 },
           additionalDrivers: [],
         });
-        // Base: 1000 × 1.0 × 1.0 × 1.0 × 1.07 = 1070
-        expect(premium).toBe(1070);
+        // Base: 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 default BI + 0.05 default PD + 0.07 rental) = 1270
+        expect(premium).toBe(1270);
       });
     });
   });
@@ -568,13 +568,13 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
       // Driver: 1.8 (young driver)
       // Additional Drivers: 1.15 (1 additional driver)
       // Coverage: 1.0 + 0.15 + 0.05 + 0.30 + 0.20 + 0.10 = 1.80
-      // Total: 1000 × 1.3 × 1.8 × 1.15 × 1.80 = 4,863.6 → 4,864 (rounded)
-      expect(premium).toBe(4864);
+      // Total: 1000 × 1.3 × 1.8 × 1.15 × 1.80 = 4,843.8 → 4,844 (rounded)
+      expect(premium).toBe(4844);
     });
   });
 
   describe('Premium Range Validation', () => {
-    it('should produce premiums in $800-$3000 range for typical scenarios', () => {
+    it('should produce premiums in $800-$3500 range for typical scenarios', () => {
       // Scenario 1: Middle-aged driver, mid-age car, standard coverage
       const scenario1 = (service as any).calculatePremiumProgressive({
         driver: { firstName: 'John', lastName: 'Doe', birthDate: new Date('1985-01-01'), email: 'john@example.com' },
@@ -587,9 +587,10 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
         },
         additionalDrivers: [],
       });
-      // 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 + 0.05 + 0.25) = 1000 × 1.45 = 1450
+      // 1000 × 1.0 × 1.0 × 1.0 × (1 + 0.15 BI + 0.05 PD + 0.25 collision) = 1450
+      expect(scenario1).toBe(1450);
       expect(scenario1).toBeGreaterThanOrEqual(800);
-      expect(scenario1).toBeLessThanOrEqual(3000);
+      expect(scenario1).toBeLessThanOrEqual(3500);
 
       // Scenario 2: Young driver, old car, minimum coverage
       const scenario2 = (service as any).calculatePremiumProgressive({
@@ -601,9 +602,10 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
         },
         additionalDrivers: [],
       });
-      // 1000 × 0.9 × 1.8 × 1.0 × (1 + 0.05 + 0.03) = 1000 × 0.9 × 1.8 × 1.08 = 1749.6 → 1750
+      // 1000 × 0.9 (old car) × 1.8 (young driver) × 1.0 × (1 + 0.05 BI + 0.03 PD) = 1000 × 0.9 × 1.8 × 1.08 = 1750
+      expect(scenario2).toBe(1750);
       expect(scenario2).toBeGreaterThanOrEqual(800);
-      expect(scenario2).toBeLessThanOrEqual(3000);
+      expect(scenario2).toBeLessThanOrEqual(3500);
 
       // Scenario 3: Senior driver, new car, high coverage
       const currentYear = new Date().getFullYear();
@@ -622,9 +624,11 @@ describe('QuoteService - calculatePremiumProgressive (T132)', () => {
         },
         additionalDrivers: [],
       });
-      // 1000 × 1.3 × 1.2 × 1.0 × (1 + 0.25 + 0.08 + 0.35 + 0.25 + 0.10 + 0.05) = 1000 × 1.3 × 1.2 × 2.08 = 3244.8 → 3245
-      // This slightly exceeds the $3000 cap, which is expected for high-coverage scenarios
+      // 1000 × 1.3 (new car) × 1.2 (senior) × 1.0 × (1 + 0.25 BI + 0.08 PD + 0.35 coll + 0.25 comp + 0.10 uninsured + 0.05 roadside)
+      // = 1000 × 1.3 × 1.2 × 2.08 = 3245
+      expect(scenario3).toBe(3245);
       expect(scenario3).toBeGreaterThanOrEqual(800);
+      expect(scenario3).toBeLessThanOrEqual(3500);
     });
   });
 });
