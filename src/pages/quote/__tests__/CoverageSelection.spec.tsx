@@ -111,11 +111,13 @@ describe('CoverageSelection Page (T171)', () => {
   };
 
   describe('Page Rendering', () => {
-    it('should render coverage selection form with all sections', () => {
+    it('should render coverage selection form with all sections', async () => {
       renderPage();
 
       // Page title
-      expect(screen.getByText('Customize Your Coverage')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Customize Your Coverage')).toBeInTheDocument();
+      });
 
       // Coverage sections
       expect(screen.getByText('Required Coverage')).toBeInTheDocument();
@@ -126,32 +128,43 @@ describe('CoverageSelection Page (T171)', () => {
       expect(screen.getByRole('button', { name: /see my quote/i })).toBeInTheDocument();
     });
 
-    it('should render coverage start date input', () => {
+    it('should render coverage start date input', async () => {
       renderPage();
 
-      expect(
-        screen.getByLabelText(/when do you want coverage to start/i)
-      ).toBeInTheDocument();
+      await waitFor(() => {
+        expect(
+          screen.getByLabelText(/when do you want coverage to start/i)
+        ).toBeInTheDocument();
+      });
     });
   });
 
   describe('Required Coverage - Liability', () => {
-    it('should render bodily injury limit select', () => {
+    it('should render bodily injury limit select', async () => {
       renderPage();
 
-      const bodilyInjurySelect = screen.getByLabelText(/bodily injury limit/i);
-      expect(bodilyInjurySelect).toBeInTheDocument();
+      await waitFor(() => {
+        const bodilyInjurySelect = screen.getByLabelText(/bodily injury limit/i);
+        expect(bodilyInjurySelect).toBeInTheDocument();
+      });
     });
 
-    it('should render property damage limit select', () => {
+    it('should render property damage limit select', async () => {
       renderPage();
 
-      const propertyDamageSelect = screen.getByLabelText(/property damage limit/i);
-      expect(propertyDamageSelect).toBeInTheDocument();
+      await waitFor(() => {
+        const propertyDamageSelect = screen.getByLabelText(/property damage limit/i);
+        expect(propertyDamageSelect).toBeInTheDocument();
+      });
     });
 
     it('should allow changing bodily injury limits', async () => {
       renderPage();
+
+      await waitFor(() => {
+        const bodilyInjurySelect = screen.getByLabelText(/bodily injury limit/i);
+        expect(bodilyInjurySelect).toBeInTheDocument();
+      });
 
       const bodilyInjurySelect = screen.getByLabelText(/bodily injury limit/i);
 
@@ -165,26 +178,32 @@ describe('CoverageSelection Page (T171)', () => {
   });
 
   describe('Recommended Coverage - Toggles', () => {
-    it('should render collision coverage toggle', () => {
+    it('should render collision coverage toggle', async () => {
       renderPage();
 
-      expect(screen.getByText('Collision Coverage')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Collision Coverage')).toBeInTheDocument();
+      });
       const collisionSwitch = screen.getByRole('switch', { name: /collision/i });
       expect(collisionSwitch).toBeInTheDocument();
     });
 
-    it('should render comprehensive coverage toggle', () => {
+    it('should render comprehensive coverage toggle', async () => {
       renderPage();
 
-      expect(screen.getByText('Comprehensive Coverage')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Comprehensive Coverage')).toBeInTheDocument();
+      });
       const comprehensiveSwitch = screen.getByRole('switch', { name: /comprehensive/i });
       expect(comprehensiveSwitch).toBeInTheDocument();
     });
 
-    it('should render uninsured motorist toggle', () => {
+    it('should render uninsured motorist toggle', async () => {
       renderPage();
 
-      expect(screen.getByText(/Uninsured\/Underinsured Motorist Coverage/i)).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText(/Uninsured\/Underinsured Motorist Coverage/i)).toBeInTheDocument();
+      });
       const uninsuredSwitch = screen.getByRole('switch', { name: /uninsured/i });
       expect(uninsuredSwitch).toBeInTheDocument();
     });
@@ -227,18 +246,22 @@ describe('CoverageSelection Page (T171)', () => {
   });
 
   describe('Additional Protection - Optional Coverages', () => {
-    it('should render roadside assistance toggle', () => {
+    it('should render roadside assistance toggle', async () => {
       renderPage();
 
-      expect(screen.getByText('24/7 Roadside Assistance')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('24/7 Roadside Assistance')).toBeInTheDocument();
+      });
       const roadsideSwitch = screen.getByRole('switch', { name: /roadside/i });
       expect(roadsideSwitch).toBeInTheDocument();
     });
 
-    it('should render rental reimbursement toggle', () => {
+    it('should render rental reimbursement toggle', async () => {
       renderPage();
 
-      expect(screen.getByText('Rental Car Reimbursement')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Rental Car Reimbursement')).toBeInTheDocument();
+      });
       const rentalSwitch = screen.getByRole('switch', { name: /rental/i });
       expect(rentalSwitch).toBeInTheDocument();
     });
@@ -597,7 +620,7 @@ describe('CoverageSelection Page (T171)', () => {
   });
 
   describe('Loading States', () => {
-    it('should show loading state while fetching quote data', () => {
+    it('should show loading state while fetching quote data', async () => {
       (useQuoteHooks.useQuoteByNumber as Mock).mockReturnValue({
         data: null,
         isLoading: true,
@@ -608,8 +631,10 @@ describe('CoverageSelection Page (T171)', () => {
       renderPage();
 
       // Submit button should be disabled during loading
-      const submitButton = screen.getByRole('button', { name: /see my quote/i });
-      expect(submitButton).toBeDisabled();
+      await waitFor(() => {
+        const submitButton = screen.getByRole('button', { name: /see my quote/i });
+        expect(submitButton).toBeDisabled();
+      });
     });
   });
 
@@ -676,12 +701,15 @@ describe('CoverageSelection Page (T171)', () => {
   });
 
   describe('Navigation', () => {
-    it('should have back button to vehicles page', () => {
+    it('should have back button to vehicles page', async () => {
       renderPage();
 
-      const backButton = screen.getByRole('button', { name: /back/i });
-      expect(backButton).toBeInTheDocument();
+      await waitFor(() => {
+        const backButton = screen.getByRole('button', { name: /back/i });
+        expect(backButton).toBeInTheDocument();
+      });
 
+      const backButton = screen.getByRole('button', { name: /back/i });
       fireEvent.click(backButton);
 
       expect(mockNavigate).toHaveBeenCalledWith('/quote/vehicles/DZ12345678');
