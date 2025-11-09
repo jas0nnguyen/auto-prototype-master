@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { QuoteModule } from './services/quote/quote.module';
+import { DocumentServiceModule } from './services/document-service/document-service.module';
 
 @Module({
   imports: [
@@ -14,6 +15,8 @@ import { QuoteModule } from './services/quote/quote.module';
     DatabaseModule,
     // Quote module - Phase 3 ✅
     QuoteModule,
+    // Document service module - Feature 003 ✅
+    DocumentServiceModule,
     // Policy module will be added in Phase 4
     // Portal module will be added in Phase 5
   ],

@@ -1607,10 +1607,14 @@ Drive safely!
         document_number: `DOC-${this.generateId()}`,
         document_type: 'POLICY_DOCUMENT',
         document_name: `Policy_Declarations_${policyNumber}.pdf`,
+        version: 1,
+        is_current: true,
+        document_status: 'READY',
         storage_url: `/documents/policies/${policyNumber}/declarations.pdf`,
         mime_type: 'application/pdf',
         description: 'Policy declarations page',
-        file_size: 245600, // Mock size
+        file_size_bytes: 245600, // Mock size
+        generated_at: new Date(),
       })
       .returning();
 
@@ -1624,10 +1628,14 @@ Drive safely!
         document_number: `DOC-${this.generateId()}`,
         document_type: 'ID_CARD',
         document_name: `ID_Card_${policyNumber}.pdf`,
+        version: 1,
+        is_current: true,
+        document_status: 'READY',
         storage_url: `/documents/policies/${policyNumber}/id_card.pdf`,
         mime_type: 'application/pdf',
         description: 'Insurance ID card',
-        file_size: 102400, // Mock size
+        file_size_bytes: 102400, // Mock size
+        generated_at: new Date(),
       })
       .returning();
 
@@ -2011,10 +2019,14 @@ Drive safely!
         document_number: `DOC-${this.generateId()}`,
         document_type: 'CLAIM_ATTACHMENT',
         document_name: fileData.filename,
+        version: 1,
+        is_current: true,
+        document_status: 'READY',
         storage_url: `/documents/claims/${claimNumber}/${fileData.filename}`,
         mime_type: fileData.mime_type,
-        file_size: fileData.file_size,
+        file_size_bytes: fileData.file_size,
         description: `Claim attachment for ${claimNumber}`,
+        generated_at: new Date(),
       })
       .returning();
 

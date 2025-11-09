@@ -1,0 +1,672 @@
+openapi: 3.0.3
+info:
+  title: Auto Insurance Document Rendering API
+  description: |
+    API for generating, managing, and downloading insurance policy documents.
+
+    **Features**:
+    - Policy document generation (declarations, policy documents, ID cards)
+    - Secure document downloads with signed URLs
+    - Document versioning and supersession tracking
+    - Async document generation with status polling
+
+    **Document Types**:
+    - `DECLARATIONS`: Policy declarations page
+    - `POLICY_DOCUMENT`: Full policy contract (14 pages)
+    - `ID_CARD`: Vehicle insurance ID card (1 per vehicle)
+
+    **Security**:
+    - Portal endpoints: Policy number verification (no authentication in demo mode)
+    - Internal endpoints: Backend-to-backend only (not exposed to frontend)
+    - Download URLs: Signed Vercel Blob URLs with 1-hour expiration
+  version: 1.0.0
+  contact:
+    name: OMG Property & Casualty Auto Insurance
+    email: dev@omg-insurance.example.com
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+  - url: https://api.omg-insurance.example.com
+    description: Production server (Vercel deployment)
+
+tags:
+  - name: Portal
+    description: Public endpoints for self-service portal
+  - name: Internal
+    description: Backend-only endpoints for document generation
+
+paths:
+  /api/v1/portal/{policyNumber}/documents:
+    get:
+      tags:
+        - Portal
+      summary: List all documents for a policy
+      description: |
+        Retrieves metadata for all documents associated with a policy.
+
+        **Filtering**:
+        - `document_type`: Filter by specific document type
+        - `include_superseded`: Include superseded versions (default: false)
+
+        **Returns**:
+        - Current versions only by default
+        - Sorted by document_type, then version descending
+        - Vehicle info included for ID_CARD documents
+      operationId: listPolicyDocuments
+      parameters:
+        - name: policyNumber
+          in: path
+          required: true
+          description: Human-readable policy number (e.g., DZPOL123456)
+          schema:
+            type: string
+            pattern: '^DZPOL[A-Z0-9]{8}$'
+            example: DZPOLABCD1234
+        - name: document_type
+          in: query
+          required: false
+          description: Filter by document type
+          schema:
+            type: string
+            enum:
+              - DECLARATIONS
+              - POLICY_DOCUMENT
+              - ID_CARD
+        - name: include_superseded
+          in: query
+          required: false
+          description: Include superseded document versions
+          schema:
+            type: boolean
+            default: false
+      responses:
+        '200':
+          description: Document list retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/DocumentMetadata'
+                  meta:
+                    type: object
+                    properties:
+                      total_count:
+                        type: integer
+                        description: Total number of documents
+                        example: 5
+                      current_count:
+                        type: integer
+                        description: Number of current (non-superseded) documents
+                        example: 4
+                      policy_number:
+                        type: string
+                        example: DZPOLABCD1234
+              examples:
+                with_multiple_documents:
+                  summary: Policy with declarations, policy doc, and 2 ID cards
+                  value:
+                    success: true
+                    data:
+                      - document_id: 550e8400-e29b-41d4-a716-446655440001
+                        document_type: DECLARATIONS
+                        document_status: READY
+                        version: 1
+                        file_size: 245678
+                        is_current: true
+                        generated_at: '2025-11-09T10:30:00Z'
+                        vehicle_info: null
+                      - document_id: 550e8400-e29b-41d4-a716-446655440002
+                        document_type: POLICY_DOCUMENT
+                        document_status: READY
+                        version: 1
+                        file_size: 1234567
+                        is_current: true
+                        generated_at: '2025-11-09T10:30:00Z'
+                        vehicle_info: null
+                      - document_id: 550e8400-e29b-41d4-a716-446655440003
+                        document_type: ID_CARD
+                        document_status: READY
+                        version: 1
+                        file_size: 89012
+                        is_current: true
+                        generated_at: '2025-11-09T10:30:00Z'
+                        vehicle_info:
+                          year: 2019
+                          make: Honda
+                          model: Civic
+                      - document_id: 550e8400-e29b-41d4-a716-446655440004
+                        document_type: ID_CARD
+                        document_status: READY
+                        version: 1
+                        file_size: 89234
+                        is_current: true
+                        generated_at: '2025-11-09T10:30:00Z'
+                        vehicle_info:
+                          year: 2021
+                          make: Toyota
+                          model: RAV4
+                    meta:
+                      total_count: 4
+                      current_count: 4
+                      policy_number: DZPOLABCD1234
+        '404':
+          description: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: POLICY_NOT_FOUND
+                  message: Policy DZPOLABCD1234 not found
+                  timestamp: '2025-11-09T10:30:00Z'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/portal/{policyNumber}/documents/{documentId}/download:
+    get:
+      tags:
+        - Portal
+      summary: Download a specific document
+      description: |
+        Returns a 302 redirect to a signed Vercel Blob URL for secure document download.
+
+        **Behavior**:
+        - Validates policy number + document belongs to policy
+        - Generates signed URL with 1-hour expiration
+        - Logs download event with timestamp
+        - Increments document access counter
+        - Returns 302 redirect to signed URL
+
+        **Client Implementation**:
+        ```javascript
+        // Browser automatically follows redirect
+        window.open(`/api/v1/portal/${policyNumber}/documents/${documentId}/download`);
+
+        // Or with fetch
+        const response = await fetch(url);
+        if (response.redirected) {
+          window.location.href = response.url;
+        }
+        ```
+      operationId: downloadDocument
+      parameters:
+        - name: policyNumber
+          in: path
+          required: true
+          description: Human-readable policy number
+          schema:
+            type: string
+            pattern: '^DZPOL[A-Z0-9]{8}$'
+            example: DZPOLABCD1234
+        - name: documentId
+          in: path
+          required: true
+          description: Document UUID
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440001
+      responses:
+        '302':
+          description: Redirect to signed download URL
+          headers:
+            Location:
+              description: Signed Vercel Blob URL (expires in 1 hour)
+              schema:
+                type: string
+                format: uri
+                example: https://blob.vercel-storage.com/documents/policy-123-declarations.pdf?token=abc123&expires=1699531800
+        '403':
+          description: Document does not belong to this policy
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: DOCUMENT_ACCESS_DENIED
+                  message: Document 550e8400-e29b-41d4-a716-446655440001 does not belong to policy DZPOLABCD1234
+                  timestamp: '2025-11-09T10:30:00Z'
+        '404':
+          description: Policy or document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error (e.g., blob storage unavailable)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/documents/generate:
+    post:
+      tags:
+        - Internal
+      summary: Trigger document generation (async)
+      description: |
+        Initiates asynchronous document generation for a policy.
+
+        **Usage**:
+        - Called by PolicyService after policy binding
+        - Returns immediately with job_id
+        - Document generation happens in background
+        - Poll `/api/v1/documents/{documentId}/status` for progress
+
+        **Generation Process**:
+        1. Validate policy exists and is BOUND/IN_FORCE
+        2. Create Document entities with status=GENERATING
+        3. Queue generation jobs
+        4. Return job IDs immediately
+        5. Background workers render PDFs
+        6. Upload to Vercel Blob storage
+        7. Update Document status to READY
+
+        **Document Types Generated**:
+        - `DECLARATIONS`: 1 per policy
+        - `POLICY_DOCUMENT`: 1 per policy
+        - `ID_CARD`: 1 per vehicle on policy
+
+        **Security**: Backend-only endpoint (not exposed to frontend)
+      operationId: generateDocuments
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - policy_id
+                - document_types
+                - trigger_reason
+              properties:
+                policy_id:
+                  type: string
+                  format: uuid
+                  description: Policy UUID
+                  example: 550e8400-e29b-41d4-a716-446655440000
+                document_types:
+                  type: array
+                  description: Document types to generate
+                  items:
+                    type: string
+                    enum:
+                      - DECLARATIONS
+                      - POLICY_DOCUMENT
+                      - ID_CARD
+                  minItems: 1
+                  example:
+                    - DECLARATIONS
+                    - POLICY_DOCUMENT
+                    - ID_CARD
+                trigger_reason:
+                  type: string
+                  description: Why documents are being generated
+                  enum:
+                    - POLICY_BOUND
+                    - POLICY_RENEWAL
+                    - ENDORSEMENT
+                    - CANCELLATION
+                    - REINSTATEMENT
+                  example: POLICY_BOUND
+      responses:
+        '202':
+          description: Document generation initiated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      job_id:
+                        type: string
+                        format: uuid
+                        description: Background job ID
+                        example: 660e8400-e29b-41d4-a716-446655440000
+                      document_ids:
+                        type: array
+                        description: Document UUIDs created (status=GENERATING)
+                        items:
+                          type: string
+                          format: uuid
+                        example:
+                          - 550e8400-e29b-41d4-a716-446655440001
+                          - 550e8400-e29b-41d4-a716-446655440002
+                          - 550e8400-e29b-41d4-a716-446655440003
+                          - 550e8400-e29b-41d4-a716-446655440004
+                      status:
+                        type: string
+                        enum:
+                          - QUEUED
+                          - PROCESSING
+                        example: QUEUED
+                      estimated_completion_seconds:
+                        type: integer
+                        description: Estimated time to completion
+                        example: 45
+                      created_at:
+                        type: string
+                        format: date-time
+                        example: '2025-11-09T10:30:00Z'
+        '400':
+          description: Invalid request (e.g., policy not in BOUND/IN_FORCE status)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                success: false
+                error:
+                  code: INVALID_POLICY_STATUS
+                  message: Cannot generate documents for policy in QUOTED status
+                  timestamp: '2025-11-09T10:30:00Z'
+        '404':
+          description: Policy not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/documents/{documentId}/status:
+    get:
+      tags:
+        - Internal
+      summary: Check document generation status
+      description: |
+        Polls the status of a document generation job.
+
+        **Usage**:
+        - Poll every 2-5 seconds after calling /api/v1/documents/generate
+        - Stop polling when status is READY or FAILED
+        - Use for progress indicators in UI (if exposed to frontend)
+
+        **Status Lifecycle**:
+        1. `GENERATING` - Document being rendered
+        2. `READY` - Document available for download
+        3. `FAILED` - Generation error (check error_message)
+
+        **Security**: Backend-only endpoint (not exposed to frontend in current design)
+      operationId: getDocumentStatus
+      parameters:
+        - name: documentId
+          in: path
+          required: true
+          description: Document UUID
+          schema:
+            type: string
+            format: uuid
+            example: 550e8400-e29b-41d4-a716-446655440001
+      responses:
+        '200':
+          description: Document status retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: object
+                    properties:
+                      document_id:
+                        type: string
+                        format: uuid
+                        example: 550e8400-e29b-41d4-a716-446655440001
+                      status:
+                        type: string
+                        enum:
+                          - GENERATING
+                          - READY
+                          - FAILED
+                          - SUPERSEDED
+                        example: GENERATING
+                      progress_percent:
+                        type: integer
+                        minimum: 0
+                        maximum: 100
+                        description: Generation progress (0-100)
+                        example: 65
+                        nullable: true
+                      error_message:
+                        type: string
+                        description: Error details if status=FAILED
+                        example: null
+                        nullable: true
+                      estimated_seconds_remaining:
+                        type: integer
+                        description: Estimated seconds until completion
+                        example: 15
+                        nullable: true
+                      updated_at:
+                        type: string
+                        format: date-time
+                        example: '2025-11-09T10:30:45Z'
+              examples:
+                generating:
+                  summary: Document in progress
+                  value:
+                    success: true
+                    data:
+                      document_id: 550e8400-e29b-41d4-a716-446655440001
+                      status: GENERATING
+                      progress_percent: 65
+                      error_message: null
+                      estimated_seconds_remaining: 15
+                      updated_at: '2025-11-09T10:30:45Z'
+                ready:
+                  summary: Document ready for download
+                  value:
+                    success: true
+                    data:
+                      document_id: 550e8400-e29b-41d4-a716-446655440001
+                      status: READY
+                      progress_percent: 100
+                      error_message: null
+                      estimated_seconds_remaining: 0
+                      updated_at: '2025-11-09T10:31:00Z'
+                failed:
+                  summary: Document generation failed
+                  value:
+                    success: true
+                    data:
+                      document_id: 550e8400-e29b-41d4-a716-446655440001
+                      status: FAILED
+                      progress_percent: 0
+                      error_message: 'Template rendering error: Missing vehicle data'
+                      estimated_seconds_remaining: null
+                      updated_at: '2025-11-09T10:30:50Z'
+        '404':
+          description: Document not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+components:
+  schemas:
+    DocumentMetadata:
+      type: object
+      description: Document metadata (excludes binary content)
+      required:
+        - document_id
+        - document_type
+        - document_status
+        - version
+        - file_size
+        - is_current
+        - generated_at
+      properties:
+        document_id:
+          type: string
+          format: uuid
+          description: Document unique identifier
+          example: 550e8400-e29b-41d4-a716-446655440001
+        document_type:
+          type: string
+          description: Type of insurance document
+          enum:
+            - DECLARATIONS
+            - POLICY_DOCUMENT
+            - ID_CARD
+          example: DECLARATIONS
+        document_status:
+          type: string
+          description: Current document status
+          enum:
+            - GENERATING
+            - READY
+            - FAILED
+            - SUPERSEDED
+          example: READY
+        version:
+          type: integer
+          description: Document version number (starts at 1)
+          minimum: 1
+          example: 1
+        file_size:
+          type: integer
+          description: File size in bytes
+          minimum: 0
+          example: 245678
+        is_current:
+          type: boolean
+          description: Whether this is the current version (not superseded)
+          example: true
+        generated_at:
+          type: string
+          format: date-time
+          description: When document was generated
+          example: '2025-11-09T10:30:00Z'
+        vehicle_info:
+          type: object
+          nullable: true
+          description: Vehicle information (for ID_CARD documents only, null otherwise)
+          properties:
+            year:
+              type: integer
+              minimum: 1900
+              maximum: 2100
+              example: 2019
+            make:
+              type: string
+              minLength: 1
+              maxLength: 50
+              example: Honda
+            model:
+              type: string
+              minLength: 1
+              maxLength: 50
+              example: Civic
+
+    ErrorResponse:
+      type: object
+      description: Standardized error response
+      required:
+        - success
+        - error
+      properties:
+        success:
+          type: boolean
+          example: false
+        error:
+          type: object
+          required:
+            - code
+            - message
+            - timestamp
+          properties:
+            code:
+              type: string
+              description: Error code for client handling
+              enum:
+                - POLICY_NOT_FOUND
+                - DOCUMENT_NOT_FOUND
+                - DOCUMENT_ACCESS_DENIED
+                - INVALID_POLICY_STATUS
+                - GENERATION_FAILED
+                - BLOB_STORAGE_ERROR
+                - INTERNAL_ERROR
+              example: POLICY_NOT_FOUND
+            message:
+              type: string
+              description: Human-readable error message
+              example: Policy DZPOLABCD1234 not found
+            timestamp:
+              type: string
+              format: date-time
+              description: When error occurred
+              example: '2025-11-09T10:30:00Z'
+            details:
+              type: object
+              description: Additional error context (optional)
+              additionalProperties: true
+              nullable: true
+
+  securitySchemes:
+    PolicyNumberAuth:
+      type: apiKey
+      in: path
+      name: policyNumber
+      description: |
+        **DEMO MODE AUTHENTICATION** (Constitutional Exception Allowed)
+
+        This API uses URL-based policy number access for demo purposes.
+
+        **Implementation** (WHAT WE'RE BUILDING):
+        - Policy number in URL path acts as access credential
+        - Backend validates policy exists (404 if not found)
+        - No session tokens, JWT, OAuth, or authentication headers needed
+        - Same pattern as existing portal (Feature 001, User Story 3)
+
+        **NOT IMPLEMENTED** (Out of scope for demo):
+        - User login/logout flows
+        - Session management
+        - OAuth integration
+        - JWT tokens
+
+        **Production Migration** (DOCUMENTATION ONLY - Not required for this feature):
+        - Future consideration: Replace with OAuth 2.0 + JWT tokens
+        - Future consideration: Add user authentication layer
+        - See quickstart.md for migration reference (informational only)
+
+security:
+  - PolicyNumberAuth: []
+
+externalDocs:
+  description: OMG Property & Casualty Data Model v1.0
+  url: https://www.omg.org/spec/PC/1.0
