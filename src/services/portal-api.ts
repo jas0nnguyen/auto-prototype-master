@@ -7,15 +7,14 @@
  * In development, uses localhost:3000 or VITE_API_BASE_URL if set.
  */
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL
-  ? import.meta.env.VITE_API_BASE_URL.replace('/api/v1', '')
-  : (import.meta.env.PROD ? '' : 'http://localhost:3000');
+// Force /api/v1 to avoid .env caching issues
+const API_BASE_URL = '/api/v1';
 
 /**
  * Get dashboard data (policy, drivers, vehicles, payments, claims)
  */
 export async function getDashboardData(policyNumber: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/dashboard`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/dashboard`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch dashboard data');
@@ -29,7 +28,7 @@ export async function getDashboardData(policyNumber: string) {
  * Get policy details
  */
 export async function getPolicy(policyNumber: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/policy`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/policy`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch policy');
@@ -43,7 +42,7 @@ export async function getPolicy(policyNumber: string) {
  * Get billing history
  */
 export async function getBillingHistory(policyNumber: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/billing`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/billing`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch billing history');
@@ -57,7 +56,7 @@ export async function getBillingHistory(policyNumber: string) {
  * Get claims list
  */
 export async function getClaims(policyNumber: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/claims`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/claims`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch claims');
@@ -71,7 +70,7 @@ export async function getClaims(policyNumber: string) {
  * Get claim details
  */
 export async function getClaimDetails(policyNumber: string, claimId: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/claims/${claimId}`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/claims/${claimId}`);
 
   if (!response.ok) {
     throw new Error('Failed to fetch claim details');
@@ -94,7 +93,7 @@ export async function fileClaim(
     driver_identifier?: string;
   },
 ) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/claims`, {
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/claims`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -117,7 +116,7 @@ export async function uploadClaimDocument(policyNumber: string, claimId: string,
   const formData = new FormData();
   formData.append('file', file);
 
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/claims/${claimId}/documents`, {
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/claims/${claimId}/documents`, {
     method: 'POST',
     body: formData,
   });
@@ -134,7 +133,7 @@ export async function uploadClaimDocument(policyNumber: string, claimId: string,
  * Download document (mock)
  */
 export async function downloadDocument(policyNumber: string, documentId: string) {
-  const response = await fetch(`${API_BASE_URL}/api/v1/portal/${policyNumber}/documents/${documentId}`);
+  const response = await fetch(`${API_BASE_URL}/portal/${policyNumber}/documents/${documentId}`);
 
   if (!response.ok) {
     throw new Error('Failed to download document');

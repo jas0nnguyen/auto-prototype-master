@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, vi, type Mock } from 'vitest';
 import { render, screen, fireEvent, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { MemoryRouter } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import QuoteResults from '../QuoteResults';
 import * as useQuoteHooks from '../../../hooks/useQuote';
 
@@ -17,14 +17,13 @@ vi.mock('../../../hooks/useQuote', () => ({
   useQuoteByNumber: vi.fn(),
 }));
 
-// Mock useNavigate and useParams
+// Mock useNavigate
 const mockNavigate = vi.fn();
 vi.mock('react-router-dom', async () => {
   const actual = await vi.importActual('react-router-dom');
   return {
     ...actual,
     useNavigate: () => mockNavigate,
-    useParams: () => ({ quoteNumber: 'DZ12345678' }),
   };
 });
 
@@ -114,24 +113,32 @@ describe('QuoteResults Page (T172)', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter initialEntries={['/quote/results/DZ12345678']}>
-          <QuoteResults />
+          <Routes>
+            <Route path="/quote/results/:quoteNumber" element={<QuoteResults />} />
+          </Routes>
         </MemoryRouter>
       </QueryClientProvider>
     );
   };
 
   describe('Page Rendering', () => {
-    it('should render page title and quote reference number', () => {
+    it('should render page title and quote reference number', async () => {
       renderPage();
 
-      expect(screen.getByText('Your Personalized Quote is Ready!')).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText('Your Personalized Quote is Ready!')).toBeInTheDocument();
+      });
+
       expect(screen.getByText(/Quote Reference: DZ12345678/i)).toBeInTheDocument();
     });
 
-    it('should render main sections', () => {
+    it('should render main sections', async () => {
       renderPage();
 
-      expect(screen.getByText("What's Covered")).toBeInTheDocument();
+      await waitFor(() => {
+        expect(screen.getByText("What's Covered")).toBeInTheDocument();
+      });
+
       expect(screen.getByText('Premium Breakdown')).toBeInTheDocument();
       expect(screen.getByText('Why This Rate?')).toBeInTheDocument();
     });
