@@ -1,3 +1,10 @@
+#!/bin/bash
+
+# Create templates directory
+mkdir -p backend/templates
+
+# Create template file
+cat > backend/templates/declarations-page.html << 'TEMPLATE_EOF'
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -117,3 +124,63 @@
     </div>
 </body>
 </html>
+TEMPLATE_EOF
+
+echo "✅ Template file created"
+
+# Update vercel.json
+cat > vercel.json << 'VERCEL_EOF'
+{
+  "version": 2,
+  "installCommand": "node scripts/setup-npmrc.js && npm install --legacy-peer-deps",
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "framework": "vite",
+  "functions": {
+    "api/index.ts": {
+      "memory": 1024,
+      "maxDuration": 10,
+      "includeFiles": "backend/{dist,templates}/**"
+    }
+  },
+  "routes": [
+    {
+      "src": "/api/v1/(.*)",
+      "dest": "/api/index"
+    },
+    {
+      "handle": "filesystem"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}
+VERCEL_EOF
+
+echo "✅ vercel.json updated"
+
+# Verify
+echo ""
+echo "Files created:"
+ls -lh backend/templates/declarations-page.html
+echo ""
+echo "vercel.json includes templates:"
+grep -A2 "includeFiles" vercel.json
+
+# Commit and push
+git add backend/templates/declarations-page.html vercel.json
+git commit -m "Add missing template file and configure Vercel to include templates
+
+- Created backend/templates/declarations-page.html with policy declarations layout
+- Updated vercel.json to include templates directory in serverless function
+- Fixes ENOENT error in production document generation
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>"
+
+git push origin master
+
+echo "✅ Deployed to production"
