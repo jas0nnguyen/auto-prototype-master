@@ -332,7 +332,7 @@ export class DocumentsController {
           );
 
           // Render HTML template
-          const html = await this.templateService.renderTemplate('declarations-page.html', templateData);
+          const html = await this.templateService.renderTemplate('declarations-page.hbs', templateData);
 
           // Generate PDF from HTML
           const pdfBuffer = await this.pdfGenerator.generatePDF(html, {
