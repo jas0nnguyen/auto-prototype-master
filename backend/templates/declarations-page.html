@@ -3,233 +3,117 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Everest Insurance Declaration Page</title>
+    <title>Policy Declarations - {{policy_number}}</title>
     <style>
-        @page {
-            size: letter;
-            margin: 0.5in;
-        }
-
-        body {
-            font-family: 'Times New Roman', serif;
-            margin: 0;
-            padding: 0;
-            background: white;
-            color: #000;
-            font-size: 11pt;
-        }
-
-        .header {
-            border-bottom: 3px solid #1a472a;
-            padding-bottom: 10px;
-            margin-bottom: 20px;
-        }
-
-        .company-name {
-            font-size: 24pt;
-            font-weight: bold;
-            color: #1a472a;
-            margin: 0;
-        }
-
-        .doc-title {
-            font-size: 16pt;
-            font-weight: bold;
-            margin: 15px 0 5px 0;
-        }
-
-        .section {
-            margin: 20px 0;
-            page-break-inside: avoid;
-        }
-
-        .section-title {
-            background: #1a472a;
-            color: white;
-            padding: 5px 10px;
-            font-weight: bold;
-            font-size: 12pt;
-            margin-bottom: 10px;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 10px 0;
-        }
-
-        td, th {
-            padding: 6px;
-            text-align: left;
-            border: 1px solid #ccc;
-        }
-
-        th {
-            background: #f0f0f0;
-            font-weight: bold;
-        }
-
-        .label {
-            font-weight: bold;
-            width: 40%;
-        }
-
-        .totals {
-            background: #f9f9f9;
-            font-weight: bold;
-        }
-
-        .footer {
-            margin-top: 30px;
-            font-size: 9pt;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
-            color: #666;
-        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11pt; line-height: 1.5; color: #333; padding: 0.5in; }
+        .header { border-bottom: 3px solid #2563eb; padding-bottom: 20px; margin-bottom: 30px; }
+        .company-name { font-size: 24pt; font-weight: bold; color: #2563eb; margin-bottom: 5px; }
+        .document-title { font-size: 18pt; font-weight: bold; margin-top: 10px; }
+        .section { margin-bottom: 25px; }
+        .section-title { font-size: 12pt; font-weight: bold; background-color: #f3f4f6; padding: 8px 12px; margin-bottom: 12px; border-left: 4px solid #2563eb; }
+        .info-grid { display: grid; grid-template-columns: 200px 1fr; gap: 8px 20px; margin-bottom: 15px; }
+        .label { font-weight: 600; color: #6b7280; }
+        .value { color: #111827; }
+        table { width: 100%; border-collapse: collapse; margin: 10px 0; }
+        th { background-color: #f3f4f6; font-weight: 600; text-align: left; padding: 10px; border-bottom: 2px solid #d1d5db; }
+        td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
+        tr:last-child td { border-bottom: none; }
+        .totals-box { background-color: #eff6ff; border: 2px solid #2563eb; padding: 15px; margin-top: 20px; }
+        .totals-row { display: flex; justify-content: space-between; padding: 5px 0; }
+        .total-label { font-weight: 600; font-size: 14pt; }
+        .total-value { font-weight: bold; font-size: 14pt; color: #2563eb; }
+        .footer { margin-top: 40px; padding-top: 20px; border-top: 1px solid #d1d5db; font-size: 9pt; color: #6b7280; }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1 class="company-name">EVEREST INSURANCE</h1>
-        <p style="margin: 5px 0;">1234 Mountain View Drive | Denver, CO 80202<br>
-        Phone: (555) 123-4567 | www.everestinsurance.example</p>
+        <div class="company-name">SURE INSURANCE</div>
+        <div class="document-title">AUTO INSURANCE POLICY DECLARATIONS</div>
     </div>
 
-    <h2 class="doc-title">AUTOMOBILE INSURANCE POLICY DECLARATION PAGE</h2>
+    <div class="section">
+        <div class="section-title">Policy Information</div>
+        <div class="info-grid">
+            <div class="label">Policy Number:</div>
+            <div class="value">{{policy_number}}</div>
+            <div class="label">Policy Period:</div>
+            <div class="value">{{policy_start_date}} to {{policy_end_date}}</div>
+            <div class="label">Issue Date:</div>
+            <div class="value">{{issue_date}}</div>
+            <div class="label">Agent Name:</div>
+            <div class="value">{{agent_name}}</div>
+            <div class="label">Agent Number:</div>
+            <div class="value">{{agent_number}}</div>
+        </div>
+    </div>
 
     <div class="section">
-        <div class="section-title">POLICY INFORMATION</div>
+        <div class="section-title">Named Insured</div>
+        <div class="info-grid">
+            <div class="label">Name:</div>
+            <div class="value">{{insured_name}}</div>
+            <div class="label">Address:</div>
+            <div class="value">{{insured_address_line1}}<br>{{insured_city}}, {{insured_state}} {{insured_zip}}</div>
+        </div>
+    </div>
+
+    <div class="section">
+        <div class="section-title">Insured Vehicles</div>
         <table>
-            <tr>
-                <td class="label">Policy Number:</td>
-                <td>{{policy_number}}</td>
-                <td class="label">Policy Period:</td>
-                <td>{{policy_start_date}} - {{policy_end_date}}</td>
-            </tr>
-            <tr>
-                <td class="label">Issue Date:</td>
-                <td>{{issue_date}}</td>
-                <td class="label">Agent:</td>
-                <td>{{agent_name}} (Agent #{{agent_number}})</td>
-            </tr>
+            <thead><tr><th>#</th><th>Year</th><th>Make</th><th>Model</th><th>VIN</th><th>Use</th></tr></thead>
+            <tbody>
+                {{#each vehicles}}
+                <tr><td>{{vehicle_number}}</td><td>{{year}}</td><td>{{make}}</td><td>{{model}}</td><td>{{vin}}</td><td>{{use}}</td></tr>
+                {{/each}}
+            </tbody>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">NAMED INSURED</div>
+        <div class="section-title">Listed Drivers</div>
         <table>
-            <tr>
-                <td class="label">Name:</td>
-                <td colspan="3">{{insured_name}}</td>
-            </tr>
-            <tr>
-                <td class="label">Mailing Address:</td>
-                <td colspan="3">{{insured_address_line1}}<br>{{insured_city}}, {{insured_state}} {{insured_zip}}</td>
-            </tr>
+            <thead><tr><th>Name</th><th>Date of Birth</th><th>License Number</th><th>Relationship</th></tr></thead>
+            <tbody>
+                {{#each drivers}}
+                <tr><td>{{name}}</td><td>{{date_of_birth}}</td><td>{{license_number}}</td><td>{{relationship}}</td></tr>
+                {{/each}}
+            </tbody>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">INSURED VEHICLES</div>
+        <div class="section-title">Coverage Summary (Vehicle #{{vehicle_number}})</div>
         <table>
-            <tr>
-                <th>Vehicle</th>
-                <th>Year</th>
-                <th>Make/Model</th>
-                <th>VIN</th>
-                <th>Use</th>
-            </tr>
-            {{#vehicles}}
-            <tr>
-                <td>Vehicle {{vehicle_number}}</td>
-                <td>{{year}}</td>
-                <td>{{make}} {{model}}</td>
-                <td>{{vin}}</td>
-                <td>{{use}}</td>
-            </tr>
-            {{/vehicles}}
+            <thead><tr><th>Coverage</th><th>Limit</th><th>Deductible</th><th>Premium</th></tr></thead>
+            <tbody>
+                {{#each coverages}}
+                <tr><td>{{coverage_name}}</td><td>{{limit}}</td><td>{{deductible}}</td><td>${{premium}}</td></tr>
+                {{/each}}
+            </tbody>
         </table>
     </div>
 
     <div class="section">
-        <div class="section-title">LISTED DRIVERS</div>
-        <table>
-            <tr>
-                <th>Name</th>
-                <th>Date of Birth</th>
-                <th>License Number</th>
-                <th>Relationship</th>
-            </tr>
-            {{#drivers}}
-            <tr>
-                <td>{{name}}</td>
-                <td>{{date_of_birth}}</td>
-                <td>{{license_number}}</td>
-                <td>{{relationship}}</td>
-            </tr>
-            {{/drivers}}
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">COVERAGE SUMMARY - VEHICLE {{vehicle_number}}</div>
-        <table>
-            <tr>
-                <th>Coverage</th>
-                <th>Limit</th>
-                <th>Deductible</th>
-                <th>Premium</th>
-            </tr>
-            {{#coverages}}
-            <tr>
-                <td>{{coverage_name}}</td>
-                <td>{{limit}}</td>
-                <td>{{deductible}}</td>
-                <td>${{premium}}</td>
-            </tr>
-            {{/coverages}}
-            <tr class="totals">
-                <td colspan="3">Total 6-Month Premium</td>
-                <td>${{total_six_month_premium}}</td>
-            </tr>
-            <tr class="totals">
-                <td colspan="3">Total Annual Premium</td>
-                <td>${{total_annual_premium}}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <div class="section-title">PAYMENT INFORMATION</div>
-        <table>
-            <tr>
-                <td class="label">Payment Plan:</td>
-                <td>{{payment_plan}}</td>
-            </tr>
-            <tr>
-                <td class="label">Monthly Payment:</td>
-                <td>${{monthly_payment}} {{#installment_fee}}(includes ${{installment_fee}} installment fee){{/installment_fee}}</td>
-            </tr>
-            <tr>
-                <td class="label">First Payment Due:</td>
-                <td>{{first_payment_due}}</td>
-            </tr>
-        </table>
-    </div>
-
-    <div class="section">
-        <p><strong>IMPORTANT NOTICES:</strong></p>
-        <ul style="font-size: 10pt;">
-            <li>This declaration page is part of your insurance policy and should be kept with your policy documents.</li>
-            <li>Your policy may be subject to a premium audit.</li>
-            <li>Coverage is subject to all policy terms, conditions, limitations, and exclusions.</li>
-            <li>Report all accidents and claims promptly by calling (555) 123-4567.</li>
-        </ul>
+        <div class="section-title">Premium & Payment Information</div>
+        <div class="totals-box">
+            <div class="totals-row"><div class="label">Six-Month Premium:</div><div class="value">${{total_six_month_premium}}</div></div>
+            <div class="totals-row"><div class="label">Annual Premium:</div><div class="value">${{total_annual_premium}}</div></div>
+            <div class="totals-row" style="margin-top: 10px; padding-top: 10px; border-top: 1px solid #cbd5e1;">
+                <div class="total-label">Payment Plan:</div><div class="value">{{payment_plan}}</div>
+            </div>
+            {{#if installment_fee}}
+            <div class="totals-row"><div class="label">Installment Fee:</div><div class="value">${{installment_fee}}</div></div>
+            {{/if}}
+            <div class="totals-row"><div class="total-label">Monthly Payment:</div><div class="total-value">${{monthly_payment}}</div></div>
+            <div class="totals-row"><div class="label">First Payment Due:</div><div class="value">{{first_payment_due}}</div></div>
+        </div>
     </div>
 
     <div class="footer">
-        <p>This declaration page is evidence of insurance coverage subject to all terms, conditions, and exclusions of the policy. Please review your complete policy documents for full details of coverage.</p>
-        <p>Form EV-AUTO-DEC (01/25) | Page 1 of 1 | Generated: {{generation_timestamp}}</p>
+        <p><strong>Important Notice:</strong> This is a legal document. Please read it carefully and keep it in a safe place.</p>
+        <p style="margin-top: 10px;">Generated: {{generation_timestamp}}</p>
+        <p style="margin-top: 5px;">© 2025 Sure Insurance Company. All rights reserved.</p>
     </div>
 </body>
 </html>
