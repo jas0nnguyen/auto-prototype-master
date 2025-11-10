@@ -28,9 +28,13 @@ export class TemplateService {
   private readonly templatesDir: string;
 
   constructor() {
-    // Templates directory relative to backend root
-    // process.cwd() is already /path/to/project/backend when running npm run start:dev
-    this.templatesDir = path.join(process.cwd(), 'templates');
+    // Templates directory - handle both local dev and Vercel serverless
+    // Local dev: process.cwd() = /path/to/project/backend
+    // Vercel: process.cwd() = /var/task, templates at /var/task/backend/templates
+    const isVercel = process.env.VERCEL === '1' || process.env.NOW_REGION;
+    this.templatesDir = isVercel
+      ? path.join(process.cwd(), 'backend', 'templates')
+      : path.join(process.cwd(), 'templates');
     this.logger.log(`TemplateService initialized. Templates directory: ${this.templatesDir}`);
     this.registerCustomHelpers();
     this.logger.log('TemplateService initialized with custom Handlebars helpers');
