@@ -1,0 +1,115 @@
+/**
+ * PriceSidebar Styling
+ *
+ * Responsive behavior:
+ * - Desktop (≥1024px): Sticky sidebar at top: 120px
+ * - Mobile (<1024px): Fixed bottom bar with "View Details" modal
+ */
+
+/* Desktop: Sticky Sidebar */
+.price-sidebar-desktop {
+  display: block;
+  position: sticky;
+  top: 120px;
+  height: fit-content;
+}
+
+/* Hide mobile view on desktop */
+.price-sidebar-mobile {
+  display: none;
+}
+
+/* Mobile Breakpoint */
+@media (max-width: 1023px) {
+  /* Hide desktop sidebar on mobile */
+  .price-sidebar-desktop {
+    display: none;
+  }
+
+  /* Show mobile bottom bar */
+  .price-sidebar-mobile {
+    display: block;
+  }
+
+  .price-sidebar-mobile-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: white;
+    padding: 16px 24px;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 100;
+  }
+
+  .view-details-button {
+    padding: 12px 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-weight: 600;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+  }
+
+  .view-details-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+  }
+
+  .view-details-button:active {
+    transform: translateY(0);
+  }
+
+  /* Mobile Details Modal */
+  .mobile-details-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(4px);
+    z-index: 1000;
+    display: flex;
+    align-items: flex-end;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .mobile-details-content {
+    width: 100%;
+    max-height: 80vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 24px 24px 0 0;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
+  }
+
+  @keyframes slideUp {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+}
+
+/* Tablet Breakpoint (768px - 1023px) */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .mobile-details-content {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+}

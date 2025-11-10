@@ -1,0 +1,1890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version 4: Tech Startup - Everest Insurance Auto Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 20%, #f093fb 100%);
+            color: #1a202c;
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: rgba(255, 255, 255, 0.98);
+            backdrop-filter: blur(10px);
+            padding: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .logo::before {
+            content: "⛰️ ";
+        }
+
+        .header-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .quote-id {
+            font-size: 14px;
+            font-weight: 600;
+            color: #667eea;
+            font-family: 'Courier New', monospace;
+        }
+
+        .support-phone {
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+        }
+
+        .screen {
+            background: white;
+            border-radius: 24px;
+            padding: 60px;
+            margin-bottom: 60px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.12);
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 52px;
+            font-weight: 800;
+            color: #1a202c;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+
+        h2 {
+            font-size: 36px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 20px;
+        }
+
+        h3 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        h4 {
+            font-size: 18px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 18px;
+            color: #718096;
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .screen-indicator {
+            text-align: center;
+            font-size: 13px;
+            color: #667eea;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 32px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 14px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 8px;
+        }
+
+        label .required {
+            color: #f56565;
+        }
+
+        input, select, textarea {
+            padding: 14px 18px;
+            border: 2px solid #e2e8f0;
+            border-radius: 12px;
+            font-size: 16px;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #cbd5e0;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 16px 32px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .btn-secondary:hover {
+            background: #f7fafc;
+            transform: translateY(-1px);
+        }
+
+        .btn-actions {
+            display: flex;
+            gap: 16px;
+            margin-top: 48px;
+            justify-content: center;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            text-align: center;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-animation {
+            margin: 50px 0;
+        }
+
+        .car-icon {
+            width: 100px;
+            height: 50px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            position: relative;
+            animation: drive 2s infinite ease-in-out;
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.4);
+        }
+
+        @keyframes drive {
+            0%, 100% { transform: translateX(-40px); }
+            50% { transform: translateX(40px); }
+        }
+
+        .loading-progress {
+            width: 500px;
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 40px;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 60%;
+            animation: progress 2s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(102, 126, 234, 0.6);
+        }
+
+        @keyframes progress {
+            0% { width: 30%; }
+            50% { width: 80%; }
+            100% { width: 30%; }
+        }
+
+        .loading-steps {
+            text-align: left;
+            margin-top: 40px;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            font-weight: 500;
+        }
+
+        .loading-step.complete::before {
+            content: "✓";
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 700;
+            box-shadow: 0 4px 15px rgba(72, 187, 120, 0.4);
+        }
+
+        .loading-step.active::before {
+            content: "";
+            width: 32px;
+            height: 32px;
+            border: 4px solid rgba(102, 126, 234, 0.3);
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Summary Layout */
+        .summary-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 48px;
+        }
+
+        .summary-content {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+
+        .card:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .card-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: #718096;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .card-subtitle {
+            font-size: 18px;
+            color: #1a202c;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .card-detail {
+            font-size: 14px;
+            color: #718096;
+            margin-bottom: 16px;
+        }
+
+        .card-link {
+            color: #667eea;
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-link:hover {
+            gap: 10px;
+        }
+
+        .add-btn {
+            background: white;
+            border: 3px dashed #cbd5e0;
+            color: #667eea;
+            width: 100%;
+            padding: 32px;
+            border-radius: 16px;
+            font-size: 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            border-color: #667eea;
+            border-style: solid;
+            background: #f7fafc;
+            transform: translateY(-2px);
+        }
+
+        /* Price Sidebar */
+        .price-sidebar {
+            background: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 40px;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .price-term {
+            font-size: 12px;
+            color: #a0aec0;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            font-weight: 600;
+        }
+
+        .price-amount {
+            font-size: 64px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #ffffff 0%, #667eea 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            line-height: 1;
+        }
+
+        .price-details {
+            font-size: 14px;
+            color: #cbd5e0;
+            margin-bottom: 32px;
+            font-weight: 500;
+        }
+
+        .price-breakdown {
+            border-top: 1px solid #4a5568;
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .price-item-label {
+            color: #cbd5e0;
+            font-weight: 500;
+        }
+
+        .price-item-value {
+            color: white;
+            font-weight: 700;
+        }
+
+        /* Coverage Selection */
+        .coverage-section {
+            margin-bottom: 48px;
+        }
+
+        .coverage-item {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .coverage-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.1);
+        }
+
+        .coverage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .coverage-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #1a202c;
+        }
+
+        .coverage-value {
+            font-size: 28px;
+            font-weight: 900;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .coverage-description {
+            font-size: 15px;
+            color: #718096;
+            margin-bottom: 24px;
+            line-height: 1.7;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 8px;
+            border-radius: 4px;
+            background: #e2e8f0;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .slider::-moz-range-thumb {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            cursor: pointer;
+            border: none;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.5);
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            color: #718096;
+            margin-top: 12px;
+            font-weight: 600;
+        }
+
+        /* Toggle Switch */
+        .toggle-item {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+        }
+
+        .toggle-item:hover {
+            border-color: #667eea;
+        }
+
+        .toggle-content {
+            flex: 1;
+        }
+
+        .toggle-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 6px;
+        }
+
+        .toggle-description {
+            font-size: 14px;
+            color: #718096;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 64px;
+            height: 36px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #cbd5e0;
+            transition: .4s;
+            border-radius: 36px;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 28px;
+            width: 28px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(28px);
+        }
+
+        input:disabled + .toggle-slider {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        /* Review Screen */
+        .review-section {
+            margin-bottom: 40px;
+        }
+
+        .review-card {
+            background: #f7fafc;
+            border: 2px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 32px;
+            margin-bottom: 24px;
+        }
+
+        .review-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        .review-row:last-child {
+            border-bottom: none;
+        }
+
+        .review-label {
+            font-size: 14px;
+            color: #718096;
+            font-weight: 500;
+        }
+
+        .review-value {
+            font-size: 14px;
+            color: #1a202c;
+            font-weight: 700;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            background: rgba(0, 0, 0, 0.5);
+            padding: 80px;
+        }
+
+        .modal-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Signature Pad */
+        .signature-pad {
+            background: white;
+            border: 3px solid #667eea;
+            border-radius: 16px;
+            padding: 40px;
+            margin: 32px 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #cbd5e0;
+            font-style: italic;
+            font-size: 24px;
+        }
+
+        .signature-pad.expanded {
+            min-height: 300px;
+        }
+
+        /* Checkout */
+        .checkout-section {
+            margin-bottom: 32px;
+        }
+
+        .payment-method-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .payment-method-card {
+            background: #f7fafc;
+            border: 3px solid #e2e8f0;
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .payment-method-card:hover,
+        .payment-method-card.selected {
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.15);
+        }
+
+        .payment-icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+
+        /* Alert Box */
+        .alert {
+            background: #fff5f5;
+            border: 2px solid #fc8181;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+
+        .alert-title {
+            font-weight: 700;
+            color: #c53030;
+            margin-bottom: 8px;
+        }
+
+        .alert-list {
+            list-style: none;
+            padding-left: 20px;
+        }
+
+        .alert-list li {
+            color: #742a2a;
+            margin-bottom: 4px;
+        }
+
+        .alert-list li::before {
+            content: "• ";
+            color: #fc8181;
+            font-weight: bold;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .badge-success {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .badge-info {
+            background: #bee3f8;
+            color: #2c5282;
+        }
+
+        /* Divider */
+        .divider {
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #e2e8f0, transparent);
+            margin: 48px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">Everest Insurance</div>
+            <div class="header-info">
+                <div class="quote-id">Quote: DZ4R2T8X9K</div>
+                <div class="support-phone">📞 1-800-EVEREST</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Screen 1: Get Started -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 1 of 19</div>
+            <h1>Reach new heights<br>with better coverage.</h1>
+            <p class="subtitle">Get auto insurance that's as reliable as a mountain. Customize your coverage in minutes and pay only for what you need.</p>
+
+            <h3>Let's start with the basics</h3>
+            <p class="subtitle">Tell us a little about yourself.</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" name="first_name" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" name="last_name" placeholder="Smith">
+                </div>
+                <div class="form-group">
+                    <label>Street Address <span class="required">*</span></label>
+                    <input type="text" name="line_1_address" placeholder="123 Main Street">
+                </div>
+                <div class="form-group">
+                    <label>Apt/Unit (optional)</label>
+                    <input type="text" name="line_2_address" placeholder="Apt 4B">
+                </div>
+                <div class="form-group">
+                    <label>City <span class="required">*</span></label>
+                    <input type="text" name="municipality_name" placeholder="San Francisco">
+                </div>
+                <div class="form-group">
+                    <label>State <span class="required">*</span></label>
+                    <select name="state_code">
+                        <option value="">Select state</option>
+                        <option value="CA">California</option>
+                        <option value="NY">New York</option>
+                        <option value="TX">Texas</option>
+                        <option value="FL">Florida</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ZIP Code <span class="required">*</span></label>
+                    <input type="text" name="postal_code" placeholder="94105">
+                </div>
+                <div class="form-group">
+                    <label>Date of Birth <span class="required">*</span></label>
+                    <input type="date" name="birth_date">
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-primary">Get My Quote →</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Effective Date Entry -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 2 of 19</div>
+            <h1>When do you want<br>coverage to begin?</h1>
+            <p class="subtitle">Select a start date for your new policy. Most people choose today or within the next 30 days.</p>
+
+            <div class="form-group" style="max-width: 500px; margin: 40px auto;">
+                <label>Policy Effective Date <span class="required">*</span></label>
+                <input type="date" name="effective_date">
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Back</button>
+                <button class="btn btn-primary">Continue →</button>
+            </div>
+        </div>
+
+        <!-- Screen 2.5: Email Address -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 3 of 19</div>
+            <h1>How can we<br>reach you?</h1>
+            <p class="subtitle">We'll send your quote and policy documents to this email address.</p>
+
+            <div class="form-group" style="max-width: 500px; margin: 40px auto;">
+                <label>Email Address <span class="required">*</span></label>
+                <input type="email" name="communication_value" data-type="EMAIL" placeholder="john.smith@example.com">
+            </div>
+
+            <div class="form-group" style="max-width: 500px; margin: 0 auto;">
+                <label>Mobile Phone (optional)</label>
+                <input type="tel" name="communication_value" data-type="MOBILE" placeholder="(555) 123-4567">
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Back</button>
+                <button class="btn btn-primary">Continue →</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Loading Screen #1 -->
+        <div class="screen loading-screen">
+            <div class="screen-indicator">Screen 4 of 19</div>
+            <h2>Climbing the mountain of data<br>to find your perfect quote...</h2>
+            <p class="subtitle">We're checking your insurance history and pulling vehicle information. This takes just a moment.</p>
+
+            <div class="loading-animation">
+                <div class="car-icon"></div>
+            </div>
+
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="loading-step complete">Verifying insurance history</div>
+                <div class="loading-step active">Retrieving vehicle information</div>
+                <div class="loading-step">Calculating premium</div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Vehicle & Driver Summary -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 5 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <div>
+                        <h2>Your Vehicles</h2>
+                        <p class="subtitle">We found these vehicles from your current policy. Feel free to add more or edit our suggestions.</p>
+
+                        <div class="card-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Vehicle 1</div>
+                                </div>
+                                <div class="card-subtitle">2006 FORD FUSION</div>
+                                <div class="card-detail">VIN: 1FAFP34N16W123456</div>
+                                <a href="#" class="card-link">Edit vehicle details →</a>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Vehicle 2</div>
+                                </div>
+                                <div class="card-subtitle">2017 CADILLAC XT5</div>
+                                <div class="card-detail">VIN: 1GYKNCRS8HZ123456</div>
+                                <a href="#" class="card-link">Edit vehicle details →</a>
+                            </div>
+                        </div>
+
+                        <button class="add-btn">+ Add Another Vehicle</button>
+                    </div>
+
+                    <div>
+                        <h2>Your Drivers</h2>
+                        <p class="subtitle">Review driver information and add anyone else who will be driving your vehicles.</p>
+
+                        <div class="card-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Primary Insured</div>
+                                </div>
+                                <div class="card-subtitle">Sherrie Beaudry, 79</div>
+                                <div class="card-detail">License: CA-D1234567</div>
+                                <div class="card-detail"><span class="badge badge-success">Named Insured</span></div>
+                                <a href="#" class="card-link">Edit driver info →</a>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Additional Driver</div>
+                                </div>
+                                <div class="card-subtitle">Joshua Gumha, 23</div>
+                                <div class="card-detail">License: CA-D7654321</div>
+                                <div class="card-detail"><span class="badge badge-info">Household Member</span></div>
+                                <a href="#" class="card-link">Edit driver info →</a>
+                            </div>
+                        </div>
+
+                        <button class="add-btn">+ Add Another Driver</button>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">Start Over</button>
+                        <button class="btn btn-primary">Next: Select Coverage →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">6-Month Policy</div>
+                    <div class="price-amount">$403<span style="font-size: 40px;">.33</span></div>
+                    <div class="price-details">Due today + 5 payments of $403.33</div>
+
+                    <div class="price-breakdown">
+                        <div class="price-item">
+                            <span class="price-item-label">Total 6-month premium</span>
+                            <span class="price-item-value">$2,420.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Multi-Car Discount</span>
+                            <span class="price-item-value">-$150.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Homeowner Discount</span>
+                            <span class="price-item-value">-$75.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Edit Vehicle - Owned -->
+        <div class="screen modal-overlay">
+            <div class="modal-content">
+                <div class="screen" style="margin-bottom: 0;">
+                    <div class="screen-indicator">Edit Vehicle (Modal)</div>
+                    <h2>Edit Vehicle Details</h2>
+                    <p class="subtitle">Update your vehicle information below.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Year <span class="required">*</span></label>
+                            <input type="number" name="vehicle_year" value="2006">
+                        </div>
+                        <div class="form-group">
+                            <label>Make <span class="required">*</span></label>
+                            <input type="text" name="vehicle_make" value="FORD">
+                        </div>
+                        <div class="form-group">
+                            <label>Model <span class="required">*</span></label>
+                            <input type="text" name="vehicle_model" value="FUSION">
+                        </div>
+                        <div class="form-group">
+                            <label>VIN <span class="required">*</span></label>
+                            <input type="text" name="vin" value="1FAFP34N16W123456">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Ownership Status <span class="required">*</span></label>
+                            <select name="ownership_status">
+                                <option value="OWNED" selected>Owned</option>
+                                <option value="FINANCED">Financed</option>
+                                <option value="LEASED">Leased</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Annual Mileage <span class="required">*</span></label>
+                            <input type="number" name="annual_mileage" value="12000">
+                        </div>
+                        <div class="form-group">
+                            <label>Primary Use <span class="required">*</span></label>
+                            <select name="vehicle_use_code">
+                                <option value="COMMUTE">Commute</option>
+                                <option value="PLEASURE" selected>Pleasure</option>
+                                <option value="BUSINESS">Business</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-secondary">Cancel</button>
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Edit Vehicle - Financed/Leased -->
+        <div class="screen modal-overlay">
+            <div class="modal-content">
+                <div class="screen" style="margin-bottom: 0;">
+                    <div class="screen-indicator">Edit Financed Vehicle (Modal)</div>
+                    <h2>Edit Vehicle Details</h2>
+                    <p class="subtitle">Since this vehicle is financed/leased, we need lienholder information.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Year <span class="required">*</span></label>
+                            <input type="number" name="vehicle_year" value="2017">
+                        </div>
+                        <div class="form-group">
+                            <label>Make <span class="required">*</span></label>
+                            <input type="text" name="vehicle_make" value="CADILLAC">
+                        </div>
+                        <div class="form-group">
+                            <label>Model <span class="required">*</span></label>
+                            <input type="text" name="vehicle_model" value="XT5">
+                        </div>
+                        <div class="form-group">
+                            <label>VIN <span class="required">*</span></label>
+                            <input type="text" name="vin" value="1GYKNCRS8HZ123456">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Ownership Status <span class="required">*</span></label>
+                            <select name="ownership_status">
+                                <option value="OWNED">Owned</option>
+                                <option value="FINANCED" selected>Financed</option>
+                                <option value="LEASED">Leased</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <h3>Lienholder Information</h3>
+                    <div class="form-grid">
+                        <div class="form-group full-width">
+                            <label>Lienholder Name <span class="required">*</span></label>
+                            <input type="text" name="lienholder_name" placeholder="Chase Auto Finance">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Lienholder Address <span class="required">*</span></label>
+                            <input type="text" name="lienholder_address" placeholder="123 Finance St">
+                        </div>
+                        <div class="form-group">
+                            <label>City <span class="required">*</span></label>
+                            <input type="text" placeholder="New York">
+                        </div>
+                        <div class="form-group">
+                            <label>State <span class="required">*</span></label>
+                            <select>
+                                <option value="NY">New York</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-secondary">Cancel</button>
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Edit Primary Driver -->
+        <div class="screen modal-overlay">
+            <div class="modal-content">
+                <div class="screen" style="margin-bottom: 0;">
+                    <div class="screen-indicator">Edit Primary Driver (Modal)</div>
+                    <h2>Primary Driver Information</h2>
+                    <p class="subtitle">Update your driver details below.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" name="first_name" value="Sherrie">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" name="last_name" value="Beaudry">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth <span class="required">*</span></label>
+                            <input type="date" name="birth_date" value="1945-03-15">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender <span class="required">*</span></label>
+                            <select name="gender_code">
+                                <option value="F" selected>Female</option>
+                                <option value="M">Male</option>
+                                <option value="X">Non-binary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Marital Status <span class="required">*</span></label>
+                            <select name="marital_status_code">
+                                <option value="SINGLE">Single</option>
+                                <option value="MARRIED" selected>Married</option>
+                                <option value="DIVORCED">Divorced</option>
+                                <option value="WIDOWED">Widowed</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>License Number <span class="required">*</span></label>
+                            <input type="text" name="license_number" value="D1234567">
+                        </div>
+                        <div class="form-group">
+                            <label>License State <span class="required">*</span></label>
+                            <select name="license_state">
+                                <option value="CA" selected>California</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>License Issue Date</label>
+                            <input type="date" name="license_date">
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-secondary">Cancel</button>
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Edit Additional Driver -->
+        <div class="screen modal-overlay">
+            <div class="modal-content">
+                <div class="screen" style="margin-bottom: 0;">
+                    <div class="screen-indicator">Edit Additional Driver (Modal)</div>
+                    <h2>Additional Driver Information</h2>
+                    <p class="subtitle">Provide details for the additional driver on your policy.</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>First Name <span class="required">*</span></label>
+                            <input type="text" name="first_name" value="Joshua">
+                        </div>
+                        <div class="form-group">
+                            <label>Last Name <span class="required">*</span></label>
+                            <input type="text" name="last_name" value="Gumha">
+                        </div>
+                        <div class="form-group">
+                            <label>Date of Birth <span class="required">*</span></label>
+                            <input type="date" name="birth_date" value="2001-07-22">
+                        </div>
+                        <div class="form-group">
+                            <label>Gender <span class="required">*</span></label>
+                            <select name="gender_code">
+                                <option value="F">Female</option>
+                                <option value="M" selected>Male</option>
+                                <option value="X">Non-binary</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Relationship to Primary <span class="required">*</span></label>
+                            <select name="relationship_type">
+                                <option value="SPOUSE">Spouse</option>
+                                <option value="CHILD" selected>Child</option>
+                                <option value="PARENT">Parent</option>
+                                <option value="SIBLING">Sibling</option>
+                                <option value="OTHER">Other</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>License Number <span class="required">*</span></label>
+                            <input type="text" name="license_number" value="D7654321">
+                        </div>
+                        <div class="form-group">
+                            <label>Marital Status</label>
+                            <select name="marital_status_code">
+                                <option value="SINGLE" selected>Single</option>
+                                <option value="MARRIED">Married</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>License State <span class="required">*</span></label>
+                            <select name="license_state">
+                                <option value="CA" selected>California</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-secondary">Cancel</button>
+                        <button class="btn btn-primary">Save Changes</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 6: Coverage Selection -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 6 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <h2>Customize Your Coverage</h2>
+                    <p class="subtitle">We've pre-selected coverages based on your current policy. Adjust to match your needs, or skip to the next step.</p>
+
+                    <div class="coverage-section">
+                        <h3>Protect Your Assets</h3>
+                        <p class="subtitle">These liability coverages protect you if you cause damage to others.</p>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Bodily Injury Liability</div>
+                                <div class="coverage-value">$300k/$500k</div>
+                            </div>
+                            <div class="coverage-description">Covers medical expenses and legal costs if you injure someone in an accident where you're at fault.</div>
+                            <div class="slider-container">
+                                <select name="coverage_BI_LIABILITY" style="width: 100%;">
+                                    <option value="100000/300000">$100,000 / $300,000</option>
+                                    <option value="300000/500000" selected>$300,000 / $500,000</option>
+                                    <option value="500000/1000000">$500,000 / $1,000,000</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Property Damage Liability</div>
+                                <div class="coverage-value">$100,000</div>
+                            </div>
+                            <div class="coverage-description">Covers damage to someone else's property (vehicle, fence, building) when you're at fault.</div>
+                            <div class="slider-container">
+                                <input type="range" min="0" max="100" value="100" class="slider" name="coverage_PD_LIABILITY">
+                                <div class="slider-labels">
+                                    <span>$25k</span>
+                                    <span>$50k</span>
+                                    <span>$100k</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="coverage-section">
+                        <h3>Protect Your Vehicles</h3>
+                        <p class="subtitle">If your car is damaged or stolen, these coverages help repair or replace it.</p>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Comprehensive & Collision</div>
+                                <div class="coverage-value">$1,000 deductible</div>
+                            </div>
+                            <div class="coverage-description">Combined coverage for theft, vandalism, weather (comprehensive) and accidents (collision). Choose your deductible per vehicle.</div>
+
+                            <div style="margin-top: 24px;">
+                                <h4>Vehicle 1: 2006 FORD FUSION</h4>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" value="50" class="slider" name="coverage_COMPREHENSIVE_v1">
+                                    <div class="slider-labels">
+                                        <span>$250</span>
+                                        <span>$500</span>
+                                        <span>$1,000</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div style="margin-top: 24px;">
+                                <h4>Vehicle 2: 2017 CADILLAC XT5</h4>
+                                <div class="slider-container">
+                                    <input type="range" min="0" max="100" value="50" class="slider" name="coverage_COMPREHENSIVE_v2">
+                                    <div class="slider-labels">
+                                        <span>$250</span>
+                                        <span>$500</span>
+                                        <span>$1,000</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="coverage-section">
+                        <h3>Protect You & Your Loved Ones</h3>
+                        <p class="subtitle">Medical coverages for injuries to you and your passengers.</p>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Medical Payments</div>
+                                <div class="coverage-value">$5,000</div>
+                            </div>
+                            <div class="coverage-description">Covers medical expenses for you and your passengers, regardless of who's at fault.</div>
+                            <div class="slider-container">
+                                <input type="range" min="0" max="100" value="50" class="slider" name="coverage_MED_PAY">
+                                <div class="slider-labels">
+                                    <span>$1k</span>
+                                    <span>$5k</span>
+                                    <span>$10k</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">← Back</button>
+                        <button class="btn btn-primary">Next: Add-Ons →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">6-Month Policy</div>
+                    <div class="price-amount">$403<span style="font-size: 40px;">.33</span></div>
+                    <div class="price-details">Due today + 5 payments of $403.33</div>
+
+                    <div class="price-breakdown">
+                        <div class="price-item">
+                            <span class="price-item-label">Total premium</span>
+                            <span class="price-item-value">$2,420.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Add-Ons -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 7 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <h2>Optional Add-Ons</h2>
+                    <p class="subtitle">Enhance your coverage with these optional protections.</p>
+
+                    <div class="coverage-section">
+                        <h3>Rental Reimbursement</h3>
+                        <p class="subtitle">If your car is being repaired after a covered claim, we'll pay for a rental car (up to $30/day).</p>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">Vehicle 1: 2006 FORD FUSION</div>
+                                <div class="toggle-description">$30/day, max 30 days</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_RENTAL_v1">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">Vehicle 2: 2017 CADILLAC XT5</div>
+                                <div class="toggle-description">$30/day, max 30 days</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_RENTAL_v2" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="coverage-section">
+                        <h3>Always Included</h3>
+                        <p class="subtitle">These protections come standard with every Everest policy.</p>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">Roadside Assistance</div>
+                                <div class="toggle-description">24/7 towing, flat tire service, lockout assistance, and more.</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_ROADSIDE" checked disabled>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">← Back</button>
+                        <button class="btn btn-primary">Continue →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">6-Month Policy</div>
+                    <div class="price-amount">$415<span style="font-size: 40px;">.50</span></div>
+                    <div class="price-details">Due today + 5 payments of $415.50</div>
+
+                    <div class="price-breakdown">
+                        <div class="price-item">
+                            <span class="price-item-label">Total premium</span>
+                            <span class="price-item-value">$2,493.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Rental (1 vehicle)</span>
+                            <span class="price-item-value">+$73.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Missing Info -->
+        <div class="screen">
+            <div class="screen-indicator">Validation Required</div>
+            <h2>We need a bit more information</h2>
+            <p class="subtitle">Please complete the following fields before proceeding.</p>
+
+            <div class="alert">
+                <div class="alert-title">Missing Required Information</div>
+                <ul class="alert-list">
+                    <li>Driver license number for Joshua Gumha</li>
+                    <li>VIN for 2017 Cadillac XT5</li>
+                    <li>Lienholder information for financed vehicle</li>
+                </ul>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-primary">Review & Complete →</button>
+            </div>
+        </div>
+
+        <!-- Screen 8: Loading Screen #2 -->
+        <div class="screen loading-screen">
+            <div class="screen-indicator">Screen 8 of 19</div>
+            <h2>Almost there!<br>Verifying your information...</h2>
+            <p class="subtitle">We're running final checks to ensure everything is accurate.</p>
+
+            <div class="loading-animation">
+                <div class="car-icon"></div>
+            </div>
+
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="loading-step complete">Vehicle valuation</div>
+                <div class="loading-step complete">Driver records check</div>
+                <div class="loading-step active">Finalizing premium calculation</div>
+            </div>
+        </div>
+
+        <!-- Screen 9: Coverage Review -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 9 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <h2>Review Your Coverage</h2>
+                    <p class="subtitle">Take a moment to review everything. You can always make changes later.</p>
+
+                    <div class="review-section">
+                        <h3>Drivers</h3>
+                        <div class="review-card">
+                            <div class="review-row">
+                                <span class="review-label">Primary Insured</span>
+                                <span class="review-value">Sherrie Beaudry, 79</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">License Number</span>
+                                <span class="review-value">CA-D1234567</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Additional Driver</span>
+                                <span class="review-value">Joshua Gumha, 23</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">License Number</span>
+                                <span class="review-value">CA-D7654321</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3>Vehicles</h3>
+                        <div class="review-card">
+                            <div class="review-row">
+                                <span class="review-label">Vehicle 1</span>
+                                <span class="review-value">2006 FORD FUSION</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">VIN</span>
+                                <span class="review-value">1FAFP34N16W123456</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Vehicle 2</span>
+                                <span class="review-value">2017 CADILLAC XT5</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">VIN</span>
+                                <span class="review-value">1GYKNCRS8HZ123456</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3>Liability Coverage</h3>
+                        <div class="review-card">
+                            <div class="review-row">
+                                <span class="review-label">Bodily Injury</span>
+                                <span class="review-value">$300,000 / $500,000</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Property Damage</span>
+                                <span class="review-value">$100,000</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="review-section">
+                        <h3>Vehicle Coverage</h3>
+                        <div class="review-card">
+                            <h4>2006 FORD FUSION</h4>
+                            <div class="review-row">
+                                <span class="review-label">Comprehensive</span>
+                                <span class="review-value">$1,000 deductible</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Collision</span>
+                                <span class="review-value">$1,000 deductible</span>
+                            </div>
+                        </div>
+
+                        <div class="review-card" style="margin-top: 16px;">
+                            <h4>2017 CADILLAC XT5</h4>
+                            <div class="review-row">
+                                <span class="review-label">Comprehensive</span>
+                                <span class="review-value">$500 deductible</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Collision</span>
+                                <span class="review-value">$500 deductible</span>
+                            </div>
+                            <div class="review-row">
+                                <span class="review-label">Rental Reimbursement</span>
+                                <span class="review-value">$30/day, 30 days max</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">Make Changes</button>
+                        <button class="btn btn-primary">Looks Good! Continue →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">6-Month Policy</div>
+                    <div class="price-amount">$415<span style="font-size: 40px;">.50</span></div>
+                    <div class="price-details">Due today + 5 payments of $415.50</div>
+
+                    <div class="price-breakdown">
+                        <div class="price-item">
+                            <span class="price-item-label">Base premium</span>
+                            <span class="price-item-value">$2,645.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Multi-Car Discount</span>
+                            <span class="price-item-value">-$150.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Superior Driver</span>
+                            <span class="price-item-value">-$75.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Total 6-month</span>
+                            <span class="price-item-value">$2,493.00</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 10: Signing Ceremony Initial -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 10 of 19</div>
+            <h2>Almost done!<br>We need your signature.</h2>
+            <p class="subtitle">By signing below, you agree to the policy terms and conditions.</p>
+
+            <div class="signature-pad">
+                Click to sign
+            </div>
+
+            <div class="form-group" style="max-width: 500px; margin: 32px auto;">
+                <label>Signature Date</label>
+                <input type="date" value="2024-11-09" readonly>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">Review Terms</button>
+                <button class="btn btn-primary">Sign & Continue →</button>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Signing Ceremony Expanded -->
+        <div class="screen">
+            <div class="screen-indicator">Signature Pad (Expanded)</div>
+            <h2>Sign Your Policy Documents</h2>
+            <p class="subtitle">Please sign using your mouse or touchscreen.</p>
+
+            <div class="signature-pad expanded">
+                [Signature canvas area - draw your signature here]
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">Clear</button>
+                <button class="btn btn-primary">Accept Signature</button>
+            </div>
+        </div>
+
+        <!-- Screen 11: Checkout Page -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 11 of 19</div>
+            <h2>Secure Checkout</h2>
+            <p class="subtitle">Choose your payment method and complete your purchase.</p>
+
+            <div class="checkout-section">
+                <h3>Payment Method</h3>
+                <div class="payment-method-grid">
+                    <div class="payment-method-card selected">
+                        <div class="payment-icon">💳</div>
+                        <h4>Credit/Debit Card</h4>
+                        <p style="font-size: 14px; color: #718096;">Visa, Mastercard, Amex</p>
+                    </div>
+                    <div class="payment-method-card">
+                        <div class="payment-icon">🏦</div>
+                        <h4>Bank Account</h4>
+                        <p style="font-size: 14px; color: #718096;">ACH transfer</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-section">
+                <h3>Account Information</h3>
+                <p class="subtitle">Looks like you're a returning customer!</p>
+
+                <div class="review-card">
+                    <div class="review-row">
+                        <span class="review-label">Email</span>
+                        <span class="review-value">sherrie.beaudry@email.com</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">Account Status</span>
+                        <span class="review-value"><span class="badge badge-success">Verified</span></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Back</button>
+                <button class="btn btn-primary">Enter Payment Details →</button>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Checkout - Non-Existing User -->
+        <div class="screen">
+            <div class="screen-indicator">New Account Setup</div>
+            <h2>Create Your Account</h2>
+            <p class="subtitle">Set up your Everest Insurance account to manage your policy online.</p>
+
+            <div class="form-grid">
+                <div class="form-group full-width">
+                    <label>Email Address <span class="required">*</span></label>
+                    <input type="email" name="email" placeholder="your.email@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Create Password <span class="required">*</span></label>
+                    <input type="password" name="password" placeholder="••••••••">
+                </div>
+                <div class="form-group">
+                    <label>Confirm Password <span class="required">*</span></label>
+                    <input type="password" placeholder="••••••••">
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-primary">Create Account & Continue →</button>
+            </div>
+        </div>
+
+        <!-- Screen 12: Checkout - Credit Card Details -->
+        <div class="screen">
+            <div class="screen-indicator">Screen 12 of 19</div>
+            <h2>Payment Information</h2>
+            <p class="subtitle">Enter your payment details securely. All transactions are encrypted.</p>
+
+            <div class="checkout-section">
+                <h3>Card Details</h3>
+                <div class="form-grid">
+                    <div class="form-group full-width">
+                        <label>Cardholder Name <span class="required">*</span></label>
+                        <input type="text" placeholder="SHERRIE BEAUDRY">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Card Number <span class="required">*</span></label>
+                        <input type="text" placeholder="4532 1234 5678 9010" maxlength="19">
+                    </div>
+                    <div class="form-group">
+                        <label>Expiration Date <span class="required">*</span></label>
+                        <input type="text" placeholder="MM/YY" maxlength="5">
+                    </div>
+                    <div class="form-group">
+                        <label>CVV <span class="required">*</span></label>
+                        <input type="text" placeholder="123" maxlength="4">
+                    </div>
+                    <div class="form-group full-width">
+                        <label>Billing ZIP Code <span class="required">*</span></label>
+                        <input type="text" placeholder="94105">
+                    </div>
+                </div>
+            </div>
+
+            <div class="checkout-section">
+                <h3>Payment Summary</h3>
+                <div class="review-card">
+                    <div class="review-row">
+                        <span class="review-label">Today's Payment</span>
+                        <span class="review-value">$415.50</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">Remaining (5 payments)</span>
+                        <span class="review-value">5 × $415.50</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">Total Policy Cost</span>
+                        <span class="review-value">$2,493.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Back</button>
+                <button class="btn btn-primary">Complete Purchase ($415.50) →</button>
+            </div>
+        </div>
+
+        <!-- Screen 13: Payment Processing -->
+        <div class="screen loading-screen">
+            <div class="screen-indicator">Screen 13 of 19</div>
+            <h2>Processing Your Payment...</h2>
+            <p class="subtitle">Please don't close this window. We're securely processing your payment.</p>
+
+            <div class="loading-animation">
+                <div class="car-icon"></div>
+            </div>
+
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="loading-step complete">Payment authorized</div>
+                <div class="loading-step active">Binding policy</div>
+                <div class="loading-step">Generating documents</div>
+            </div>
+        </div>
+
+        <!-- Final Screen: Success -->
+        <div class="screen">
+            <div class="screen-indicator">🎉 Policy Active</div>
+            <div style="text-align: center; padding: 60px 0;">
+                <div style="font-size: 80px; margin-bottom: 24px;">✓</div>
+                <h1>Congratulations!</h1>
+                <h2 style="color: #667eea; margin-top: 16px;">Your policy is now active.</h2>
+                <p class="subtitle" style="max-width: 600px; margin: 24px auto;">
+                    Policy Number: <strong>DZQV87Z4FH</strong><br>
+                    Effective: November 9, 2024<br>
+                    Coverage: 6 months
+                </p>
+
+                <div class="review-card" style="max-width: 600px; margin: 40px auto;">
+                    <h3 style="margin-bottom: 24px;">What's Next?</h3>
+                    <div class="review-row">
+                        <span class="review-label">📧 Check Your Email</span>
+                        <span class="review-value">Documents sent</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">📱 Download ID Cards</span>
+                        <span class="review-value">Ready now</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">🏠 Access Portal</span>
+                        <span class="review-value">Manage your policy</span>
+                    </div>
+                </div>
+
+                <div class="btn-actions" style="margin-top: 48px;">
+                    <button class="btn btn-secondary">Download ID Cards</button>
+                    <button class="btn btn-primary">Go to My Policy Portal →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

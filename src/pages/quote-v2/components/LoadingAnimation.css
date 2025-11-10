@@ -1,0 +1,149 @@
+/**
+ * LoadingAnimation Styling
+ *
+ * 60fps animations using transform and opacity only for GPU acceleration
+ * - Car bounce animation
+ * - Progress bar fill
+ * - Spinner rotation
+ * - Checkmark appearance
+ *
+ * Respects prefers-reduced-motion for accessibility
+ */
+
+.loading-animation-container {
+  padding: 48px 24px;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Car Icon with Bounce Animation */
+.loading-car-icon {
+  color: #667eea;
+  animation: carBounce 1s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes carBounce {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+/* Progress Bar */
+.progress-bar {
+  width: 100%;
+  max-width: 400px;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 4px;
+  transition: width 0.5s ease;
+  animation: progressFill 0.5s ease;
+  will-change: width;
+}
+
+@keyframes progressFill {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* Loading Steps */
+.loading-step {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.loading-step-loading {
+  background-color: #f7fafc;
+}
+
+.step-indicator {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+/* Pending Dot */
+.step-dot {
+  width: 8px;
+  height: 8px;
+  background: #cbd5e0;
+  border-radius: 50%;
+}
+
+/* Loading Spinner */
+.spinner {
+  width: 20px;
+  height: 20px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  will-change: transform;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Completed Checkmark */
+.checkmark {
+  animation: checkmarkAppear 0.3s ease;
+  will-change: opacity, transform;
+}
+
+@keyframes checkmarkAppear {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  .loading-car-icon {
+    animation: none;
+  }
+
+  .progress-bar-fill {
+    animation: none;
+  }
+
+  .spinner {
+    animation: none;
+    border-top-color: #667eea;
+    border-right-color: #667eea;
+  }
+
+  .checkmark {
+    animation: none;
+  }
+}

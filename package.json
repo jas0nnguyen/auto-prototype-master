@@ -60,6 +60,7 @@
     "@types/handlebars": "^4.0.40",
     "@types/react": "^18.2.0",
     "@types/react-dom": "^18.2.0",
+    "@types/react-signature-canvas": "^1.0.7",
     "@vercel/blob": "^2.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.1",
@@ -69,7 +70,9 @@
     "playwright-core": "^1.56.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
+    "react-focus-lock": "^2.13.6",
     "react-router-dom": "^7.6.2",
+    "react-signature-canvas": "^1.0.7",
     "reflect-metadata": "^0.2.1",
     "rxjs": "^7.8.1",
     "uuid": "^9.0.1"

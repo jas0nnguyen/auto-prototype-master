@@ -1,0 +1,276 @@
+openapi: 3.0.3
+info:
+  title: Signature API
+  description: API endpoints for digital signature capture and storage
+  version: 1.0.0
+  contact:
+    name: Auto Insurance Prototype
+    email: support@example.com
+
+servers:
+  - url: http://localhost:3000/api/v1
+    description: Local development
+  - url: https://api.example.com/v1
+    description: Production
+
+paths:
+  /signatures:
+    post:
+      summary: Create a new signature
+      description: Store a digital signature captured during the signing ceremony
+      operationId: createSignature
+      tags:
+        - Signatures
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSignatureRequest'
+            examples:
+              validSignature:
+                summary: Valid signature submission
+                value:
+                  quote_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                  party_id: "b1ffce99-9c0b-4ef8-bb6d-6bb9bd380a22"
+                  signature_image_data: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+                  signature_format: "PNG"
+      responses:
+        '201':
+          description: Signature created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureResponse'
+              examples:
+                success:
+                  summary: Successful signature creation
+                  value:
+                    status: "success"
+                    data:
+                      signature_id: "550e8400-e29b-41d4-a716-446655440000"
+                      quote_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                      party_id: "b1ffce99-9c0b-4ef8-bb6d-6bb9bd380a22"
+                      signature_format: "PNG"
+                      signature_date: "2025-11-09T14:30:00Z"
+                      created_at: "2025-11-09T14:30:00Z"
+        '400':
+          description: Invalid request data
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptySignature:
+                  summary: Empty signature data
+                  value:
+                    status: "error"
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "Signature image data is required"
+                invalidFormat:
+                  summary: Invalid signature format
+                  value:
+                    status: "error"
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "Signature format must be PNG or JPEG"
+                tooLarge:
+                  summary: Signature file too large
+                  value:
+                    status: "error"
+                    error:
+                      code: "VALIDATION_ERROR"
+                      message: "Signature image exceeds 1MB limit"
+        '404':
+          description: Quote or Party not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                quoteNotFound:
+                  summary: Quote not found
+                  value:
+                    status: "error"
+                    error:
+                      code: "NOT_FOUND"
+                      message: "Quote with ID a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11 not found"
+        '409':
+          description: Signature already exists for this quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                duplicate:
+                  summary: Duplicate signature
+                  value:
+                    status: "error"
+                    error:
+                      code: "DUPLICATE"
+                      message: "Signature already exists for this quote"
+
+  /signatures/{quoteId}:
+    get:
+      summary: Get signature by quote ID
+      description: Retrieve the signature associated with a specific quote
+      operationId: getSignatureByQuoteId
+      tags:
+        - Signatures
+      parameters:
+        - name: quoteId
+          in: path
+          required: true
+          description: UUID of the quote
+          schema:
+            type: string
+            format: uuid
+          example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+      responses:
+        '200':
+          description: Signature found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignatureResponse'
+              examples:
+                success:
+                  summary: Signature retrieved
+                  value:
+                    status: "success"
+                    data:
+                      signature_id: "550e8400-e29b-41d4-a716-446655440000"
+                      quote_id: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+                      party_id: "b1ffce99-9c0b-4ef8-bb6d-6bb9bd380a22"
+                      signature_image_data: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+                      signature_format: "PNG"
+                      signature_date: "2025-11-09T14:30:00Z"
+                      created_at: "2025-11-09T14:30:00Z"
+        '404':
+          description: Signature not found for this quote
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  summary: No signature found
+                  value:
+                    status: "error"
+                    error:
+                      code: "NOT_FOUND"
+                      message: "No signature found for quote ID a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+
+components:
+  schemas:
+    CreateSignatureRequest:
+      type: object
+      required:
+        - quote_id
+        - party_id
+        - signature_image_data
+        - signature_format
+      properties:
+        quote_id:
+          type: string
+          format: uuid
+          description: UUID of the quote being signed
+          example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+        party_id:
+          type: string
+          format: uuid
+          description: UUID of the party (signer)
+          example: "b1ffce99-9c0b-4ef8-bb6d-6bb9bd380a22"
+        signature_image_data:
+          type: string
+          description: Base64-encoded signature image (PNG or JPEG)
+          maxLength: 1400000
+          example: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+        signature_format:
+          type: string
+          enum: [PNG, JPEG]
+          description: Image format of the signature
+          example: "PNG"
+
+    SignatureResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [success]
+          example: "success"
+        data:
+          type: object
+          properties:
+            signature_id:
+              type: string
+              format: uuid
+              description: UUID of the created signature
+              example: "550e8400-e29b-41d4-a716-446655440000"
+            quote_id:
+              type: string
+              format: uuid
+              description: UUID of the associated quote
+              example: "a0eebc99-9c0b-4ef8-bb6d-6bb9bd380a11"
+            party_id:
+              type: string
+              format: uuid
+              description: UUID of the signer
+              example: "b1ffce99-9c0b-4ef8-bb6d-6bb9bd380a22"
+            signature_image_data:
+              type: string
+              description: Base64-encoded signature image
+              example: "data:image/png;base64,iVBORw0KGgoAAAANS..."
+            signature_format:
+              type: string
+              enum: [PNG, JPEG]
+              example: "PNG"
+            signature_date:
+              type: string
+              format: date-time
+              description: Timestamp when signature was created
+              example: "2025-11-09T14:30:00Z"
+            created_at:
+              type: string
+              format: date-time
+              example: "2025-11-09T14:30:00Z"
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: [error]
+          example: "error"
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: [VALIDATION_ERROR, NOT_FOUND, DUPLICATE, INTERNAL_ERROR]
+              example: "VALIDATION_ERROR"
+            message:
+              type: string
+              description: Human-readable error message
+              example: "Signature image data is required"
+            details:
+              type: array
+              items:
+                type: object
+                properties:
+                  field:
+                    type: string
+                    example: "signature_image_data"
+                  message:
+                    type: string
+                    example: "Field is required"
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication (not required for demo)
+
+security: []

@@ -1,0 +1,193 @@
+/**
+ * TechStartupButton.css (T047)
+ *
+ * Custom styling for TechStartupButton component.
+ * Adds gradient background and hover effects to Canary Button.
+ *
+ * DESIGN:
+ * - Gradient: #667eea → #764ba2 (purple spectrum)
+ * - Hover: Lift effect with enhanced shadow
+ * - Transition: Smooth 0.2s animation
+ *
+ * CSS SPECIFICITY:
+ * These styles are additive to Canary Button's base styles.
+ * The .tech-startup-button class adds/overrides specific properties.
+ */
+
+/**
+ * Base Button Styling (T047)
+ *
+ * Gradient background and rounded corners for tech startup aesthetic.
+ */
+.tech-startup-button {
+  /* Gradient Background: Purple spectrum */
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+
+  /* Override any default background color from Canary */
+  background-color: transparent;
+
+  /* White text for contrast on gradient */
+  color: #ffffff;
+
+  /* Border: None (gradient provides visual boundary) */
+  border: none;
+
+  /* Rounded corners for modern look */
+  border-radius: 8px;
+
+  /* Padding: Comfortable spacing */
+  padding: 12px 24px;
+
+  /* Font: Bold and clean */
+  font-weight: 600;
+  font-size: 16px;
+
+  /* Cursor: Indicate clickability */
+  cursor: pointer;
+
+  /* Transition: Smooth animations */
+  transition: all 0.2s ease-in-out;
+
+  /* Base shadow: Subtle depth */
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+}
+
+/**
+ * Hover State (T047)
+ *
+ * Lift effect on hover with enhanced shadow.
+ * Creates sense of elevation and interactivity.
+ */
+.tech-startup-button:hover {
+  /* Transform: Lift up 2px */
+  transform: translateY(-2px);
+
+  /* Enhanced shadow: Stronger depth on hover */
+  box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+
+  /* Slight brightness increase */
+  filter: brightness(1.05);
+}
+
+/**
+ * Active State (Click)
+ *
+ * Press down effect when button is clicked.
+ */
+.tech-startup-button:active {
+  /* Transform: Push down 1px */
+  transform: translateY(1px);
+
+  /* Reduced shadow: Less depth when pressed */
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+}
+
+/**
+ * Focus State (Accessibility)
+ *
+ * Visible outline when button is focused via keyboard.
+ * Important for accessibility and keyboard navigation.
+ */
+.tech-startup-button:focus {
+  /* Outline: Bright ring for visibility */
+  outline: 2px solid #f093fb;
+  outline-offset: 2px;
+}
+
+/**
+ * Disabled State
+ *
+ * Muted appearance when button is disabled.
+ */
+.tech-startup-button:disabled {
+  /* Opacity: Semi-transparent */
+  opacity: 0.5;
+
+  /* Cursor: Not allowed */
+  cursor: not-allowed;
+
+  /* Reset transform: No hover effect */
+  transform: none;
+
+  /* Reset shadow: No depth */
+  box-shadow: none;
+}
+
+/**
+ * ============================================================================
+ * CSS ANIMATION BEST PRACTICES
+ * ============================================================================
+ *
+ * KEY CONCEPTS:
+ *
+ * 1. TRANSFORM
+ *    - translateY(): Move vertically (Y-axis)
+ *    - More performant than changing 'top' or 'margin'
+ *    - GPU-accelerated on modern browsers
+ *
+ * 2. TRANSITION
+ *    - all: Animate all changing properties
+ *    - 0.2s: Duration (200 milliseconds)
+ *    - ease-in-out: Timing function (smooth start/end)
+ *
+ * 3. BOX-SHADOW
+ *    - X-offset Y-offset blur spread color
+ *    - 0 8px 16px rgba(102,126,234,0.3)
+ *    - Larger values = more depth
+ *
+ * 4. FILTER
+ *    - brightness(1.05): 5% brighter
+ *    - contrast(), saturate(), etc. also available
+ *    - Applies to entire element
+ *
+ * ANALOGIES:
+ *
+ * - transform: translateY() = Elevator
+ *   - Negative value (-2px) = Move up
+ *   - Positive value (1px) = Move down
+ *   - Smooth transition between floors
+ *
+ * - box-shadow = Sunlight Shadow
+ *   - Closer object = Shorter shadow (active)
+ *   - Higher object = Longer shadow (hover)
+ *   - On surface = No shadow (disabled)
+ *
+ * - transition = Crossfade
+ *   - From state A to state B
+ *   - Smooth animation in between
+ *   - Duration controls speed
+ *
+ * ACCESSIBILITY CONSIDERATIONS:
+ *
+ * 1. Focus Outline
+ *    - Always provide visible focus state
+ *    - Important for keyboard users
+ *    - Never use outline: none without alternative
+ *
+ * 2. Disabled State
+ *    - Clear visual indication (opacity)
+ *    - cursor: not-allowed tells user it's disabled
+ *    - No hover effects when disabled
+ *
+ * 3. Color Contrast
+ *    - White text on gradient background
+ *    - Ensure WCAG AA compliance (4.5:1 ratio)
+ *    - Test with accessibility tools
+ *
+ * PERFORMANCE TIPS:
+ *
+ * 1. Use transform/opacity for animations
+ *    - GPU-accelerated
+ *    - Smooth 60fps animations
+ *    - Better than animating width/height/position
+ *
+ * 2. Keep transitions short
+ *    - 0.2s feels responsive
+ *    - >0.5s feels sluggish
+ *    - Match duration to interaction
+ *
+ * 3. Use will-change sparingly
+ *    - Only for complex animations
+ *    - Can hurt performance if overused
+ *    - Not needed for simple hover effects
+ */
