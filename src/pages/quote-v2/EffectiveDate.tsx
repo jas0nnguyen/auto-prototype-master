@@ -45,12 +45,12 @@ const EffectiveDate: React.FC = () => {
       return false;
     }
 
-    const selected = new Date(effectiveDate);
+    // Compare date strings directly to avoid timezone issues
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
-    tomorrow.setHours(0, 0, 0, 0);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
 
-    if (selected < tomorrow) {
+    if (effectiveDate < tomorrowStr) {
       setError('Coverage must start tomorrow or later');
       return false;
     }
@@ -95,16 +95,22 @@ const EffectiveDate: React.FC = () => {
 
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '400px' }}>
             <Layout display="flex-column" gap="large">
-              <TextInput
-                type="date"
-                label="Coverage Start Date"
-                value={effectiveDate}
-                onChange={(e) => handleDateChange(e.target.value)}
-                error={!!error}
-                errorMessage={error}
-                min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // tomorrow
-                required
-              />
+              <div>
+                <TextInput
+                  type="date"
+                  label="Coverage Start Date"
+                  value={effectiveDate}
+                  onChange={(e) => handleDateChange(e.target.value)}
+                  error={!!error}
+                  min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // tomorrow
+                  required
+                />
+                {error && (
+                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                    {error}
+                  </Text>
+                )}
+              </div>
 
               <Layout display="flex" gap="medium" flexJustify="space-between">
                 <Button

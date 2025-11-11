@@ -37,7 +37,78 @@ interface EditDriverModalProps {
   onSave: (driver: Driver) => void;
 }
 
-const US_STATES = ['AL', 'AK', 'AZ', 'AR', 'CA', 'CO', 'CT', 'DE', 'FL', 'GA', 'HI', 'ID', 'IL', 'IN', 'IA', 'KS', 'KY', 'LA', 'ME', 'MD', 'MA', 'MI', 'MN', 'MS', 'MO', 'MT', 'NE', 'NV', 'NH', 'NJ', 'NM', 'NY', 'NC', 'ND', 'OH', 'OK', 'OR', 'PA', 'RI', 'SC', 'SD', 'TN', 'TX', 'UT', 'VT', 'VA', 'WA', 'WV', 'WI', 'WY'];
+const US_STATES = [
+  { label: 'AL', value: 'AL' },
+  { label: 'AK', value: 'AK' },
+  { label: 'AZ', value: 'AZ' },
+  { label: 'AR', value: 'AR' },
+  { label: 'CA', value: 'CA' },
+  { label: 'CO', value: 'CO' },
+  { label: 'CT', value: 'CT' },
+  { label: 'DE', value: 'DE' },
+  { label: 'FL', value: 'FL' },
+  { label: 'GA', value: 'GA' },
+  { label: 'HI', value: 'HI' },
+  { label: 'ID', value: 'ID' },
+  { label: 'IL', value: 'IL' },
+  { label: 'IN', value: 'IN' },
+  { label: 'IA', value: 'IA' },
+  { label: 'KS', value: 'KS' },
+  { label: 'KY', value: 'KY' },
+  { label: 'LA', value: 'LA' },
+  { label: 'ME', value: 'ME' },
+  { label: 'MD', value: 'MD' },
+  { label: 'MA', value: 'MA' },
+  { label: 'MI', value: 'MI' },
+  { label: 'MN', value: 'MN' },
+  { label: 'MS', value: 'MS' },
+  { label: 'MO', value: 'MO' },
+  { label: 'MT', value: 'MT' },
+  { label: 'NE', value: 'NE' },
+  { label: 'NV', value: 'NV' },
+  { label: 'NH', value: 'NH' },
+  { label: 'NJ', value: 'NJ' },
+  { label: 'NM', value: 'NM' },
+  { label: 'NY', value: 'NY' },
+  { label: 'NC', value: 'NC' },
+  { label: 'ND', value: 'ND' },
+  { label: 'OH', value: 'OH' },
+  { label: 'OK', value: 'OK' },
+  { label: 'OR', value: 'OR' },
+  { label: 'PA', value: 'PA' },
+  { label: 'RI', value: 'RI' },
+  { label: 'SC', value: 'SC' },
+  { label: 'SD', value: 'SD' },
+  { label: 'TN', value: 'TN' },
+  { label: 'TX', value: 'TX' },
+  { label: 'UT', value: 'UT' },
+  { label: 'VT', value: 'VT' },
+  { label: 'VA', value: 'VA' },
+  { label: 'WA', value: 'WA' },
+  { label: 'WV', value: 'WV' },
+  { label: 'WI', value: 'WI' },
+  { label: 'WY', value: 'WY' }
+];
+
+const GENDER_OPTIONS = [
+  { label: 'Male', value: 'M' },
+  { label: 'Female', value: 'F' },
+  { label: 'Non-binary', value: 'X' }
+];
+
+const MARITAL_STATUS_OPTIONS = [
+  { label: 'Single', value: 'SINGLE' },
+  { label: 'Married', value: 'MARRIED' },
+  { label: 'Divorced', value: 'DIVORCED' },
+  { label: 'Widowed', value: 'WIDOWED' }
+];
+
+const RELATIONSHIP_OPTIONS = [
+  { label: 'Spouse', value: 'SPOUSE' },
+  { label: 'Child', value: 'CHILD' },
+  { label: 'Parent', value: 'PARENT' },
+  { label: 'Other', value: 'OTHER' }
+];
 
 export const EditDriverModal: React.FC<EditDriverModalProps> = ({
   driver,
@@ -48,9 +119,12 @@ export const EditDriverModal: React.FC<EditDriverModalProps> = ({
 }) => {
   const [formData, setFormData] = useState<Driver>(driver);
 
+  // Only reset form data when modal opens, not on every driver prop change
   useEffect(() => {
-    setFormData(driver);
-  }, [driver]);
+    if (isOpen) {
+      setFormData(driver);
+    }
+  }, [isOpen, driver.id]); // Only re-initialize when modal opens or driver ID changes
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -98,6 +172,8 @@ export const EditDriverModal: React.FC<EditDriverModalProps> = ({
             width: '90%',
             maxHeight: '90vh',
             overflowY: 'auto',
+            position: 'relative',
+            zIndex: 1001,
           }}
         >
           <form onSubmit={handleSubmit}>
@@ -128,7 +204,7 @@ export const EditDriverModal: React.FC<EditDriverModalProps> = ({
                 />
               </Layout>
 
-              <Input
+              <TextInput
                 type="date"
                 label="Date of Birth"
                 value={formData.birthDate}
@@ -137,57 +213,53 @@ export const EditDriverModal: React.FC<EditDriverModalProps> = ({
               />
 
               <Layout display="flex" gap="medium">
-                <Select
-                  label="Gender"
-                  value={formData.genderCode || ''}
-                  onChange={(e) => setFormData({...formData, genderCode: e.target.value})}
-                >
-                  <option value="">Select</option>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                  <option value="X">Non-binary</option>
-                </Select>
-                <Select
-                  label="Marital Status"
-                  value={formData.maritalStatus || ''}
-                  onChange={(e) => setFormData({...formData, maritalStatus: e.target.value})}
-                >
-                  <option value="">Select</option>
-                  <option value="SINGLE">Single</option>
-                  <option value="MARRIED">Married</option>
-                  <option value="DIVORCED">Divorced</option>
-                  <option value="WIDOWED">Widowed</option>
-                </Select>
+                <div style={{ flex: 1 }}>
+                  <Select
+                    label="Gender"
+                    placeholder="Select gender"
+                    value={formData.genderCode || ''}
+                    onChange={(value) => setFormData({...formData, genderCode: value})}
+                    options={GENDER_OPTIONS}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Select
+                    label="Marital Status"
+                    placeholder="Select status"
+                    value={formData.maritalStatus || ''}
+                    onChange={(value) => setFormData({...formData, maritalStatus: value})}
+                    options={MARITAL_STATUS_OPTIONS}
+                  />
+                </div>
               </Layout>
 
               <Layout display="flex" gap="medium">
-                <TextInput
-                  label="License Number"
-                  value={formData.licenseNumber || ''}
-                  onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
-                />
-                <Select
-                  label="License State"
-                  value={formData.licenseState || ''}
-                  onChange={(e) => setFormData({...formData, licenseState: e.target.value})}
-                >
-                  <option value="">Select State</option>
-                  {US_STATES.map(state => <option key={state} value={state}>{state}</option>)}
-                </Select>
+                <div style={{ flex: 1 }}>
+                  <TextInput
+                    label="License Number"
+                    value={formData.licenseNumber || ''}
+                    onChange={(e) => setFormData({...formData, licenseNumber: e.target.value})}
+                  />
+                </div>
+                <div style={{ flex: 1 }}>
+                  <Select
+                    label="License State"
+                    placeholder="Select state"
+                    value={formData.licenseState || ''}
+                    onChange={(value) => setFormData({...formData, licenseState: value})}
+                    options={US_STATES}
+                  />
+                </div>
               </Layout>
 
               {!isPrimary && (
                 <Select
                   label="Relationship"
+                  placeholder="Select relationship"
                   value={formData.relationshipType || ''}
-                  onChange={(e) => setFormData({...formData, relationshipType: e.target.value})}
-                >
-                  <option value="">Select</option>
-                  <option value="SPOUSE">Spouse</option>
-                  <option value="CHILD">Child</option>
-                  <option value="PARENT">Parent</option>
-                  <option value="OTHER">Other</option>
-                </Select>
+                  onChange={(value) => setFormData({...formData, relationshipType: value})}
+                  options={RELATIONSHIP_OPTIONS}
+                />
               )}
 
               <Layout display="flex" gap="medium" flexJustify="flex-end">

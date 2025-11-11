@@ -6,7 +6,6 @@ import {
   Text
 } from '@sureapp/canary-design-system';
 import './PriceSidebar.css';
-import { useQuoteContext } from '../contexts/QuoteContext';
 
 /**
  * PriceSidebar Component - T095
@@ -22,7 +21,7 @@ import { useQuoteContext } from '../contexts/QuoteContext';
  * - Desktop (≥1024px): Sticky sidebar at top: 120px
  * - Mobile (<1024px): Fixed bottom bar with "View Details" button
  *
- * Data source: useQuoteContext() - real-time quote data
+ * Data source: quote prop passed from parent component
  */
 
 interface Discount {
@@ -30,13 +29,20 @@ interface Discount {
   amount: number;
 }
 
-export const PriceSidebar: React.FC = () => {
-  const { quote, isLoading } = useQuoteContext();
+interface PriceSidebarProps {
+  quote?: any;
+  isLoading?: boolean;
+}
+
+export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = false }) => {
   const [isMobileDetailsOpen, setIsMobileDetailsOpen] = React.useState(false);
 
+  console.log('[PriceSidebar] Quote:', quote);
+  console.log('[PriceSidebar] Premium:', quote?.premium);
+
   // Extract premium data from quote
-  const sixMonthPremium = quote?.premium?.total || 0;
-  const dueToday = quote?.premium?.dueToday || 0;
+  const sixMonthPremium = quote?.premium?.total || quote?.premium?.sixMonth || 0;
+  const dueToday = quote?.premium?.dueToday || (sixMonthPremium / 6) || 0;
   const remainingPayments = 5; // Standard 6-month policy = 1 down + 5 remaining
   const paymentAmount = sixMonthPremium > 0 ? sixMonthPremium / 6 : 0;
 

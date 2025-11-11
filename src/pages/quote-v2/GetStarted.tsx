@@ -195,9 +195,13 @@ const GetStarted: React.FC = () => {
                       value={formData.first_name}
                       onChange={(e) => handleInputChange('first_name', e.target.value)}
                       error={!!errors.first_name}
-                      errorMessage={errors.first_name}
                       required
                     />
+                    {errors.first_name && (
+                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                        {errors.first_name}
+                      </Text>
+                    )}
                   </div>
                   <div style={{ flex: 1 }}>
                     <TextInput
@@ -206,9 +210,13 @@ const GetStarted: React.FC = () => {
                       value={formData.last_name}
                       onChange={(e) => handleInputChange('last_name', e.target.value)}
                       error={!!errors.last_name}
-                      errorMessage={errors.last_name}
                       required
                     />
+                    {errors.last_name && (
+                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                        {errors.last_name}
+                      </Text>
+                    )}
                   </div>
                 </Layout>
               </Layout>
@@ -223,9 +231,13 @@ const GetStarted: React.FC = () => {
                   value={formData.line_1_address}
                   onChange={(e) => handleInputChange('line_1_address', e.target.value)}
                   error={!!errors.line_1_address}
-                  errorMessage={errors.line_1_address}
                   required
                 />
+                {errors.line_1_address && (
+                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                    {errors.line_1_address}
+                  </Text>
+                )}
 
                 <TextInput
                   type="text"
@@ -242,9 +254,13 @@ const GetStarted: React.FC = () => {
                       value={formData.municipality_name}
                       onChange={(e) => handleInputChange('municipality_name', e.target.value)}
                       error={!!errors.municipality_name}
-                      errorMessage={errors.municipality_name}
                       required
                     />
+                    {errors.municipality_name && (
+                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                        {errors.municipality_name}
+                      </Text>
+                    )}
                   </div>
                   <div style={{ flex: 1 }}>
                     <Select
@@ -266,10 +282,14 @@ const GetStarted: React.FC = () => {
                       value={formData.postal_code}
                       onChange={(e) => handleInputChange('postal_code', e.target.value)}
                       error={!!errors.postal_code}
-                      errorMessage={errors.postal_code}
                       maxLength={5}
                       required
                     />
+                    {errors.postal_code && (
+                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                        {errors.postal_code}
+                      </Text>
+                    )}
                   </div>
                 </Layout>
               </Layout>
@@ -283,10 +303,14 @@ const GetStarted: React.FC = () => {
                   value={formData.birth_date}
                   onChange={(e) => handleInputChange('birth_date', e.target.value)}
                   error={!!errors.birth_date}
-                  errorMessage={errors.birth_date}
                   max={new Date().toISOString().split('T')[0]}
                   required
                 />
+                {errors.birth_date && (
+                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                    {errors.birth_date}
+                  </Text>
+                )}
               </Layout>
 
               {/* Submit Button */}

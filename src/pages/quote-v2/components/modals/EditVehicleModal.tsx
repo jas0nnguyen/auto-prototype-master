@@ -47,18 +47,21 @@ interface EditVehicleModalProps {
 }
 
 const CURRENT_YEAR = new Date().getFullYear();
-const YEARS = Array.from({ length: 30 }, (_, i) => CURRENT_YEAR - i);
+const YEARS = Array.from({ length: 30 }, (_, i) => {
+  const year = CURRENT_YEAR - i;
+  return { label: year.toString(), value: year.toString() };
+});
 
 const OWNERSHIP_STATUS = [
-  { value: 'OWNED', label: 'Owned' },
-  { value: 'FINANCED', label: 'Financed' },
-  { value: 'LEASED', label: 'Leased' },
+  { label: 'Owned', value: 'OWNED' },
+  { label: 'Financed', value: 'FINANCED' },
+  { label: 'Leased', value: 'LEASED' },
 ];
 
 const VEHICLE_USE = [
-  { value: 'COMMUTE', label: 'Commute to work/school' },
-  { value: 'PLEASURE', label: 'Pleasure/Personal use' },
-  { value: 'BUSINESS', label: 'Business use' },
+  { label: 'Commute to work/school', value: 'COMMUTE' },
+  { label: 'Pleasure/Personal use', value: 'PLEASURE' },
+  { label: 'Business use', value: 'BUSINESS' },
 ];
 
 export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
@@ -70,9 +73,13 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
   const [formData, setFormData] = useState<Vehicle>(vehicle);
   const [errors, setErrors] = useState<Partial<Record<keyof Vehicle, string>>>({});
 
+  // Only reset form data when modal opens, not on every vehicle prop change
   useEffect(() => {
-    setFormData(vehicle);
-  }, [vehicle]);
+    if (isOpen) {
+      setFormData(vehicle);
+      setErrors({});
+    }
+  }, [isOpen, vehicle.id]); // Only re-initialize when modal opens or vehicle ID changes
 
   // ESC key handler
   useEffect(() => {
@@ -158,6 +165,8 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
             width: '90%',
             maxHeight: '90vh',
             overflowY: 'auto',
+            position: 'relative',
+            zIndex: 1001,
           }}
         >
           <form onSubmit={handleSubmit}>
@@ -186,16 +195,12 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
                 <div style={{ flex: 1 }}>
                   <Select
                     label="Year"
+                    placeholder="Select year"
                     value={formData.year.toString()}
-                    onChange={(e) => handleInputChange('year', Number(e.target.value))}
-                    error={errors.year}
+                    onChange={(value) => handleInputChange('year', Number(value))}
+                    options={YEARS}
                     required
-                  >
-                    <option value="">Select Year</option>
-                    {YEARS.map(year => (
-                      <option key={year} value={year}>{year}</option>
-                    ))}
-                  </Select>
+                  />
                 </div>
                 <div style={{ flex: 1 }}>
                   <TextInput
@@ -203,7 +208,7 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
                     label="Make"
                     value={formData.make}
                     onChange={(e) => handleInputChange('make', e.target.value)}
-                    error={errors.make}
+                    error={!!errors.make}
                     required
                   />
                 </div>
@@ -214,7 +219,7 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
                 label="Model"
                 value={formData.model}
                 onChange={(e) => handleInputChange('model', e.target.value)}
-                error={errors.model}
+                error={!!errors.model}
                 required
               />
 
@@ -223,22 +228,18 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
                 label="VIN (17 characters)"
                 value={formData.vin}
                 onChange={(e) => handleInputChange('vin', e.target.value.toUpperCase())}
-                error={errors.vin}
+                error={!!errors.vin}
                 maxLength={17}
                 required
               />
 
               <Select
                 label="Ownership Status"
+                placeholder="Select ownership status"
                 value={formData.ownershipStatus || 'OWNED'}
-                onChange={(e) => handleInputChange('ownershipStatus', e.target.value)}
-              >
-                {OWNERSHIP_STATUS.map(status => (
-                  <option key={status.value} value={status.value}>
-                    {status.label}
-                  </option>
-                ))}
-              </Select>
+                onChange={(value) => handleInputChange('ownershipStatus', value)}
+                options={OWNERSHIP_STATUS}
+              />
 
               <TextInput
                 type="number"
@@ -251,15 +252,11 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
 
               <Select
                 label="Primary Use"
+                placeholder="Select primary use"
                 value={formData.useCode || 'COMMUTE'}
-                onChange={(e) => handleInputChange('useCode', e.target.value)}
-              >
-                {VEHICLE_USE.map(use => (
-                  <option key={use.value} value={use.value}>
-                    {use.label}
-                  </option>
-                ))}
-              </Select>
+                onChange={(value) => handleInputChange('useCode', value)}
+                options={VEHICLE_USE}
+              />
 
               <Layout display="flex" gap="medium" flexJustify="flex-end">
                 <Button

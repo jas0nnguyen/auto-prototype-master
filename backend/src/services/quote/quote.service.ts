@@ -63,6 +63,8 @@ export interface CreateQuoteInput {
     maritalStatus?: string;
     yearsLicensed?: number;
     relationship?: string; // spouse, child, parent, sibling, other
+    licenseNumber?: string;
+    licenseState?: string;
   }>;
 
   // Address information (for PNI)
@@ -152,182 +154,185 @@ export class QuoteService {
     });
 
     try {
-      // Step 1: Create Party (the person buying insurance)
-      const [newParty] = await this.db.insert(party).values({
-        party_name: `${input.driver.firstName} ${input.driver.lastName}`,
-        party_type_code: 'PERSON',
-      }).returning();
-
-      this.logger.debug('Created party', { partyId: newParty.party_identifier });
-
-      // Step 2: Create Person (detailed person info)
-      await this.db.insert(person).values({
-        person_identifier: newParty.party_identifier, // Subtype shares PK
-        first_name: input.driver.firstName,
-        last_name: input.driver.lastName,
-        birth_date: formatDateToYYYYMMDD(input.driver.birthDate),
-        gender_code: input.driver.gender || null,
-      }).returning();
-
-      // Step 3: Create Communication Identity (email)
-      await this.db.insert(communicationIdentity).values({
-        party_identifier: newParty.party_identifier,
-        communication_type_code: 'EMAIL',
-        communication_value: input.driver.email,
-      }).returning();
-
-      // Step 4: Create Communication Identity (phone) - only if provided
-      if (input.driver.phone) {
-        await this.db.insert(communicationIdentity).values({
-          party_identifier: newParty.party_identifier,
-          communication_type_code: 'PHONE',
-          communication_value: input.driver.phone,
+      // Wrap all database operations in a transaction to ensure atomicity
+      return await this.db.transaction(async (tx) => {
+        // Step 1: Create Party (the person buying insurance)
+        const [newParty] = await tx.insert(party).values({
+          party_name: `${input.driver.firstName} ${input.driver.lastName}`,
+          party_type_code: 'PERSON',
         }).returning();
-      }
 
-      // Step 5: Create Insurable Object (generic object)
-      const [newInsurableObject] = await this.db.insert(insurableObject).values({
-        insurable_object_type_code: 'VEHICLE',
-        object_description: `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`,
-      }).returning();
+        this.logger.debug('Created party', { partyId: newParty.party_identifier });
 
-      // Step 6: Create Vehicle (specific vehicle details)
-      const vehicleData: any = {
-        vehicle_identifier: newInsurableObject.insurable_object_identifier,
-        vin: primaryVehicle.vin || null,  // Use null instead of empty string for unique constraint
-        make: primaryVehicle.make,
-        model: primaryVehicle.model,
-        year: primaryVehicle.year,
-      };
+        // Step 2: Create Person (detailed person info)
+        await tx.insert(person).values({
+          person_identifier: newParty.party_identifier, // Subtype shares PK
+          first_name: input.driver.firstName,
+          last_name: input.driver.lastName,
+          birth_date: formatDateToYYYYMMDD(input.driver.birthDate),
+          gender_code: input.driver.gender || null,
+        }).returning();
 
-      // Only add optional fields if they have values
-      if (primaryVehicle.bodyType) vehicleData.body_style = primaryVehicle.bodyType;
-      if (primaryVehicle.annualMileage) vehicleData.annual_mileage = primaryVehicle.annualMileage;
+        // Step 3: Create Communication Identity (email)
+        await tx.insert(communicationIdentity).values({
+          party_identifier: newParty.party_identifier,
+          communication_type_code: 'EMAIL',
+          communication_value: input.driver.email,
+        }).returning();
 
-      await this.db.insert(vehicle).values(vehicleData).returning();
+        // Step 4: Create Communication Identity (phone) - only if provided
+        if (input.driver.phone) {
+          await tx.insert(communicationIdentity).values({
+            party_identifier: newParty.party_identifier,
+            communication_type_code: 'PHONE',
+            communication_value: input.driver.phone,
+          }).returning();
+        }
 
-      this.logger.debug('Created vehicle', { vehicleId: newInsurableObject.insurable_object_identifier });
+        // Step 5: Create Insurable Object (generic object)
+        const [newInsurableObject] = await tx.insert(insurableObject).values({
+          insurable_object_type_code: 'VEHICLE',
+          object_description: `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`,
+        }).returning();
 
-      // Step 7: Ensure Product exists (Personal Auto Insurance)
-      const productId = await this.ensureProductExists();
+        // Step 6: Create Vehicle (specific vehicle details)
+        const vehicleData: any = {
+          vehicle_identifier: newInsurableObject.insurable_object_identifier,
+          vin: primaryVehicle.vin || null,  // Use null instead of empty string for unique constraint
+          make: primaryVehicle.make,
+          model: primaryVehicle.model,
+          year: primaryVehicle.year,
+        };
 
-      // Step 8: Calculate premium (before creating agreement so we can store it)
-      const premium = this.calculatePremium(input);
+        // Only add optional fields if they have values
+        if (primaryVehicle.bodyType) vehicleData.body_style = primaryVehicle.bodyType;
+        if (primaryVehicle.annualMileage) vehicleData.annual_mileage = primaryVehicle.annualMileage;
 
-      // Step 9: Generate quote number
-      const quoteNumber = this.generateQuoteNumber();
+        await tx.insert(vehicle).values(vehicleData).returning();
 
-      // Step 10: Build complete quote snapshot for CRM (HYBRID APPROACH)
-      // Includes ALL drivers and ALL vehicles for complete CRM data
-      const quoteSnapshot = {
-        // Primary vehicle (backward compatibility)
-        vehicle: input.vehicle ? {
-          year: input.vehicle.year,
-          make: input.vehicle.make,
-          model: input.vehicle.model,
-          vin: input.vehicle.vin || null,
-          bodyType: input.vehicle.bodyType || null,
-          annualMileage: input.vehicle.annualMileage || null,
-        } : null,
-        // ALL vehicles (for multi-vehicle quotes)
-        vehicles: (input.vehicles || []).map(v => ({
-          year: v.year,
-          make: v.make,
-          model: v.model,
-          vin: v.vin || null,
-          bodyType: v.bodyType || null,
-          annualMileage: v.annualMileage || null,
-          primaryDriverId: v.primaryDriverId || null,
-        })),
-        // Primary driver (PNI - Primary Named Insured)
-        driver: {
-          firstName: input.driver.firstName,
-          lastName: input.driver.lastName,
-          birthDate: formatDateToYYYYMMDD(input.driver.birthDate),
-          email: input.driver.email,
-          phone: input.driver.phone,
-          gender: input.driver.gender || null,
-          maritalStatus: input.driver.maritalStatus || null,
-          yearsLicensed: input.driver.yearsLicensed || null,
-          isPrimary: true,
-        },
-        // ALL additional drivers (for multi-driver quotes)
-        additionalDrivers: (input.additionalDrivers || []).map(d => ({
-          firstName: d.firstName,
-          lastName: d.lastName,
-          birthDate: formatDateToYYYYMMDD(d.birthDate),
-          email: d.email,
-          phone: d.phone,
-          gender: d.gender || null,
-          maritalStatus: d.maritalStatus || null,
-          yearsLicensed: d.yearsLicensed || null,
-          relationship: d.relationship || null,
-        })),
-        address: {
-          addressLine1: input.address.addressLine1,
-          addressLine2: input.address.addressLine2 || null,
-          city: input.address.city,
-          state: input.address.state,
-          zipCode: input.address.zipCode,
-        },
-        coverages: {
-          startDate: input.coverages?.startDate || null,
-          bodilyInjuryLimit: input.coverages?.bodilyInjuryLimit || null,
-          propertyDamageLimit: input.coverages?.propertyDamageLimit || null,
-          hasCollision: input.coverages?.collision || false,
-          collisionDeductible: input.coverages?.collisionDeductible || null,
-          hasComprehensive: input.coverages?.comprehensive || false,
-          comprehensiveDeductible: input.coverages?.comprehensiveDeductible || null,
-          hasUninsured: input.coverages?.uninsuredMotorist || false,
-          hasRoadside: input.coverages?.roadsideAssistance || false,
-          hasRental: input.coverages?.rentalReimbursement || false,
-          rentalLimit: input.coverages?.rentalLimit || null,
-        },
-        premium: {
-          total: premium,
-          monthly: Math.round(premium / 6 * 100) / 100,
-          sixMonth: premium,
-        },
-        meta: {
-          createdAt: new Date().toISOString(),
-          quoteNumber: quoteNumber,
-          version: 2, // Incremented to v2 to indicate multi-driver/vehicle support
-        },
-      };
+        this.logger.debug('Created vehicle', { vehicleId: newInsurableObject.insurable_object_identifier });
 
-      // Step 11: Create Agreement (parent contract) with driver email and premium
-      const [newAgreement] = await this.db.insert(agreement).values({
-        agreement_type_code: 'POLICY',
-        product_identifier: productId,
-        driver_email: input.driver.email,
-        premium_amount: premium.toString(),
-      }).returning();
+        // Step 7: Ensure Product exists (Personal Auto Insurance)
+        const productId = await this.ensureProductExists(tx);
 
-      // Step 12: Create Policy with snapshot and denormalized fields
-      const [newPolicy] = await this.db.insert(policy).values({
-        policy_identifier: newAgreement.agreement_identifier,
-        policy_number: quoteNumber,
-        effective_date: formatDateToYYYYMMDD(new Date()),
-        expiration_date: formatDateToYYYYMMDD(this.calculateExpirationDate()),
-        status_code: 'QUOTED',
-        quote_snapshot: quoteSnapshot,  // ✅ Complete quote data
-        marital_status: input.driver.maritalStatus || null,  // ✅ Denormalized for queries
-        coverage_start_date: input.coverages?.startDate || null,  // ✅ Denormalized for queries
-      }).returning();
+        // Step 8: Calculate premium (before creating agreement so we can store it)
+        const premium = this.calculatePremium(input);
 
-      this.logger.log('Quote created successfully', {
-        quoteNumber,
-        policyId: newPolicy.policy_identifier,
-        premium
+        // Step 9: Generate quote number
+        const quoteNumber = this.generateQuoteNumber();
+
+        // Step 10: Build complete quote snapshot for CRM (HYBRID APPROACH)
+        // Includes ALL drivers and ALL vehicles for complete CRM data
+        const quoteSnapshot = {
+          // Primary vehicle (backward compatibility)
+          vehicle: input.vehicle ? {
+            year: input.vehicle.year,
+            make: input.vehicle.make,
+            model: input.vehicle.model,
+            vin: input.vehicle.vin || null,
+            bodyType: input.vehicle.bodyType || null,
+            annualMileage: input.vehicle.annualMileage || null,
+          } : null,
+          // ALL vehicles (for multi-vehicle quotes)
+          vehicles: (input.vehicles || []).map(v => ({
+            year: v.year,
+            make: v.make,
+            model: v.model,
+            vin: v.vin || null,
+            bodyType: v.bodyType || null,
+            annualMileage: v.annualMileage || null,
+            primaryDriverId: v.primaryDriverId || null,
+          })),
+          // Primary driver (PNI - Primary Named Insured)
+          driver: {
+            firstName: input.driver.firstName,
+            lastName: input.driver.lastName,
+            birthDate: formatDateToYYYYMMDD(input.driver.birthDate),
+            email: input.driver.email,
+            phone: input.driver.phone,
+            gender: input.driver.gender || null,
+            maritalStatus: input.driver.maritalStatus || null,
+            yearsLicensed: input.driver.yearsLicensed || null,
+            isPrimary: true,
+          },
+          // ALL additional drivers (for multi-driver quotes)
+          additionalDrivers: (input.additionalDrivers || []).map(d => ({
+            firstName: d.firstName,
+            lastName: d.lastName,
+            birthDate: formatDateToYYYYMMDD(d.birthDate),
+            email: d.email,
+            phone: d.phone,
+            gender: d.gender || null,
+            maritalStatus: d.maritalStatus || null,
+            yearsLicensed: d.yearsLicensed || null,
+            relationship: d.relationship || null,
+          })),
+          address: {
+            addressLine1: input.address.addressLine1,
+            addressLine2: input.address.addressLine2 || null,
+            city: input.address.city,
+            state: input.address.state,
+            zipCode: input.address.zipCode,
+          },
+          coverages: {
+            startDate: input.coverages?.startDate || null,
+            bodilyInjuryLimit: input.coverages?.bodilyInjuryLimit || null,
+            propertyDamageLimit: input.coverages?.propertyDamageLimit || null,
+            hasCollision: input.coverages?.collision || false,
+            collisionDeductible: input.coverages?.collisionDeductible || null,
+            hasComprehensive: input.coverages?.comprehensive || false,
+            comprehensiveDeductible: input.coverages?.comprehensiveDeductible || null,
+            hasUninsured: input.coverages?.uninsuredMotorist || false,
+            hasRoadside: input.coverages?.roadsideAssistance || false,
+            hasRental: input.coverages?.rentalReimbursement || false,
+            rentalLimit: input.coverages?.rentalLimit || null,
+          },
+          premium: {
+            total: premium,
+            monthly: Math.round(premium / 6 * 100) / 100,
+            sixMonth: premium,
+          },
+          meta: {
+            createdAt: new Date().toISOString(),
+            quoteNumber: quoteNumber,
+            version: 2, // Incremented to v2 to indicate multi-driver/vehicle support
+          },
+        };
+
+        // Step 11: Create Agreement (parent contract) with driver email and premium
+        const [newAgreement] = await tx.insert(agreement).values({
+          agreement_type_code: 'POLICY',
+          product_identifier: productId,
+          driver_email: input.driver.email,
+          premium_amount: premium.toString(),
+        }).returning();
+
+        // Step 12: Create Policy with snapshot and denormalized fields
+        const [newPolicy] = await tx.insert(policy).values({
+          policy_identifier: newAgreement.agreement_identifier,
+          policy_number: quoteNumber,
+          effective_date: formatDateToYYYYMMDD(new Date()),
+          expiration_date: formatDateToYYYYMMDD(this.calculateExpirationDate()),
+          status_code: 'QUOTED',
+          quote_snapshot: quoteSnapshot,  // ✅ Complete quote data
+          marital_status: input.driver.maritalStatus || null,  // ✅ Denormalized for queries
+          coverage_start_date: input.coverages?.startDate || null,  // ✅ Denormalized for queries
+        }).returning();
+
+        this.logger.log('Quote created successfully', {
+          quoteNumber,
+          policyId: newPolicy.policy_identifier,
+          premium
+        });
+
+        return {
+          quoteId: quoteNumber,      // Use quote number as the human-readable ID
+          quoteNumber,
+          premium,
+          createdAt: new Date(),
+          expiresAt: this.calculateQuoteExpiration(),
+        };
       });
-
-      return {
-        quoteId: quoteNumber,      // Use quote number as the human-readable ID
-        quoteNumber,
-        premium,
-        createdAt: new Date(),
-        expiresAt: this.calculateQuoteExpiration(),
-      };
     } catch (error) {
       this.logger.error('Failed to create quote', error);
       // Log full error details for debugging
@@ -543,11 +548,12 @@ export class QuoteService {
   /**
    * Ensure Product exists (create if not)
    */
-  private async ensureProductExists(): Promise<string> {
+  private async ensureProductExists(tx?: any): Promise<string> {
     const productName = 'Personal Auto Insurance';
+    const db = tx || this.db;
 
     // Check if product exists
-    const existing = await this.db
+    const existing = await db
       .select()
       .from(product)
       .where(eq(product.licensed_product_name, productName))
@@ -558,7 +564,7 @@ export class QuoteService {
     }
 
     // Create product
-    const [newProduct] = await this.db.insert(product).values({
+    const [newProduct] = await db.insert(product).values({
       licensed_product_name: productName,
       product_description: 'Standard personal auto insurance coverage',
     }).returning();
@@ -602,6 +608,8 @@ export class QuoteService {
       phone: string;
       gender?: string;
       maritalStatus?: string;
+      licenseNumber?: string;
+      licenseState?: string;
     },
     address: {
       addressLine1: string;
@@ -645,6 +653,8 @@ export class QuoteService {
           phone: driver.phone,
           gender: driver.gender || null,
           maritalStatus: driver.maritalStatus || null,
+          licenseNumber: driver.licenseNumber || null,
+          licenseState: driver.licenseState || null,
         },
         address: {
           addressLine1: address.addressLine1,
@@ -722,6 +732,8 @@ export class QuoteService {
       maritalStatus?: string;
       yearsLicensed?: number;
       relationship?: string;
+      licenseNumber?: string;
+      licenseState?: string;
     }>
   ): Promise<QuoteResult> {
     this.logger.log('Updating drivers for quote', { quoteNumber, driverCount: additionalDrivers.length });
@@ -777,6 +789,8 @@ export class QuoteService {
           maritalStatus: d.maritalStatus || null,
           yearsLicensed: d.yearsLicensed || null,
           relationship: d.relationship || null,
+          licenseNumber: d.licenseNumber || null,
+          licenseState: d.licenseState || null,
         })),
         meta: {
           ...currentSnapshot.meta,

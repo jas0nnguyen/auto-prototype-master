@@ -117,27 +117,39 @@ const EmailCollection: React.FC = () => {
 
           <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '500px' }}>
             <Layout display="flex-column" gap="medium">
-              <TextInput
-                type="email"
-                label="Email Address"
-                value={formData.email}
-                onChange={(e) => handleInputChange('email', e.target.value)}
-                error={!!errors.email}
-                errorMessage={errors.email}
-                placeholder="you@example.com"
-                required
-              />
+              <div>
+                <TextInput
+                  type="email"
+                  label="Email Address"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange('email', e.target.value)}
+                  error={!!errors.email}
+                  placeholder="you@example.com"
+                  required
+                />
+                {errors.email && (
+                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                    {errors.email}
+                  </Text>
+                )}
+              </div>
 
-              <TextInput
-                type="tel"
-                label="Mobile Phone (Optional)"
-                value={formData.mobile_phone}
-                onChange={(e) => handlePhoneChange(e.target.value)}
-                error={!!errors.mobile_phone}
-                errorMessage={errors.mobile_phone}
-                placeholder="(555) 123-4567"
-                maxLength={14}
-              />
+              <div>
+                <TextInput
+                  type="tel"
+                  label="Mobile Phone (Optional)"
+                  value={formData.mobile_phone}
+                  onChange={(e) => handlePhoneChange(e.target.value)}
+                  error={!!errors.mobile_phone}
+                  placeholder="(555) 123-4567"
+                  maxLength={14}
+                />
+                {errors.mobile_phone && (
+                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
+                    {errors.mobile_phone}
+                  </Text>
+                )}
+              </div>
 
               <Text variant="body-small" color="subtle">
                 By providing your email, you agree to receive quote details and policy information.

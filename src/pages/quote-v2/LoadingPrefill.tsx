@@ -57,11 +57,13 @@ const LoadingPrefill: React.FC = () => {
         await new Promise(resolve => setTimeout(resolve, 2000));
 
         // Mock vehicle data (in production, this would come from VIN decoder API)
+        // Generate unique VIN using timestamp to avoid duplicates
+        const uniqueVin = `1HGBH41JXMN${Date.now().toString().slice(-6)}`;
         const mockVehicle = {
           year: 2020,
           make: 'Honda',
           model: 'Civic',
-          vin: '1HGBH41JXMN109186',
+          vin: uniqueVin,
           annual_mileage: 12000,
           body_type: 'Sedan'
         };
@@ -86,7 +88,7 @@ const LoadingPrefill: React.FC = () => {
           driver_last_name: quoteData.getStarted.last_name,
           driver_birth_date: quoteData.getStarted.birth_date,
           driver_email: quoteData.email.email,
-          driver_phone: formattedPhone || '',
+          driver_phone: formattedPhone || undefined,
 
           // Address (from GetStarted)
           address_line_1: quoteData.getStarted.line_1_address,
@@ -95,8 +97,13 @@ const LoadingPrefill: React.FC = () => {
           address_state: quoteData.getStarted.state_code,
           address_zip: quoteData.getStarted.postal_code,
 
-          // Vehicle (from mock service)
-          vehicles: [mockVehicle],
+          // Vehicle (from mock service) - fixed to use legacy format
+          vehicle_year: mockVehicle.year,
+          vehicle_make: mockVehicle.make,
+          vehicle_model: mockVehicle.model,
+          vehicle_vin: mockVehicle.vin,
+          vehicle_annual_mileage: mockVehicle.annual_mileage,
+          vehicle_body_type: mockVehicle.body_type,
 
           // Coverage start date (from EffectiveDate)
           coverage_start_date: quoteData.effectiveDate
@@ -124,7 +131,8 @@ const LoadingPrefill: React.FC = () => {
     };
 
     runPrefillFlow();
-  }, [navigate, createQuote]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Run once on mount
 
   return (
     <TechStartupLayout>

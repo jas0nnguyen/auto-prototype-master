@@ -96,26 +96,58 @@ const SummaryContent: React.FC = () => {
     try {
       setIsSaving(true);
 
-      // Get all vehicles and update the edited one
-      const allVehicles = quote.vehicles?.map(v =>
-        v.vehicle_id === updatedVehicle.id
-          ? {
+      console.log('[Summary] Saving vehicle:', updatedVehicle);
+
+      // Check if this is a new vehicle (ID starts with "vehicle-new-")
+      const isNewVehicle = updatedVehicle.id.startsWith('vehicle-new-');
+
+      let allVehicles = [];
+
+      if (isNewVehicle) {
+        // Add new vehicle to existing vehicles
+        const existingVehicles = (quote.vehicles || []).map(v => ({
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          vin: v.vin,
+          bodyType: v.bodyType,
+          annualMileage: v.annualMileage
+        }));
+
+        const newVehicleData = {
+          year: updatedVehicle.year,
+          make: updatedVehicle.make,
+          model: updatedVehicle.model,
+          vin: updatedVehicle.vin,
+          bodyType: updatedVehicle.bodyType,
+          annualMileage: updatedVehicle.annualMileage
+        };
+
+        allVehicles = [...existingVehicles, newVehicleData];
+      } else {
+        // Update existing vehicle
+        const vehicleIndex = parseInt(updatedVehicle.id.replace('vehicle-', ''));
+        allVehicles = (quote.vehicles || []).map((v, index) => {
+          if (index === vehicleIndex) {
+            return {
               year: updatedVehicle.year,
               make: updatedVehicle.make,
               model: updatedVehicle.model,
               vin: updatedVehicle.vin,
-              body_type: updatedVehicle.bodyType,
-              annual_mileage: updatedVehicle.annualMileage
-            }
-          : {
-              year: v.year,
-              make: v.make,
-              model: v.model,
-              vin: v.vin,
-              body_type: v.body_type,
-              annual_mileage: v.annual_mileage
-            }
-      ) || [];
+              bodyType: updatedVehicle.bodyType,
+              annualMileage: updatedVehicle.annualMileage
+            };
+          }
+          return {
+            year: v.year,
+            make: v.make,
+            model: v.model,
+            vin: v.vin,
+            bodyType: v.bodyType,
+            annualMileage: v.annualMileage
+          };
+        });
+      }
 
       await updateVehicles.mutateAsync({
         quoteNumber,
@@ -126,7 +158,7 @@ const SummaryContent: React.FC = () => {
       setSelectedVehicle(null);
     } catch (err) {
       console.error('[Summary] Error saving vehicle:', err);
-      // Could show error toast here
+      alert('Failed to save vehicle. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -138,24 +170,13 @@ const SummaryContent: React.FC = () => {
     try {
       setIsSaving(true);
 
-      // Determine if this is the primary driver (index 0)
-      const drivers: Driver[] = [];
-      if (quote.driver) {
-        drivers.push({
-          id: quote.driver.party_id,
-          firstName: quote.driver.first_name,
-          lastName: quote.driver.last_name,
-          birthDate: quote.driver.birth_date,
-          genderCode: quote.driver.gender_code,
-          maritalStatus: quote.driver.marital_status_code,
-          licenseNumber: quote.driver.license_number,
-          licenseState: quote.driver.license_state_code,
-        });
-      }
+      console.log('[Summary] Saving driver:', updatedDriver);
 
-      const isPrimary = drivers[0]?.id === updatedDriver.id;
+      // Check if this is a new driver (ID starts with "driver-new-")
+      const isNewDriver = updatedDriver.id.startsWith('driver-new-');
+      const isPrimaryDriver = updatedDriver.id === 'driver-0';
 
-      if (isPrimary) {
+      if (isPrimaryDriver) {
         // Update primary driver
         await updatePrimaryDriver.mutateAsync({
           quoteNumber,
@@ -167,38 +188,79 @@ const SummaryContent: React.FC = () => {
             driver_phone: quote.driver?.phone || '',
             driver_gender: updatedDriver.genderCode,
             driver_marital_status: updatedDriver.maritalStatus,
-            address_line_1: quote.driver?.address?.line_1_address || '',
-            address_line_2: quote.driver?.address?.line_2_address,
-            address_city: quote.driver?.address?.municipality_name || '',
-            address_state: quote.driver?.address?.state_code || '',
-            address_zip: quote.driver?.address?.postal_code || ''
+            driver_license_number: updatedDriver.licenseNumber,
+            driver_license_state: updatedDriver.licenseState,
+            address_line_1: quote.address?.addressLine1 || '',
+            address_line_2: quote.address?.addressLine2 || '',
+            address_city: quote.address?.city || '',
+            address_state: quote.address?.state || '',
+            address_zip: quote.address?.zipCode || ''
           }
         });
+      } else if (isNewDriver) {
+        // Add new additional driver
+        const existingDrivers = (quote.additionalDrivers || []).map(d => ({
+          first_name: d.firstName,
+          last_name: d.lastName,
+          birth_date: d.birthDate,
+          email: d.email || '',
+          phone: d.phone || '',
+          gender: d.gender,
+          marital_status: d.maritalStatus,
+          relationship: d.relationship,
+          license_number: d.licenseNumber,
+          license_state: d.licenseState
+        }));
+
+        // Add the new driver
+        const newDriverData = {
+          first_name: updatedDriver.firstName,
+          last_name: updatedDriver.lastName,
+          birth_date: updatedDriver.birthDate,
+          email: '', // New drivers don't have email yet
+          phone: '',
+          gender: updatedDriver.genderCode,
+          marital_status: updatedDriver.maritalStatus,
+          relationship: updatedDriver.relationshipType || 'SPOUSE',
+          license_number: updatedDriver.licenseNumber,
+          license_state: updatedDriver.licenseState
+        };
+
+        await updateAdditionalDrivers.mutateAsync({
+          quoteNumber,
+          additionalDrivers: [...existingDrivers, newDriverData]
+        });
       } else {
-        // Update additional driver
-        const additionalDrivers = quote.additionalDrivers?.map(d =>
-          d.party_id === updatedDriver.id
-            ? {
-                first_name: updatedDriver.firstName,
-                last_name: updatedDriver.lastName,
-                birth_date: updatedDriver.birthDate,
-                email: d.email,
-                phone: d.phone,
-                gender: updatedDriver.genderCode,
-                marital_status: updatedDriver.maritalStatus,
-                relationship: updatedDriver.relationshipType
-              }
-            : {
-                first_name: d.first_name,
-                last_name: d.last_name,
-                birth_date: d.birth_date,
-                email: d.email,
-                phone: d.phone,
-                gender: d.gender_code,
-                marital_status: d.marital_status_code,
-                relationship: d.relationship_to_primary
-              }
-        ) || [];
+        // Update existing additional driver
+        const driverIndex = parseInt(updatedDriver.id.replace('driver-', '')) - 1;
+        const additionalDrivers = (quote.additionalDrivers || []).map((d, index) => {
+          if (index === driverIndex) {
+            return {
+              first_name: updatedDriver.firstName,
+              last_name: updatedDriver.lastName,
+              birth_date: updatedDriver.birthDate,
+              email: d.email || '',
+              phone: d.phone || '',
+              gender: updatedDriver.genderCode,
+              marital_status: updatedDriver.maritalStatus,
+              relationship: updatedDriver.relationshipType,
+              license_number: updatedDriver.licenseNumber,
+              license_state: updatedDriver.licenseState
+            };
+          }
+          return {
+            first_name: d.firstName,
+            last_name: d.lastName,
+            birth_date: d.birthDate,
+            email: d.email || '',
+            phone: d.phone || '',
+            gender: d.gender,
+            marital_status: d.maritalStatus,
+            relationship: d.relationship,
+            license_number: d.licenseNumber,
+            license_state: d.licenseState
+          };
+        });
 
         await updateAdditionalDrivers.mutateAsync({
           quoteNumber,
@@ -210,7 +272,7 @@ const SummaryContent: React.FC = () => {
       setSelectedDriver(null);
     } catch (err) {
       console.error('[Summary] Error saving driver:', err);
-      // Could show error toast here
+      alert('Failed to save driver. Please try again.');
     } finally {
       setIsSaving(false);
     }
@@ -222,6 +284,40 @@ const SummaryContent: React.FC = () => {
 
   const handleBack = () => {
     navigate('/quote-v2/loading-prefill');
+  };
+
+  const handleAddVehicle = () => {
+    // TODO: Implement add vehicle functionality
+    // For now, open modal with empty vehicle
+    const newVehicle: Vehicle = {
+      id: `vehicle-new-${Date.now()}`,
+      year: new Date().getFullYear(),
+      make: '',
+      model: '',
+      vin: '',
+      bodyType: '',
+      annualMileage: 12000
+    };
+    setSelectedVehicle(newVehicle);
+    setIsVehicleModalOpen(true);
+  };
+
+  const handleAddDriver = () => {
+    // TODO: Implement add driver functionality
+    // For now, open modal with empty driver
+    const newDriver: Driver = {
+      id: `driver-new-${Date.now()}`,
+      firstName: '',
+      lastName: '',
+      birthDate: '',
+      genderCode: '',
+      maritalStatus: '',
+      licenseNumber: '',
+      licenseState: '',
+      relationshipType: 'SPOUSE'
+    };
+    setSelectedDriver(newDriver);
+    setIsDriverModalOpen(true);
   };
 
   // Loading state
@@ -279,48 +375,74 @@ const SummaryContent: React.FC = () => {
   }
 
   // Map API response to component format
-  const vehicles: Vehicle[] = quote.vehicles?.map(v => ({
-    id: v.vehicle_id,
-    year: v.year,
-    make: v.make,
-    model: v.model,
-    vin: v.vin || '',
-    bodyType: v.body_type,
-    annualMileage: v.annual_mileage
-  })) || [];
+  // The API returns camelCase snapshot data without database IDs
+  console.log('[Summary] Quote data:', quote);
 
-  const drivers: Driver[] = [];
+  const vehicles: Vehicle[] = [];
 
-  // Add primary driver
-  if (quote.driver) {
-    drivers.push({
-      id: quote.driver.party_id,
-      firstName: quote.driver.first_name,
-      lastName: quote.driver.last_name,
-      birthDate: quote.driver.birth_date,
-      genderCode: quote.driver.gender_code,
-      maritalStatus: quote.driver.marital_status_code,
-      licenseNumber: quote.driver.license_number,
-      licenseState: quote.driver.license_state_code,
-    });
-  }
-
-  // Add additional drivers
-  if (quote.additionalDrivers) {
-    quote.additionalDrivers.forEach(driver => {
-      drivers.push({
-        id: driver.party_id,
-        firstName: driver.first_name,
-        lastName: driver.last_name,
-        birthDate: driver.birth_date,
-        genderCode: driver.gender_code,
-        maritalStatus: driver.marital_status_code,
-        licenseNumber: driver.license_number,
-        licenseState: driver.license_state_code,
-        relationshipType: driver.relationship_to_primary
+  // Try vehicles array first (multi-vehicle quotes)
+  if (quote.vehicles && quote.vehicles.length > 0) {
+    quote.vehicles.forEach((v: any, index: number) => {
+      vehicles.push({
+        id: `vehicle-${index}`, // Generate temporary ID since API doesn't return DB IDs
+        year: v.year,
+        make: v.make,
+        model: v.model,
+        vin: v.vin || '',
+        bodyType: v.bodyType,
+        annualMileage: v.annualMileage
       });
     });
   }
+  // Fallback to single vehicle (legacy format)
+  else if (quote.vehicle) {
+    vehicles.push({
+      id: 'vehicle-0',
+      year: quote.vehicle.year,
+      make: quote.vehicle.make,
+      model: quote.vehicle.model,
+      vin: quote.vehicle.vin || '',
+      bodyType: quote.vehicle.bodyType,
+      annualMileage: quote.vehicle.annualMileage
+    });
+  }
+
+  console.log('[Summary] Mapped vehicles:', vehicles);
+
+  const drivers: Driver[] = [];
+
+  // Add primary driver (API uses camelCase)
+  if (quote.driver) {
+    drivers.push({
+      id: 'driver-0', // Generate temporary ID
+      firstName: quote.driver.firstName,
+      lastName: quote.driver.lastName,
+      birthDate: quote.driver.birthDate || '',
+      genderCode: quote.driver.gender,
+      maritalStatus: quote.driver.maritalStatus,
+      licenseNumber: quote.driver.licenseNumber || undefined,
+      licenseState: quote.driver.licenseState || undefined,
+    });
+  }
+
+  // Add additional drivers (API uses camelCase)
+  if (quote.additionalDrivers && quote.additionalDrivers.length > 0) {
+    quote.additionalDrivers.forEach((driver: any, index: number) => {
+      drivers.push({
+        id: `driver-${index + 1}`, // Generate temporary ID
+        firstName: driver.firstName,
+        lastName: driver.lastName,
+        birthDate: driver.birthDate || '',
+        genderCode: driver.gender,
+        maritalStatus: driver.maritalStatus,
+        licenseNumber: driver.licenseNumber || undefined,
+        licenseState: driver.licenseState || undefined,
+        relationshipType: driver.relationship
+      });
+    });
+  }
+
+  console.log('[Summary] Mapped drivers:', drivers);
 
   return (
     <TechStartupLayout>
@@ -362,6 +484,7 @@ const SummaryContent: React.FC = () => {
                           variant="secondary"
                           size="medium"
                           onClick={() => handleEditVehicle(vehicle)}
+                          style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
                         >
                           Edit
                         </Button>
@@ -374,7 +497,12 @@ const SummaryContent: React.FC = () => {
                   </Text>
                 )}
 
-                <Button variant="secondary" size="medium">
+                <Button
+                  variant="secondary"
+                  size="medium"
+                  onClick={handleAddVehicle}
+                  style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
+                >
                   + Add Another Vehicle
                 </Button>
               </Layout>
@@ -405,6 +533,7 @@ const SummaryContent: React.FC = () => {
                           variant="secondary"
                           size="medium"
                           onClick={() => handleEditDriver(driver)}
+                          style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
                         >
                           Edit
                         </Button>
@@ -417,7 +546,12 @@ const SummaryContent: React.FC = () => {
                   </Text>
                 )}
 
-                <Button variant="secondary" size="medium">
+                <Button
+                  variant="secondary"
+                  size="medium"
+                  onClick={handleAddDriver}
+                  style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
+                >
                   + Add Another Driver
                 </Button>
               </Layout>
@@ -446,7 +580,7 @@ const SummaryContent: React.FC = () => {
 
           {/* Price Sidebar */}
           <div style={{ width: '320px' }}>
-            <PriceSidebar />
+            <PriceSidebar quote={quote} />
           </div>
         </Layout>
       </Container>
@@ -479,23 +613,13 @@ const SummaryContent: React.FC = () => {
  *
  * Wraps SummaryContent with QuoteProvider to provide quote context.
  * This enables PriceSidebar and other components to access quote data.
+ *
+ * NOTE: We don't use QuoteProvider here because it expects a quote UUID,
+ * but we only have the quote number. Instead, SummaryContent fetches
+ * the quote directly using useQuoteByNumber and passes it to PriceSidebar.
  */
 const Summary: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-
-  // Get quote data to extract quoteId for QuoteProvider
-  const { data: quote } = useQuoteByNumber(quoteNumber);
-
-  if (!quote) {
-    // Show loading or error without context (handled in SummaryContent)
-    return <SummaryContent />;
-  }
-
-  return (
-    <QuoteProvider quoteId={quote.quoteId}>
-      <SummaryContent />
-    </QuoteProvider>
-  );
+  return <SummaryContent />;
 };
 
 export default Summary;

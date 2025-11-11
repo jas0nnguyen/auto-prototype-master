@@ -47,12 +47,17 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const CoverageContent: React.FC = () => {
+interface CoverageContentProps {
+  quote?: any;
+}
+
+const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
-  // Fetch quote data
-  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber);
+  // Fetch quote data (use prop if provided, otherwise fetch)
+  const { data: fetchedQuote, isLoading, error } = useQuoteByNumber(quoteNumber);
+  const quote = quoteProp || fetchedQuote;
 
   // Mutation for updating coverage
   const updateCoverage = useUpdateQuoteCoverage();
@@ -126,7 +131,8 @@ const CoverageContent: React.FC = () => {
     debouncedMedicalPayments,
     quoteNumber,
     isInitialized,
-    updateCoverage
+    // NOTE: Do NOT include updateCoverage here - it changes on every render and causes infinite loop
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   const handleContinue = () => {
@@ -168,11 +174,11 @@ const CoverageContent: React.FC = () => {
     );
   }
 
-  // Get first vehicle for display
-  const firstVehicle = quote.vehicles?.[0];
-  const vehicleDisplay = firstVehicle
-    ? `${firstVehicle.year} ${firstVehicle.make} ${firstVehicle.model}`
-    : 'Vehicle';
+  // Get all vehicles for display
+  const vehicles = quote.vehicles || [];
+  const vehicleDisplay = vehicles.length > 0
+    ? vehicles.map((v: any) => `${v.year} ${v.make} ${v.model}`).join(', ')
+    : 'No vehicles found';
 
   return (
     <TechStartupLayout>
@@ -201,12 +207,13 @@ const CoverageContent: React.FC = () => {
                   <Select
                     label="Coverage Limit"
                     value={biLiability}
-                    onChange={(e) => setBiLiability(e.target.value)}
-                  >
-                    <option value="100000/300000">$100,000 / $300,000</option>
-                    <option value="300000/500000">$300,000 / $500,000</option>
-                    <option value="500000/1000000">$500,000 / $1,000,000</option>
-                  </Select>
+                    onChange={(value) => setBiLiability(value)}
+                    options={[
+                      { label: '$100,000 / $300,000', value: '100000/300000' },
+                      { label: '$300,000 / $500,000', value: '300000/500000' },
+                      { label: '$500,000 / $1,000,000', value: '500000/1000000' }
+                    ]}
+                  />
                 </Layout>
 
                 <Layout display="flex-column" gap="small">
@@ -320,7 +327,7 @@ const CoverageContent: React.FC = () => {
 
           {/* Price Sidebar */}
           <div style={{ width: '320px' }}>
-            <PriceSidebar />
+            <PriceSidebar quote={quote} isLoading={isLoading} />
           </div>
         </Layout>
       </Container>
@@ -329,21 +336,18 @@ const CoverageContent: React.FC = () => {
 };
 
 /**
- * Coverage Component Wrapper with QuoteProvider
+ * Coverage Component Wrapper
+ *
+ * Fetches quote data and passes it directly to CoverageContent.
+ * We don't use QuoteProvider here because it expects a UUID,
+ * but we only have the quote number.
  */
 const Coverage: React.FC = () => {
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
   const { data: quote } = useQuoteByNumber(quoteNumber);
 
-  if (!quote) {
-    return <CoverageContent />;
-  }
-
-  return (
-    <QuoteProvider quoteId={quote.quoteId}>
-      <CoverageContent />
-    </QuoteProvider>
-  );
+  // Pass quote directly to CoverageContent
+  return <CoverageContent quote={quote} />;
 };
 
 export default Coverage;

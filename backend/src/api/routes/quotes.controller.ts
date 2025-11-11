@@ -58,6 +58,12 @@ class DriverDTO {
   @ApiProperty({ example: 'spouse', required: false, description: 'Relationship to primary (for additional drivers)' })
   relationship?: string;
 
+  @ApiProperty({ example: 'DL123456', required: false, description: 'Driver license number' })
+  license_number?: string;
+
+  @ApiProperty({ example: 'CA', required: false, description: 'Driver license state' })
+  license_state?: string;
+
   @ApiProperty({ example: true, required: false, description: 'Is this the primary named insured?' })
   is_primary?: boolean;
 }
@@ -117,6 +123,14 @@ class UpdatePrimaryDriverDTO {
   @IsOptional()
   @IsString()
   driver_marital_status?: string;
+
+  @IsOptional()
+  @IsString()
+  driver_license_number?: string;
+
+  @IsOptional()
+  @IsString()
+  driver_license_state?: string;
 
   @IsString()
   address_line_1!: string;
@@ -676,6 +690,8 @@ export class QuotesController {
           phone: dto.driver_phone,
           gender: dto.driver_gender,
           maritalStatus: dto.driver_marital_status,
+          licenseNumber: dto.driver_license_number,
+          licenseState: dto.driver_license_state,
         },
         {
           addressLine1: dto.address_line_1,
@@ -744,6 +760,8 @@ export class QuotesController {
         maritalStatus: d.marital_status,
         yearsLicensed: d.years_licensed,
         relationship: d.relationship,
+        licenseNumber: d.license_number,
+        licenseState: d.license_state,
       }));
 
       const result = await this.quoteService.updateQuoteDrivers(
