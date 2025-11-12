@@ -23,7 +23,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsOptional, IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsOptional, IsBoolean, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { QuoteService } from '../../services/quote/quote.service';
 import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.service';
 
@@ -182,6 +183,10 @@ class UpdateCoverageDTO {
   coverage_property_damage_limit?: string;
 
   @IsOptional()
+  @IsNumber()
+  coverage_medical_payments_limit?: number;
+
+  @IsOptional()
   @IsBoolean()
   coverage_collision?: boolean;
 
@@ -212,6 +217,26 @@ class UpdateCoverageDTO {
   @IsOptional()
   @IsNumber()
   coverage_rental_limit?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VehicleCoverageDTO)
+  vehicle_coverages?: VehicleCoverageDTO[];
+}
+
+/**
+ * DTO for per-vehicle coverage (nested in UpdateCoverageDTO)
+ */
+class VehicleCoverageDTO {
+  @IsNumber()
+  vehicle_index: number;
+
+  @IsNumber()
+  collision_deductible: number;
+
+  @IsNumber()
+  comprehensive_deductible: number;
 }
 
 /**
@@ -877,6 +902,12 @@ export class QuotesController {
     @Body() dto: UpdateCoverageDTO
   ): Promise<QuoteResult> {
     this.logger.log('Updating coverage for quote', { quoteNumber });
+    this.logger.debug('Received DTO', {
+      dto,
+      vehicle_coverages: dto.vehicle_coverages,
+      medical_payments_limit: dto.coverage_medical_payments_limit,
+      has_medical_field: 'coverage_medical_payments_limit' in dto
+    });
 
     try {
       // Transform DTO to service input format
@@ -884,6 +915,7 @@ export class QuotesController {
         startDate: dto.coverage_start_date,
         bodilyInjuryLimit: dto.coverage_bodily_injury_limit,
         propertyDamageLimit: dto.coverage_property_damage_limit,
+        medicalPaymentsLimit: dto.coverage_medical_payments_limit,
         collision: dto.coverage_collision,
         collisionDeductible: dto.coverage_collision_deductible,
         comprehensive: dto.coverage_comprehensive,
@@ -892,6 +924,7 @@ export class QuotesController {
         roadsideAssistance: dto.coverage_roadside_assistance,
         rentalReimbursement: dto.coverage_rental_reimbursement,
         rentalLimit: dto.coverage_rental_limit,
+        vehicleCoverages: dto.vehicle_coverages,
       };
 
       const result = await this.quoteService.updateQuoteCoverage(

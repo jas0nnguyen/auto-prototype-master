@@ -48,6 +48,9 @@ import EffectiveDate from './pages/quote-v2/EffectiveDate';
 import EmailCollection from './pages/quote-v2/EmailCollection';
 import LoadingPrefill from './pages/quote-v2/LoadingPrefill';
 import Summary from './pages/quote-v2/Summary';
+
+// Import test page for debugging
+import { TestCoveragePage } from './pages/TestCoveragePage';
 import Coverage from './pages/quote-v2/Coverage';
 import AddOns from './pages/quote-v2/AddOns';
 import LoadingValidation from './pages/quote-v2/LoadingValidation';
@@ -154,6 +157,9 @@ function App() {
               </RouteGuard>
             }
           />
+
+          {/* Test page for debugging Medical Payments functionality */}
+          <Route path="/test-coverage" element={<TestCoveragePage />} />
 
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

@@ -968,6 +968,7 @@ export class QuoteService {
       startDate?: string;
       bodilyInjuryLimit?: string;
       propertyDamageLimit?: string;
+      medicalPaymentsLimit?: number;
       collision?: boolean;
       collisionDeductible?: number;
       comprehensive?: boolean;
@@ -976,6 +977,7 @@ export class QuoteService {
       roadsideAssistance?: boolean;
       rentalReimbursement?: boolean;
       rentalLimit?: number;
+      vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
     }
   ): Promise<QuoteResult> {
     this.logger.log('Updating coverage and finalizing quote', { quoteNumber });
@@ -1008,6 +1010,7 @@ export class QuoteService {
           startDate: coverages.startDate || null,
           bodilyInjuryLimit: coverages.bodilyInjuryLimit || null,
           propertyDamageLimit: coverages.propertyDamageLimit || null,
+          medicalPaymentsLimit: coverages.medicalPaymentsLimit || null,
           hasCollision: coverages.collision || false,
           collisionDeductible: coverages.collisionDeductible || null,
           hasComprehensive: coverages.comprehensive || false,
@@ -1016,6 +1019,7 @@ export class QuoteService {
           hasRoadside: coverages.roadsideAssistance || false,
           hasRental: coverages.rentalReimbursement || false,
           rentalLimit: coverages.rentalLimit || null,
+          vehicleCoverages: coverages.vehicleCoverages || null,
         },
         meta: {
           ...currentSnapshot.meta,
@@ -1030,6 +1034,7 @@ export class QuoteService {
         additionalDrivers: currentSnapshot.additionalDrivers || [],
         vehicles: currentSnapshot.vehicles || [],
         coverages,
+        vehicleCoverages: coverages.vehicleCoverages,
       });
 
       // Update premium in snapshot
@@ -1087,6 +1092,7 @@ export class QuoteService {
     additionalDrivers?: any[];
     vehicles?: any[];
     coverages?: any;
+    vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
   }): number {
     // Base premium starts at $1000
     let basePremium = 1000;
@@ -1111,93 +1117,136 @@ export class QuoteService {
       additionalDriversFactor = 1 + (data.additionalDrivers.length * 0.15);
     }
 
-    // Vehicle factor (use first vehicle if provided, else assume average)
-    let vehicleFactor = 1.0;
+    // Calculate per-vehicle premiums
+    let totalVehiclePremium = 0;
     if (data.vehicles && data.vehicles.length > 0) {
-      const primaryVehicle = data.vehicles[0];
-      const currentYear = new Date().getFullYear();
-      const vehicleAge = currentYear - primaryVehicle.year;
+      data.vehicles.forEach((vehicle: any, index: number) => {
+        const currentYear = new Date().getFullYear();
+        const vehicleAge = currentYear - vehicle.year;
 
-      if (vehicleAge <= 3) {
-        vehicleFactor = 1.3; // New cars cost more to repair
-      } else if (vehicleAge <= 7) {
-        vehicleFactor = 1.0; // Mid-age baseline
-      } else {
-        vehicleFactor = 0.9; // Older cars less valuable
-      }
+        // Base vehicle factor
+        let vehicleFactor = 1.0;
+        if (vehicleAge <= 3) {
+          vehicleFactor = 1.3; // New cars cost more to repair
+        } else if (vehicleAge <= 7) {
+          vehicleFactor = 1.0; // Mid-age baseline
+        } else {
+          vehicleFactor = 0.9; // Older cars less valuable
+        }
 
-      // Multi-car discount (10% off for each additional vehicle)
+        // Get per-vehicle deductibles if provided, otherwise use global defaults
+        let collisionDeductible = data.coverages?.collisionDeductible || 500;
+        let comprehensiveDeductible = data.coverages?.comprehensiveDeductible || 500;
+
+        if (data.vehicleCoverages && data.vehicleCoverages[index]) {
+          collisionDeductible = data.vehicleCoverages[index].collision_deductible;
+          comprehensiveDeductible = data.vehicleCoverages[index].comprehensive_deductible;
+        }
+
+        // Collision deductible factor for this vehicle
+        let collisionFactor = 0;
+        if (data.coverages?.collision || data.coverages?.hasCollision) {
+          if (collisionDeductible === 250) collisionFactor = 0.35;       // Low deductible = higher premium
+          else if (collisionDeductible === 500) collisionFactor = 0.30;  // Standard deductible
+          else if (collisionDeductible === 750) collisionFactor = 0.275; // Mid-range deductible
+          else if (collisionDeductible === 1000) collisionFactor = 0.25; // High deductible = lower premium
+          else if (collisionDeductible === 2500) collisionFactor = 0.20; // Very high deductible = much lower premium
+          else collisionFactor = 0.30; // Default to standard
+        }
+
+        // Comprehensive deductible factor for this vehicle
+        let comprehensiveFactor = 0;
+        if (data.coverages?.comprehensive || data.coverages?.hasComprehensive) {
+          if (comprehensiveDeductible === 250) comprehensiveFactor = 0.25;       // Low deductible = higher premium
+          else if (comprehensiveDeductible === 500) comprehensiveFactor = 0.20;  // Standard deductible
+          else if (comprehensiveDeductible === 750) comprehensiveFactor = 0.175; // Mid-range deductible
+          else if (comprehensiveDeductible === 1000) comprehensiveFactor = 0.15; // High deductible = lower premium
+          else if (comprehensiveDeductible === 2500) comprehensiveFactor = 0.10; // Very high deductible = much lower premium
+          else comprehensiveFactor = 0.20; // Default to standard
+        }
+
+        // Calculate this vehicle's contribution to premium
+        const vehicleCoverageFactor = 1.0 + collisionFactor + comprehensiveFactor;
+        const vehiclePremium = basePremium * vehicleFactor * vehicleCoverageFactor;
+        totalVehiclePremium += vehiclePremium;
+
+        this.logger.debug(`Vehicle ${index + 1} premium calculation`, {
+          vehicleYear: vehicle.year,
+          vehicleAge,
+          vehicleFactor,
+          collisionDeductible,
+          comprehensiveDeductible,
+          collisionFactor,
+          comprehensiveFactor,
+          vehicleCoverageFactor,
+          vehiclePremium: Math.round(vehiclePremium),
+        });
+      });
+
+      // Apply multi-car discount to total vehicle premium
       if (data.vehicles.length > 1) {
         const multiCarDiscount = 0.9 - ((data.vehicles.length - 1) * 0.05);
-        vehicleFactor *= Math.max(multiCarDiscount, 0.75); // Cap at 25% discount
+        const discountMultiplier = Math.max(multiCarDiscount, 0.75); // Cap at 25% discount
+        totalVehiclePremium *= discountMultiplier;
+        this.logger.debug(`Multi-car discount applied: ${discountMultiplier}`);
       }
     }
 
-    // Coverage factor (use actual if provided, else minimum)
-    let coverageFactor = 1.0;
+    // Liability coverage factor (applies to entire policy, not per-vehicle)
+    let liabilityCoverageFactor = 1.0;
     if (data.coverages) {
       // Bodily Injury Liability - Higher limits cost more
       const biLimit = data.coverages.bodilyInjuryLimit || data.coverages.bodilyInjuryLimit;
-      if (biLimit === '25/50') coverageFactor += 0.05;       // Minimum
-      else if (biLimit === '50/100') coverageFactor += 0.10;  // Standard
-      else if (biLimit === '100/300') coverageFactor += 0.15; // Recommended (baseline)
-      else if (biLimit === '250/500') coverageFactor += 0.25; // High coverage
-      else coverageFactor += 0.15; // Default to recommended
+      if (biLimit === '25/50') liabilityCoverageFactor += 0.05;       // Minimum
+      else if (biLimit === '50/100') liabilityCoverageFactor += 0.10;  // Standard
+      else if (biLimit === '100/300') liabilityCoverageFactor += 0.15; // Recommended (baseline)
+      else if (biLimit === '250/500') liabilityCoverageFactor += 0.25; // High coverage
+      else liabilityCoverageFactor += 0.15; // Default to recommended
 
       // Property Damage Liability - Higher limits cost more
       const pdLimit = data.coverages.propertyDamageLimit || data.coverages.propertyDamageLimit;
-      if (pdLimit === '25000') coverageFactor += 0.03;      // Minimum
-      else if (pdLimit === '50000') coverageFactor += 0.05; // Standard (baseline)
-      else if (pdLimit === '100000') coverageFactor += 0.08; // High coverage
-      else coverageFactor += 0.05; // Default to standard
+      if (pdLimit === '25000') liabilityCoverageFactor += 0.03;      // Minimum
+      else if (pdLimit === '50000') liabilityCoverageFactor += 0.05; // Standard (baseline)
+      else if (pdLimit === '100000') liabilityCoverageFactor += 0.08; // High coverage
+      else liabilityCoverageFactor += 0.05; // Default to standard
 
-      // Collision Coverage - Deductible affects price (higher deductible = lower price)
-      if (data.coverages.collision || data.coverages.hasCollision) {
-        const collDeductible = data.coverages.collisionDeductible || data.coverages.collisionDeductible;
-        if (collDeductible === 250) coverageFactor += 0.35;       // Low deductible = higher premium
-        else if (collDeductible === 500) coverageFactor += 0.30;  // Standard deductible
-        else if (collDeductible === 1000) coverageFactor += 0.25; // High deductible = lower premium
-        else if (collDeductible === 2500) coverageFactor += 0.20; // Very high deductible = much lower premium
-        else coverageFactor += 0.30; // Default to standard
-      }
-
-      // Comprehensive Coverage - Deductible affects price (higher deductible = lower price)
-      if (data.coverages.comprehensive || data.coverages.hasComprehensive) {
-        const compDeductible = data.coverages.comprehensiveDeductible || data.coverages.comprehensiveDeductible;
-        if (compDeductible === 250) coverageFactor += 0.25;       // Low deductible = higher premium
-        else if (compDeductible === 500) coverageFactor += 0.20;  // Standard deductible
-        else if (compDeductible === 1000) coverageFactor += 0.15; // High deductible = lower premium
-        else if (compDeductible === 2500) coverageFactor += 0.10; // Very high deductible = much lower premium
-        else coverageFactor += 0.20; // Default to standard
+      // Medical Payments - Higher limits cost more
+      const medicalPaymentsLimit = data.coverages.medicalPaymentsLimit;
+      if (medicalPaymentsLimit) {
+        if (medicalPaymentsLimit === 1000) liabilityCoverageFactor += 0.02;       // $1,000
+        else if (medicalPaymentsLimit === 2000) liabilityCoverageFactor += 0.03;  // $2,000
+        else if (medicalPaymentsLimit === 5000) liabilityCoverageFactor += 0.05;  // $5,000 (baseline)
+        else if (medicalPaymentsLimit === 10000) liabilityCoverageFactor += 0.08; // $10,000
+        else liabilityCoverageFactor += 0.05; // Default to $5,000 baseline
       }
 
       // Uninsured/Underinsured Motorist
-      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) coverageFactor += 0.10;
+      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) liabilityCoverageFactor += 0.10;
 
       // Roadside Assistance
-      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) coverageFactor += 0.05;
+      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) liabilityCoverageFactor += 0.05;
 
       // Rental Reimbursement - Limit affects price
       if (data.coverages.rentalReimbursement || data.coverages.hasRental) {
         const rentalLimit = data.coverages.rentalLimit || data.coverages.rentalLimit;
-        if (rentalLimit === 30) coverageFactor += 0.03;      // $30/day
-        else if (rentalLimit === 50) coverageFactor += 0.05; // $50/day
-        else if (rentalLimit === 75) coverageFactor += 0.07; // $75/day
-        else coverageFactor += 0.05; // Default to $50/day
+        if (rentalLimit === 30) liabilityCoverageFactor += 0.03;      // $30/day
+        else if (rentalLimit === 50) liabilityCoverageFactor += 0.05; // $50/day
+        else if (rentalLimit === 75) liabilityCoverageFactor += 0.07; // $75/day
+        else liabilityCoverageFactor += 0.05; // Default to $50/day
       }
     }
 
-    // Calculate total
+    // Calculate total premium: per-vehicle premium + driver factors + liability coverage
     const totalPremium = Math.round(
-      basePremium * vehicleFactor * driverFactor * additionalDriversFactor * coverageFactor
+      totalVehiclePremium * driverFactor * additionalDriversFactor * liabilityCoverageFactor
     );
 
     this.logger.debug('Progressive premium calculated', {
       basePremium,
-      vehicleFactor,
+      totalVehiclePremium: Math.round(totalVehiclePremium),
       driverFactor,
       additionalDriversFactor,
-      coverageFactor,
+      liabilityCoverageFactor,
       totalPremium,
     });
 

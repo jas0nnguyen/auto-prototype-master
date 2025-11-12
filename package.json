@@ -38,6 +38,7 @@
     "@vitejs/plugin-react": "^4.6.0",
     "@vitest/coverage-v8": "^4.0.3",
     "@vitest/ui": "^4.0.3",
+    "dependency-cruiser": "^16.10.4",
     "dotenv": "^17.2.3",
     "drizzle-kit": "^0.31.5",
     "happy-dom": "^20.0.8",

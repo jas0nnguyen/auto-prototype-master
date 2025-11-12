@@ -454,6 +454,7 @@ export function useUpdateQuoteCoverage() {
         coverage_start_date?: string;
         coverage_bodily_injury_limit?: string;
         coverage_property_damage_limit?: string;
+        coverage_medical_payments_limit?: number;
         coverage_collision?: boolean;
         coverage_collision_deductible?: number;
         coverage_comprehensive?: boolean;
@@ -462,6 +463,11 @@ export function useUpdateQuoteCoverage() {
         coverage_roadside_assistance?: boolean;
         coverage_rental_reimbursement?: boolean;
         coverage_rental_limit?: number;
+        vehicle_coverages?: Array<{
+          vehicle_index: number;
+          collision_deductible: number;
+          comprehensive_deductible: number;
+        }>;
       };
     }) => quoteApi.updateQuoteCoverage(quoteNumber, coverageData),
 

@@ -47,17 +47,12 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-interface CoverageContentProps {
-  quote?: any;
-}
-
-const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) => {
+const CoverageContent: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
-  // Fetch quote data (use prop if provided, otherwise fetch)
-  const { data: fetchedQuote, isLoading, error } = useQuoteByNumber(quoteNumber);
-  const quote = quoteProp || fetchedQuote;
+  // Fetch quote data - this will auto-refetch when cache is invalidated
+  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber);
 
   // Mutation for updating coverage
   const updateCoverage = useUpdateQuoteCoverage();
@@ -65,10 +60,11 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
   // Coverage state - initialize from quote data
   const [biLiability, setBiLiability] = useState('100000/300000');
   const [pdLiability, setPdLiability] = useState(50000);
-  const [comprehensive, setComprehensive] = useState(500);
-  const [collision, setCollision] = useState(500);
   const [medicalPayments, setMedicalPayments] = useState(5000);
   const [isInitialized, setIsInitialized] = useState(false);
+
+  // Per-vehicle coverage state (comprehensive and collision deductibles)
+  const [vehicleCoverages, setVehicleCoverages] = useState<Record<number, { comprehensive: number; collision: number }>>({});
 
   // Initialize coverage values from quote
   useEffect(() => {
@@ -80,15 +76,21 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
       if (quote.coverage?.property_damage_limit !== undefined) {
         setPdLiability(quote.coverage.property_damage_limit);
       }
-      if (quote.coverage?.collision_deductible !== undefined) {
-        setCollision(quote.coverage.collision_deductible);
-      }
-      if (quote.coverage?.comprehensive_deductible !== undefined) {
-        setComprehensive(quote.coverage.comprehensive_deductible);
-      }
       if (quote.coverage?.medical_payments_limit !== undefined) {
         setMedicalPayments(quote.coverage.medical_payments_limit);
       }
+
+      // Initialize per-vehicle coverages (default to $500 deductible for both)
+      const vehicles = quote.vehicles || [];
+      const initialVehicleCoverages: Record<number, { comprehensive: number; collision: number }> = {};
+      vehicles.forEach((_: any, index: number) => {
+        initialVehicleCoverages[index] = {
+          comprehensive: quote.coverage?.comprehensive_deductible || 500,
+          collision: quote.coverage?.collision_deductible || 500,
+        };
+      });
+      setVehicleCoverages(initialVehicleCoverages);
+
       setIsInitialized(true);
     }
   }, [quote, isInitialized]);
@@ -96,27 +98,65 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
   // Debounce coverage changes (300ms)
   const debouncedBiLiability = useDebounce(biLiability, 300);
   const debouncedPdLiability = useDebounce(pdLiability, 300);
-  const debouncedComprehensive = useDebounce(comprehensive, 300);
-  const debouncedCollision = useDebounce(collision, 300);
   const debouncedMedicalPayments = useDebounce(medicalPayments, 300);
+
+  // For objects, we need to serialize to detect changes properly
+  const vehicleCoveragesJson = JSON.stringify(vehicleCoverages);
+  console.log('[Coverage] vehicleCoveragesJson:', vehicleCoveragesJson);
+  const debouncedVehicleCoveragesJson = useDebounce(vehicleCoveragesJson, 300);
+  console.log('[Coverage] debouncedVehicleCoveragesJson:', debouncedVehicleCoveragesJson);
 
   // Update coverage when debounced values change
   useEffect(() => {
-    if (!quoteNumber || !isInitialized) return;
+    const debouncedVehicleCoverages = debouncedVehicleCoveragesJson ? JSON.parse(debouncedVehicleCoveragesJson) : {};
+
+    console.log('[Coverage] useEffect triggered', {
+      quoteNumber,
+      isInitialized,
+      debouncedVehicleCoveragesKeys: Object.keys(debouncedVehicleCoverages),
+      debouncedVehicleCoverages,
+      debouncedBiLiability,
+      debouncedPdLiability,
+      debouncedMedicalPayments,
+    });
+
+    if (!quoteNumber || !isInitialized) {
+      console.log('[Coverage] Skipping API call -', { quoteNumber, isInitialized });
+      return;
+    }
 
     const updateCoverageData = async () => {
       try {
+        // Convert vehicleCoverages object to array format for API
+        const vehicleCoveragesArray = Object.entries(debouncedVehicleCoverages).map(([index, coverage]) => ({
+          vehicle_index: parseInt(index),
+          collision_deductible: coverage.collision,
+          comprehensive_deductible: coverage.comprehensive
+        }));
+
+        console.log('[Coverage] Calling API with vehicle coverages:', vehicleCoveragesArray);
+        console.log('[Coverage] Vehicle coverages array stringified:', JSON.stringify(vehicleCoveragesArray));
+        vehicleCoveragesArray.forEach((vc, idx) => {
+          console.log(`[Coverage] Vehicle ${idx}: index=${vc.vehicle_index}, collision=${vc.collision_deductible}, comprehensive=${vc.comprehensive_deductible}`);
+        });
+
+        const coveragePayload = {
+          coverage_bodily_injury_limit: debouncedBiLiability,
+          coverage_property_damage_limit: debouncedPdLiability,
+          coverage_medical_payments_limit: debouncedMedicalPayments,
+          coverage_collision: true,
+          coverage_comprehensive: true,
+          vehicle_coverages: vehicleCoveragesArray.length > 0 ? vehicleCoveragesArray : undefined,
+        };
+        console.log('[Coverage] Sending coverage payload:', coveragePayload);
+        console.log('[Coverage] Medical Payments value:', debouncedMedicalPayments);
+
         await updateCoverage.mutateAsync({
           quoteNumber,
-          coverageData: {
-            coverage_bodily_injury_limit: debouncedBiLiability,
-            coverage_property_damage_limit: debouncedPdLiability,
-            coverage_collision: true,
-            coverage_collision_deductible: debouncedCollision,
-            coverage_comprehensive: true,
-            coverage_comprehensive_deductible: debouncedComprehensive,
-          }
+          coverageData: coveragePayload
         });
+
+        console.log('[Coverage] API call completed successfully');
       } catch (err) {
         console.error('[Coverage] Error updating coverage:', err);
       }
@@ -126,8 +166,7 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
   }, [
     debouncedBiLiability,
     debouncedPdLiability,
-    debouncedComprehensive,
-    debouncedCollision,
+    debouncedVehicleCoveragesJson, // Use serialized version for proper change detection
     debouncedMedicalPayments,
     quoteNumber,
     isInitialized,
@@ -176,6 +215,9 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
 
   // Get all vehicles for display
   const vehicles = quote.vehicles || [];
+  console.log('[Coverage] Quote vehicles:', vehicles);
+  console.log('[Coverage] Vehicle count:', vehicles.length);
+
   const vehicleDisplay = vehicles.length > 0
     ? vehicles.map((v: any) => `${v.year} ${v.make} ${v.model}`).join(', ')
     : 'No vehicles found';
@@ -263,44 +305,79 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
               {/* Section 3: Protect Your Vehicles */}
               <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
                 <Title variant="title-3">Protect Your Vehicles</Title>
-
                 <Text variant="body-regular" color="subtle">
-                  {vehicleDisplay}
+                  Comprehensive and Collision coverage helps repair or replace your vehicle if it's damaged or stolen. Choose your deductible for each vehicle.
                 </Text>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Comprehensive Deductible</Title>
-                  <Text variant="body-small" color="subtle">
-                    Covers theft, vandalism, weather damage
-                  </Text>
-                  <input
-                    type="range"
-                    min="250"
-                    max="1000"
-                    step="250"
-                    value={comprehensive}
-                    onChange={(e) => setComprehensive(Number(e.target.value))}
-                    style={{ width: '100%' }}
-                  />
-                  <Text variant="body-regular">${comprehensive} deductible</Text>
-                </Layout>
+                {/* Per-vehicle sliders */}
+                {vehicles.map((vehicle: any, index: number) => (
+                  <Layout key={index} display="flex-column" gap="medium" padding="medium" style={{ background: '#f7fafc', borderRadius: '12px' }}>
+                    <Title variant="title-4">
+                      Vehicle {index + 1}: {vehicle.year} {vehicle.make} {vehicle.model}
+                    </Title>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Collision Deductible</Title>
-                  <Text variant="body-small" color="subtle">
-                    Covers damage from accidents
-                  </Text>
-                  <input
-                    type="range"
-                    min="250"
-                    max="1000"
-                    step="250"
-                    value={collision}
-                    onChange={(e) => setCollision(Number(e.target.value))}
-                    style={{ width: '100%' }}
-                  />
-                  <Text variant="body-regular">${collision} deductible</Text>
-                </Layout>
+                    <Layout display="flex-column" gap="small">
+                      <Text variant="body-small" style={{ fontWeight: 600 }}>Comprehensive Deductible</Text>
+                      <Text variant="body-small" color="subtle">
+                        Covers theft, vandalism, weather damage
+                      </Text>
+                      <input
+                        type="range"
+                        min="250"
+                        max="1000"
+                        step="250"
+                        value={vehicleCoverages[index]?.comprehensive || 500}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          console.log(`[Coverage] Vehicle ${index} comprehensive slider changed to:`, newValue);
+                          setVehicleCoverages(prev => {
+                            const updated = {
+                              ...prev,
+                              [index]: {
+                                ...prev[index],
+                                comprehensive: newValue
+                              }
+                            };
+                            console.log('[Coverage] Updated vehicleCoverages:', updated);
+                            return updated;
+                          });
+                        }}
+                        style={{ width: '100%' }}
+                      />
+                      <Text variant="body-regular">
+                        ${vehicleCoverages[index]?.comprehensive || 500} deductible
+                      </Text>
+                    </Layout>
+
+                    <Layout display="flex-column" gap="small">
+                      <Text variant="body-small" style={{ fontWeight: 600 }}>Collision Deductible</Text>
+                      <Text variant="body-small" color="subtle">
+                        Covers damage from accidents
+                      </Text>
+                      <input
+                        type="range"
+                        min="250"
+                        max="1000"
+                        step="250"
+                        value={vehicleCoverages[index]?.collision || 500}
+                        onChange={(e) => {
+                          const newValue = Number(e.target.value);
+                          setVehicleCoverages(prev => ({
+                            ...prev,
+                            [index]: {
+                              ...prev[index],
+                              collision: newValue
+                            }
+                          }));
+                        }}
+                        style={{ width: '100%' }}
+                      />
+                      <Text variant="body-regular">
+                        ${vehicleCoverages[index]?.collision || 500} deductible
+                      </Text>
+                    </Layout>
+                  </Layout>
+                ))}
               </Layout>
 
               {/* Navigation Buttons */}
@@ -335,19 +412,5 @@ const CoverageContent: React.FC<CoverageContentProps> = ({ quote: quoteProp }) =
   );
 };
 
-/**
- * Coverage Component Wrapper
- *
- * Fetches quote data and passes it directly to CoverageContent.
- * We don't use QuoteProvider here because it expects a UUID,
- * but we only have the quote number.
- */
-const Coverage: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-  const { data: quote } = useQuoteByNumber(quoteNumber);
-
-  // Pass quote directly to CoverageContent
-  return <CoverageContent quote={quote} />;
-};
-
-export default Coverage;
+// Export CoverageContent directly as Coverage
+export default CoverageContent;
