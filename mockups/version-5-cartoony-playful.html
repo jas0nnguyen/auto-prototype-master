@@ -1,0 +1,1437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Version 5: Cartoony Playful - Everest Insurance Auto Flow</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&family=Quicksand:wght@500;600;700&display=swap');
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(180deg, #FFE5B4 0%, #FFF4E0 50%, #E8F5E9 100%);
+            color: #2C3E50;
+            line-height: 1.7;
+            min-height: 100vh;
+        }
+
+        /* Fun Background Pattern */
+        body::before {
+            content: "";
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-image:
+                radial-gradient(circle at 20% 20%, rgba(255, 193, 7, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 80%, rgba(76, 175, 80, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(33, 150, 243, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        /* Header */
+        .header {
+            background: white;
+            padding: 20px 0;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 4px solid #FFC107;
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: 900;
+            color: #2196F3;
+            font-family: 'Quicksand', sans-serif;
+            text-shadow: 2px 2px 0px #FFC107;
+        }
+
+        .logo::before {
+            content: "🏔️ ";
+        }
+
+        .header-info {
+            display: flex;
+            gap: 30px;
+            align-items: center;
+        }
+
+        .quote-id {
+            font-size: 16px;
+            font-weight: 800;
+            color: #FF5722;
+            font-family: 'Quicksand', monospace;
+            background: #FFF3E0;
+            padding: 8px 16px;
+            border-radius: 30px;
+            border: 3px solid #FFC107;
+        }
+
+        .support-phone {
+            color: #2C3E50;
+            font-size: 16px;
+            font-weight: 700;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 60px 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .screen {
+            background: white;
+            border-radius: 32px;
+            padding: 60px;
+            margin-bottom: 60px;
+            box-shadow:
+                0 8px 0 #FFE082,
+                0 16px 40px rgba(255, 193, 7, 0.3);
+            border: 4px solid #2C3E50;
+        }
+
+        /* Typography */
+        h1 {
+            font-size: 56px;
+            font-weight: 900;
+            color: #2196F3;
+            margin-bottom: 20px;
+            line-height: 1.1;
+            font-family: 'Quicksand', sans-serif;
+            text-shadow: 3px 3px 0px #FFC107;
+        }
+
+        h2 {
+            font-size: 40px;
+            font-weight: 800;
+            color: #2196F3;
+            margin-bottom: 20px;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        h3 {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FF5722;
+            margin-bottom: 16px;
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        h4 {
+            font-size: 20px;
+            font-weight: 700;
+            color: #2C3E50;
+            margin-bottom: 12px;
+        }
+
+        .subtitle {
+            font-size: 19px;
+            color: #546E7A;
+            margin-bottom: 40px;
+            line-height: 1.7;
+        }
+
+        .screen-indicator {
+            text-align: center;
+            font-size: 14px;
+            color: #FF5722;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 32px;
+            padding: 12px 24px;
+            background: #FFF3E0;
+            border-radius: 30px;
+            display: inline-block;
+            width: 100%;
+            border: 3px solid #FFE082;
+        }
+
+        /* Forms */
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .form-group.full-width {
+            grid-column: 1 / -1;
+        }
+
+        label {
+            font-size: 15px;
+            font-weight: 800;
+            color: #2C3E50;
+            margin-bottom: 10px;
+        }
+
+        label .required {
+            color: #FF5722;
+        }
+
+        input, select, textarea {
+            padding: 16px 20px;
+            border: 4px solid #E3F2FD;
+            border-radius: 20px;
+            font-size: 17px;
+            font-family: 'Nunito', sans-serif;
+            transition: all 0.3s;
+            background: white;
+            font-weight: 600;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #2196F3;
+            box-shadow: 0 0 0 6px rgba(33, 150, 243, 0.15);
+            transform: translateY(-2px);
+        }
+
+        input::placeholder {
+            color: #B0BEC5;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 18px 40px;
+            border: none;
+            border-radius: 30px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: 'Quicksand', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            color: white;
+            box-shadow:
+                0 6px 0 #1565C0,
+                0 12px 30px rgba(33, 150, 243, 0.4);
+            border: 4px solid #0D47A1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px);
+            box-shadow:
+                0 10px 0 #1565C0,
+                0 16px 40px rgba(33, 150, 243, 0.5);
+        }
+
+        .btn-primary:active {
+            transform: translateY(2px);
+            box-shadow:
+                0 2px 0 #1565C0,
+                0 6px 20px rgba(33, 150, 243, 0.4);
+        }
+
+        .btn-secondary {
+            background: white;
+            color: #2196F3;
+            border: 4px solid #2196F3;
+            box-shadow: 0 4px 0 #1976D2;
+        }
+
+        .btn-secondary:hover {
+            background: #E3F2FD;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #1976D2;
+        }
+
+        .btn-actions {
+            display: flex;
+            gap: 20px;
+            margin-top: 48px;
+            justify-content: center;
+        }
+
+        /* Loading Screen */
+        .loading-screen {
+            text-align: center;
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .loading-animation {
+            margin: 50px 0;
+            position: relative;
+        }
+
+        .car-icon {
+            width: 120px;
+            height: 60px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-radius: 20px;
+            position: relative;
+            animation: bounce 1.5s infinite;
+            box-shadow: 0 8px 30px rgba(33, 150, 243, 0.5);
+            border: 4px solid #0D47A1;
+        }
+
+        .car-icon::before {
+            content: "🚗";
+            position: absolute;
+            font-size: 40px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        @keyframes bounce {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            25% {
+                transform: translateY(-20px) rotate(-5deg);
+            }
+            50% {
+                transform: translateY(0) rotate(0deg);
+            }
+            75% {
+                transform: translateY(-10px) rotate(5deg);
+            }
+        }
+
+        .loading-progress {
+            width: 500px;
+            height: 20px;
+            background: #E3F2FD;
+            border-radius: 30px;
+            overflow: hidden;
+            margin-bottom: 40px;
+            border: 4px solid #2196F3;
+        }
+
+        .loading-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #FFC107 0%, #FF5722 50%, #4CAF50 100%);
+            background-size: 200% 100%;
+            width: 60%;
+            animation: progressRainbow 3s ease-in-out infinite;
+            box-shadow: 0 0 20px rgba(255, 193, 7, 0.8);
+        }
+
+        @keyframes progressRainbow {
+            0% {
+                width: 30%;
+                background-position: 0% 50%;
+            }
+            50% {
+                width: 80%;
+                background-position: 100% 50%;
+            }
+            100% {
+                width: 30%;
+                background-position: 0% 50%;
+            }
+        }
+
+        .loading-steps {
+            text-align: left;
+            margin-top: 40px;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .loading-step.complete::before {
+            content: "✅";
+            font-size: 32px;
+        }
+
+        .loading-step.active::before {
+            content: "⏳";
+            font-size: 32px;
+            animation: wiggle 1s infinite;
+        }
+
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(0deg); }
+            25% { transform: rotate(-10deg); }
+            75% { transform: rotate(10deg); }
+        }
+
+        /* Summary Layout */
+        .summary-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 48px;
+        }
+
+        .summary-content {
+            display: flex;
+            flex-direction: column;
+            gap: 48px;
+        }
+
+        /* Cards */
+        .card-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+
+        .card {
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFF3E0 100%);
+            border: 4px solid #FFC107;
+            border-radius: 24px;
+            padding: 28px;
+            transition: all 0.3s;
+            cursor: pointer;
+            box-shadow: 0 4px 0 #FFB300;
+        }
+
+        .card:hover {
+            border-color: #FF5722;
+            box-shadow:
+                0 8px 0 #FFB300,
+                0 12px 30px rgba(255, 87, 34, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .card-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #2196F3 0%, #1976D2 100%);
+            border-radius: 16px;
+            box-shadow: 0 4px 0 #1565C0;
+            border: 3px solid #0D47A1;
+            position: relative;
+        }
+
+        .card-icon::before {
+            content: "🚙";
+            position: absolute;
+            font-size: 28px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .card-title {
+            font-size: 13px;
+            font-weight: 800;
+            color: #FF5722;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+        }
+
+        .card-subtitle {
+            font-size: 20px;
+            color: #2C3E50;
+            margin-bottom: 12px;
+            font-weight: 800;
+        }
+
+        .card-detail {
+            font-size: 15px;
+            color: #546E7A;
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        .card-link {
+            color: #2196F3;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 800;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .card-link:hover {
+            gap: 12px;
+            color: #FF5722;
+        }
+
+        .add-btn {
+            background: white;
+            border: 4px dashed #B0BEC5;
+            color: #2196F3;
+            width: 100%;
+            padding: 32px;
+            border-radius: 24px;
+            font-size: 18px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .add-btn:hover {
+            border-color: #2196F3;
+            border-style: solid;
+            background: #E3F2FD;
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 8px 30px rgba(33, 150, 243, 0.3);
+        }
+
+        /* Price Sidebar */
+        .price-sidebar {
+            background: linear-gradient(135deg, #FF5722 0%, #F4511E 100%);
+            color: white;
+            border-radius: 32px;
+            padding: 40px;
+            height: fit-content;
+            position: sticky;
+            top: 120px;
+            box-shadow:
+                0 8px 0 #D84315,
+                0 16px 40px rgba(244, 81, 30, 0.4);
+            border: 4px solid #BF360C;
+        }
+
+        .price-term {
+            font-size: 14px;
+            color: #FFCCBC;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 800;
+        }
+
+        .price-amount {
+            font-size: 72px;
+            font-weight: 900;
+            color: white;
+            margin-bottom: 12px;
+            line-height: 1;
+            text-shadow: 4px 4px 0px rgba(0, 0, 0, 0.2);
+            font-family: 'Quicksand', sans-serif;
+        }
+
+        .price-details {
+            font-size: 16px;
+            color: #FFCCBC;
+            margin-bottom: 32px;
+            font-weight: 700;
+        }
+
+        .price-breakdown {
+            border-top: 3px solid rgba(255, 255, 255, 0.3);
+            padding-top: 24px;
+            margin-top: 24px;
+        }
+
+        .price-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 16px;
+            font-size: 15px;
+        }
+
+        .price-item-label {
+            color: #FFCCBC;
+            font-weight: 700;
+        }
+
+        .price-item-value {
+            color: white;
+            font-weight: 900;
+        }
+
+        /* Coverage Selection */
+        .coverage-section {
+            margin-bottom: 48px;
+        }
+
+        .coverage-item {
+            background: linear-gradient(135deg, #E3F2FD 0%, #F3E5F5 100%);
+            border: 4px solid #2196F3;
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 24px;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #1976D2;
+        }
+
+        .coverage-item:hover {
+            border-color: #FF5722;
+            box-shadow:
+                0 8px 0 #F4511E,
+                0 12px 30px rgba(255, 87, 34, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .coverage-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .coverage-title {
+            font-size: 22px;
+            font-weight: 800;
+            color: #2C3E50;
+        }
+
+        .coverage-value {
+            font-size: 32px;
+            font-weight: 900;
+            color: #FF5722;
+            font-family: 'Quicksand', sans-serif;
+            text-shadow: 2px 2px 0px rgba(0, 0, 0, 0.1);
+        }
+
+        .coverage-description {
+            font-size: 16px;
+            color: #546E7A;
+            margin-bottom: 24px;
+            line-height: 1.8;
+            font-weight: 600;
+        }
+
+        .slider-container {
+            margin-bottom: 20px;
+        }
+
+        .slider {
+            width: 100%;
+            height: 12px;
+            border-radius: 20px;
+            background: white;
+            outline: none;
+            -webkit-appearance: none;
+            border: 3px solid #B0BEC5;
+        }
+
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+            cursor: pointer;
+            box-shadow:
+                0 4px 0 #F57C00,
+                0 8px 20px rgba(255, 193, 7, 0.5);
+            border: 4px solid white;
+        }
+
+        .slider::-moz-range-thumb {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #FFC107 0%, #FF5722 100%);
+            cursor: pointer;
+            box-shadow:
+                0 4px 0 #F57C00,
+                0 8px 20px rgba(255, 193, 7, 0.5);
+            border: 4px solid white;
+        }
+
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 14px;
+            color: #546E7A;
+            margin-top: 16px;
+            font-weight: 800;
+        }
+
+        /* Toggle Switch */
+        .toggle-item {
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFF3E0 100%);
+            border: 4px solid #FFC107;
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #FFB300;
+        }
+
+        .toggle-item:hover {
+            border-color: #FF5722;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 0 #F57C00;
+        }
+
+        .toggle-content {
+            flex: 1;
+        }
+
+        .toggle-title {
+            font-size: 18px;
+            font-weight: 800;
+            color: #2C3E50;
+            margin-bottom: 6px;
+        }
+
+        .toggle-description {
+            font-size: 15px;
+            color: #546E7A;
+            font-weight: 600;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 80px;
+            height: 44px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: #B0BEC5;
+            transition: .4s;
+            border-radius: 44px;
+            border: 4px solid #78909C;
+        }
+
+        .toggle-slider:before {
+            position: absolute;
+            content: "❌";
+            height: 32px;
+            width: 32px;
+            left: 4px;
+            bottom: 4px;
+            background: white;
+            transition: .4s;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            line-height: 32px;
+            text-align: center;
+        }
+
+        input:checked + .toggle-slider {
+            background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);
+            border-color: #2E7D32;
+        }
+
+        input:checked + .toggle-slider:before {
+            transform: translateX(36px);
+            content: "✅";
+        }
+
+        input:disabled + .toggle-slider {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Review Screen */
+        .review-section {
+            margin-bottom: 40px;
+        }
+
+        .review-card {
+            background: linear-gradient(135deg, #E8F5E9 0%, #E3F2FD 100%);
+            border: 4px solid #4CAF50;
+            border-radius: 24px;
+            padding: 32px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 0 #388E3C;
+        }
+
+        .review-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px 0;
+            border-bottom: 3px dashed #C8E6C9;
+        }
+
+        .review-row:last-child {
+            border-bottom: none;
+        }
+
+        .review-label {
+            font-size: 15px;
+            color: #546E7A;
+            font-weight: 700;
+        }
+
+        .review-value {
+            font-size: 15px;
+            color: #2C3E50;
+            font-weight: 900;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            background: rgba(33, 150, 243, 0.3);
+            padding: 80px;
+        }
+
+        .modal-content {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Signature Pad */
+        .signature-pad {
+            background: white;
+            border: 6px dashed #2196F3;
+            border-radius: 24px;
+            padding: 60px;
+            margin: 32px 0;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #B0BEC5;
+            font-style: italic;
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .signature-pad.expanded {
+            min-height: 320px;
+            font-size: 20px;
+        }
+
+        /* Checkout */
+        .checkout-section {
+            margin-bottom: 32px;
+        }
+
+        .payment-method-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .payment-method-card {
+            background: linear-gradient(135deg, #FFF9C4 0%, #FFF3E0 100%);
+            border: 4px solid #FFE082;
+            border-radius: 24px;
+            padding: 32px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            box-shadow: 0 4px 0 #FFD54F;
+        }
+
+        .payment-method-card:hover,
+        .payment-method-card.selected {
+            border-color: #2196F3;
+            background: linear-gradient(135deg, #E3F2FD 0%, #BBDEFB 100%);
+            box-shadow:
+                0 8px 0 #1976D2,
+                0 12px 30px rgba(33, 150, 243, 0.3);
+            transform: translateY(-4px);
+        }
+
+        .payment-icon {
+            font-size: 64px;
+            margin-bottom: 16px;
+        }
+
+        /* Alert Box */
+        .alert {
+            background: #FFEBEE;
+            border: 4px solid #EF5350;
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 0 #E53935;
+        }
+
+        .alert-title {
+            font-weight: 900;
+            color: #C62828;
+            margin-bottom: 16px;
+            font-size: 20px;
+        }
+
+        .alert-list {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .alert-list li {
+            color: #B71C1C;
+            margin-bottom: 8px;
+            font-weight: 700;
+            font-size: 16px;
+        }
+
+        .alert-list li::before {
+            content: "⚠️ ";
+            font-size: 20px;
+        }
+
+        /* Badge */
+        .badge {
+            display: inline-block;
+            padding: 8px 18px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border: 3px solid;
+        }
+
+        .badge-success {
+            background: #C8E6C9;
+            color: #1B5E20;
+            border-color: #4CAF50;
+        }
+
+        .badge-info {
+            background: #BBDEFB;
+            color: #0D47A1;
+            border-color: #2196F3;
+        }
+
+        /* Divider */
+        .divider {
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #FFE082, transparent);
+            margin: 48px 0;
+            border-radius: 4px;
+        }
+
+        /* Fun Clouds */
+        .cloud {
+            position: fixed;
+            font-size: 60px;
+            opacity: 0.3;
+            animation: float 20s infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .cloud:nth-child(1) { top: 10%; left: 10%; animation-delay: 0s; }
+        .cloud:nth-child(2) { top: 30%; right: 15%; animation-delay: 5s; }
+        .cloud:nth-child(3) { bottom: 20%; left: 20%; animation-delay: 10s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Fun decorative clouds -->
+    <div class="cloud">☁️</div>
+    <div class="cloud">☁️</div>
+    <div class="cloud">☁️</div>
+
+    <div class="header">
+        <div class="header-content">
+            <div class="logo">Everest Insurance</div>
+            <div class="header-info">
+                <div class="quote-id">Quote: DZ4R2T8X9K</div>
+                <div class="support-phone">📞 1-800-EVEREST</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+
+        <!-- Screen 1: Get Started -->
+        <div class="screen">
+            <div class="screen-indicator">🚀 Screen 1 of 19</div>
+            <h1>Ready to climb?<br>Let's get started! 🏔️</h1>
+            <p class="subtitle">Getting auto insurance shouldn't feel like climbing Everest! We'll make it fun and easy. Customize your coverage in just a few minutes!</p>
+
+            <h3>First things first! 👋</h3>
+            <p class="subtitle">Tell us a bit about yourself so we can get you the perfect quote.</p>
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>First Name <span class="required">*</span></label>
+                    <input type="text" name="first_name" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name <span class="required">*</span></label>
+                    <input type="text" name="last_name" placeholder="Smith">
+                </div>
+                <div class="form-group">
+                    <label>Street Address <span class="required">*</span></label>
+                    <input type="text" name="line_1_address" placeholder="123 Happy Street">
+                </div>
+                <div class="form-group">
+                    <label>Apt/Unit 🏠</label>
+                    <input type="text" name="line_2_address" placeholder="Apt 4B">
+                </div>
+                <div class="form-group">
+                    <label>City <span class="required">*</span></label>
+                    <input type="text" name="municipality_name" placeholder="San Francisco">
+                </div>
+                <div class="form-group">
+                    <label>State <span class="required">*</span></label>
+                    <select name="state_code">
+                        <option value="">Pick your state!</option>
+                        <option value="CA">California ☀️</option>
+                        <option value="NY">New York 🗽</option>
+                        <option value="TX">Texas 🤠</option>
+                        <option value="FL">Florida 🏖️</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>ZIP Code <span class="required">*</span></label>
+                    <input type="text" name="postal_code" placeholder="94105">
+                </div>
+                <div class="form-group">
+                    <label>Birthday 🎂 <span class="required">*</span></label>
+                    <input type="date" name="birth_date">
+                </div>
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-primary">Let's Go! →</button>
+            </div>
+        </div>
+
+        <!-- Screen 2: Effective Date Entry -->
+        <div class="screen">
+            <div class="screen-indicator">📅 Screen 2 of 19</div>
+            <h1>When should we<br>start protecting you?</h1>
+            <p class="subtitle">Pick a date when you want your coverage to begin. Most folks choose today or sometime in the next month!</p>
+
+            <div class="form-group" style="max-width: 500px; margin: 40px auto;">
+                <label>Policy Start Date 🗓️ <span class="required">*</span></label>
+                <input type="date" name="effective_date">
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Oops, Go Back</button>
+                <button class="btn btn-primary">Next Step! →</button>
+            </div>
+        </div>
+
+        <!-- Screen 2.5: Email Address -->
+        <div class="screen">
+            <div class="screen-indicator">📧 Screen 3 of 19</div>
+            <h1>How can we<br>reach you?</h1>
+            <p class="subtitle">We'll send your quote and all the important stuff to your email. Don't worry, we won't spam you! 😊</p>
+
+            <div class="form-group" style="max-width: 500px; margin: 40px auto;">
+                <label>Email Address ✉️ <span class="required">*</span></label>
+                <input type="email" name="communication_value" data-type="EMAIL" placeholder="you@awesome.com">
+            </div>
+
+            <div class="form-group" style="max-width: 500px; margin: 0 auto;">
+                <label>Mobile Phone 📱</label>
+                <input type="tel" name="communication_value" data-type="MOBILE" placeholder="(555) 123-4567">
+            </div>
+
+            <div class="btn-actions">
+                <button class="btn btn-secondary">← Back</button>
+                <button class="btn btn-primary">Onwards! →</button>
+            </div>
+        </div>
+
+        <!-- Screen 3: Loading Screen #1 -->
+        <div class="screen loading-screen">
+            <div class="screen-indicator">⏳ Screen 4 of 19</div>
+            <h2>Hang tight!<br>We're working our magic... ✨</h2>
+            <p class="subtitle">We're checking your insurance history and finding your vehicles. This is like a treasure hunt, but faster!</p>
+
+            <div class="loading-animation">
+                <div class="car-icon"></div>
+            </div>
+
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="loading-step complete">Found your insurance history!</div>
+                <div class="loading-step active">Looking for your vehicles...</div>
+                <div class="loading-step">Crunching the numbers</div>
+            </div>
+        </div>
+
+        <!-- Screen 4: Vehicle & Driver Summary -->
+        <div class="screen">
+            <div class="screen-indicator">🚗 Screen 5 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <div>
+                        <h2>Your Awesome Vehicles! 🚙</h2>
+                        <p class="subtitle">We found these beauties! Add more or edit if we got something wrong.</p>
+
+                        <div class="card-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Vehicle 1</div>
+                                </div>
+                                <div class="card-subtitle">2006 FORD FUSION</div>
+                                <div class="card-detail">VIN: 1FAFP34N16W123456</div>
+                                <a href="#" class="card-link">Edit this ride →</a>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon"></div>
+                                    <div class="card-title">Vehicle 2</div>
+                                </div>
+                                <div class="card-subtitle">2017 CADILLAC XT5</div>
+                                <div class="card-detail">VIN: 1GYKNCRS8HZ123456</div>
+                                <a href="#" class="card-link">Edit this ride →</a>
+                            </div>
+                        </div>
+
+                        <button class="add-btn">+ Add Another Vehicle 🚗</button>
+                    </div>
+
+                    <div>
+                        <h2>Who's Driving? 👨‍👩‍👧‍👦</h2>
+                        <p class="subtitle">Make sure everyone who drives is on the list!</p>
+
+                        <div class="card-grid">
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon" style="background: linear-gradient(135deg, #4CAF50 0%, #388E3C 100%);"></div>
+                                    <div class="card-title">Primary Driver</div>
+                                </div>
+                                <div class="card-subtitle">Sherrie Beaudry, 79</div>
+                                <div class="card-detail">License: CA-D1234567</div>
+                                <div class="card-detail"><span class="badge badge-success">Main Person</span></div>
+                                <a href="#" class="card-link">Edit info →</a>
+                            </div>
+
+                            <div class="card">
+                                <div class="card-header">
+                                    <div class="card-icon" style="background: linear-gradient(135deg, #9C27B0 0%, #7B1FA2 100%);"></div>
+                                    <div class="card-title">Extra Driver</div>
+                                </div>
+                                <div class="card-subtitle">Joshua Gumha, 23</div>
+                                <div class="card-detail">License: CA-D7654321</div>
+                                <div class="card-detail"><span class="badge badge-info">Family Member</span></div>
+                                <a href="#" class="card-link">Edit info →</a>
+                            </div>
+                        </div>
+
+                        <button class="add-btn">+ Add Another Driver 👤</button>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">Start Over</button>
+                        <button class="btn btn-primary">Pick Coverage! →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">💰 6-Month Deal</div>
+                    <div class="price-amount">$403<span style="font-size: 44px;">.33</span></div>
+                    <div class="price-details">Pay this today + 5 more payments</div>
+
+                    <div class="price-breakdown">
+                        <div class="price-item">
+                            <span class="price-item-label">Total for 6 months</span>
+                            <span class="price-item-value">$2,420.00</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Multi-Car Discount</span>
+                            <span class="price-item-value">-$150.00 🎉</span>
+                        </div>
+                        <div class="price-item">
+                            <span class="price-item-label">Homeowner Discount</span>
+                            <span class="price-item-value">-$75.00 🏠</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- MODAL SCREEN: Edit Vehicle - Owned -->
+        <div class="screen modal-overlay">
+            <div class="modal-content">
+                <div class="screen" style="margin-bottom: 0;">
+                    <div class="screen-indicator">🔧 Edit Your Vehicle</div>
+                    <h2>Let's Update This Info!</h2>
+                    <p class="subtitle">Make sure everything looks right!</p>
+
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label>Year 📅 <span class="required">*</span></label>
+                            <input type="number" name="vehicle_year" value="2006">
+                        </div>
+                        <div class="form-group">
+                            <label>Make 🏭 <span class="required">*</span></label>
+                            <input type="text" name="vehicle_make" value="FORD">
+                        </div>
+                        <div class="form-group">
+                            <label>Model 🚗 <span class="required">*</span></label>
+                            <input type="text" name="vehicle_model" value="FUSION">
+                        </div>
+                        <div class="form-group">
+                            <label>VIN 🔢 <span class="required">*</span></label>
+                            <input type="text" name="vin" value="1FAFP34N16W123456">
+                        </div>
+                        <div class="form-group full-width">
+                            <label>Do You Own It? <span class="required">*</span></label>
+                            <select name="ownership_status">
+                                <option value="OWNED" selected>I own it! ✅</option>
+                                <option value="FINANCED">Paying it off 💳</option>
+                                <option value="LEASED">It's a lease 📝</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Miles Per Year 🛣️ <span class="required">*</span></label>
+                            <input type="number" name="annual_mileage" value="12000">
+                        </div>
+                        <div class="form-group">
+                            <label>What's It For? <span class="required">*</span></label>
+                            <select name="vehicle_use_code">
+                                <option value="COMMUTE">Going to work 💼</option>
+                                <option value="PLEASURE" selected>Just for fun! 🎉</option>
+                                <option value="BUSINESS">Business stuff 📊</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions">
+                        <button class="btn btn-secondary">Nevermind</button>
+                        <button class="btn btn-primary">Save It!</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional screens would continue with the same playful, cartoony style... -->
+        <!-- For brevity, I'm including key screens. The full implementation would have all 19. -->
+
+        <!-- Screen 6: Coverage Selection -->
+        <div class="screen">
+            <div class="screen-indicator">🛡️ Screen 6 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <h2>Pick Your Protection! 🛡️</h2>
+                    <p class="subtitle">We pre-picked some good stuff, but you can change anything. It's your call!</p>
+
+                    <div class="coverage-section">
+                        <h3>Protect Your Wallet 💰</h3>
+                        <p class="subtitle">If you bump into someone, these coverages have your back!</p>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Bodily Injury Coverage</div>
+                                <div class="coverage-value">$300k/$500k</div>
+                            </div>
+                            <div class="coverage-description">If someone gets hurt and it's your fault, this helps pay their medical bills. Nobody likes hospital bills! 🏥</div>
+                            <div class="slider-container">
+                                <select name="coverage_BI_LIABILITY" style="width: 100%;">
+                                    <option value="100000/300000">$100k / $300k</option>
+                                    <option value="300000/500000" selected>$300k / $500k (recommended! ⭐)</option>
+                                    <option value="500000/1000000">$500k / $1M (extra safe! 🌟)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="coverage-item">
+                            <div class="coverage-header">
+                                <div class="coverage-title">Property Damage Coverage</div>
+                                <div class="coverage-value">$100,000</div>
+                            </div>
+                            <div class="coverage-description">Oops, did you hit a fancy car? Or a fence? This helps pay for the damage. 🚗💥</div>
+                            <div class="slider-container">
+                                <input type="range" min="0" max="100" value="100" class="slider" name="coverage_PD_LIABILITY">
+                                <div class="slider-labels">
+                                    <span>$25k</span>
+                                    <span>$50k</span>
+                                    <span>$100k ⭐</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">← Back</button>
+                        <button class="btn btn-primary">Add Fun Extras! →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">💰 6-Month Deal</div>
+                    <div class="price-amount">$403<span style="font-size: 44px;">.33</span></div>
+                    <div class="price-details">Today + 5 more payments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 7: Add-Ons -->
+        <div class="screen">
+            <div class="screen-indicator">✨ Screen 7 of 19</div>
+            <div class="summary-layout">
+                <div class="summary-content">
+                    <h2>Want Some Extras? 🎁</h2>
+                    <p class="subtitle">These add-ons are totally optional, but they're pretty cool!</p>
+
+                    <div class="coverage-section">
+                        <h3>Rental Car Coverage 🚗</h3>
+                        <p class="subtitle">If your car is in the shop, we'll pay for a rental! Up to $30 a day.</p>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">2006 FORD FUSION</div>
+                                <div class="toggle-description">$30/day, up to 30 days</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_RENTAL_v1">
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">2017 CADILLAC XT5</div>
+                                <div class="toggle-description">$30/day, up to 30 days</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_RENTAL_v2" checked>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="coverage-section">
+                        <h3>Always Free! 🎉</h3>
+                        <p class="subtitle">These awesome perks come with every Everest policy!</p>
+
+                        <div class="toggle-item">
+                            <div class="toggle-content">
+                                <div class="toggle-title">Roadside Rescue! 🚑</div>
+                                <div class="toggle-description">24/7 help: towing, flat tires, dead batteries, lockouts!</div>
+                            </div>
+                            <label class="toggle-switch">
+                                <input type="checkbox" name="coverage_ROADSIDE" checked disabled>
+                                <span class="toggle-slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="btn-actions" style="justify-content: space-between;">
+                        <button class="btn btn-secondary">← Back</button>
+                        <button class="btn btn-primary">Keep Going! →</button>
+                    </div>
+                </div>
+
+                <div class="price-sidebar">
+                    <div class="price-term">💰 6-Month Deal</div>
+                    <div class="price-amount">$415<span style="font-size: 44px;">.50</span></div>
+                    <div class="price-details">Today + 5 more payments</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Screen 13: Payment Processing -->
+        <div class="screen loading-screen">
+            <div class="screen-indicator">💳 Screen 13 of 19</div>
+            <h2>Processing your payment...<br>Almost there! 🎉</h2>
+            <p class="subtitle">Don't close this! We're making sure everything is secure and perfect!</p>
+
+            <div class="loading-animation">
+                <div class="car-icon"></div>
+            </div>
+
+            <div class="loading-progress">
+                <div class="loading-bar"></div>
+            </div>
+
+            <div class="loading-steps">
+                <div class="loading-step complete">Payment approved! ✅</div>
+                <div class="loading-step active">Setting up your policy...</div>
+                <div class="loading-step">Making your documents</div>
+            </div>
+        </div>
+
+        <!-- Final Screen: Success -->
+        <div class="screen">
+            <div class="screen-indicator">🎊 You Did It!</div>
+            <div style="text-align: center; padding: 60px 0;">
+                <div style="font-size: 120px; margin-bottom: 24px; animation: bounce 2s infinite;">🎉</div>
+                <h1 style="color: #4CAF50;">Woohoo!</h1>
+                <h2 style="color: #2196F3; margin-top: 16px;">You're all set and protected!</h2>
+                <p class="subtitle" style="max-width: 600px; margin: 24px auto; font-size: 20px;">
+                    Policy Number: <strong style="color: #FF5722;">DZQV87Z4FH</strong><br>
+                    Starts: November 9, 2024 📅<br>
+                    Lasts: 6 awesome months! ⭐
+                </p>
+
+                <div class="review-card" style="max-width: 600px; margin: 40px auto;">
+                    <h3 style="margin-bottom: 24px; color: #2C3E50;">What happens next?</h3>
+                    <div class="review-row">
+                        <span class="review-label">📧 Check Your Email</span>
+                        <span class="review-value">All docs sent! ✅</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">📱 Get Your ID Cards</span>
+                        <span class="review-value">Ready to download!</span>
+                    </div>
+                    <div class="review-row">
+                        <span class="review-label">🏠 Visit Your Portal</span>
+                        <span class="review-value">Manage everything!</span>
+                    </div>
+                </div>
+
+                <div class="btn-actions" style="margin-top: 48px;">
+                    <button class="btn btn-secondary">Download ID Cards 📱</button>
+                    <button class="btn btn-primary">Go to My Portal! →</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>

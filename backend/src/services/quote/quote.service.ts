@@ -63,6 +63,8 @@ export interface CreateQuoteInput {
     maritalStatus?: string;
     yearsLicensed?: number;
     relationship?: string; // spouse, child, parent, sibling, other
+    licenseNumber?: string;
+    licenseState?: string;
   }>;
 
   // Address information (for PNI)
@@ -152,182 +154,185 @@ export class QuoteService {
     });
 
     try {
-      // Step 1: Create Party (the person buying insurance)
-      const [newParty] = await this.db.insert(party).values({
-        party_name: `${input.driver.firstName} ${input.driver.lastName}`,
-        party_type_code: 'PERSON',
-      }).returning();
-
-      this.logger.debug('Created party', { partyId: newParty.party_identifier });
-
-      // Step 2: Create Person (detailed person info)
-      await this.db.insert(person).values({
-        person_identifier: newParty.party_identifier, // Subtype shares PK
-        first_name: input.driver.firstName,
-        last_name: input.driver.lastName,
-        birth_date: formatDateToYYYYMMDD(input.driver.birthDate),
-        gender_code: input.driver.gender || null,
-      }).returning();
-
-      // Step 3: Create Communication Identity (email)
-      await this.db.insert(communicationIdentity).values({
-        party_identifier: newParty.party_identifier,
-        communication_type_code: 'EMAIL',
-        communication_value: input.driver.email,
-      }).returning();
-
-      // Step 4: Create Communication Identity (phone) - only if provided
-      if (input.driver.phone) {
-        await this.db.insert(communicationIdentity).values({
-          party_identifier: newParty.party_identifier,
-          communication_type_code: 'PHONE',
-          communication_value: input.driver.phone,
+      // Wrap all database operations in a transaction to ensure atomicity
+      return await this.db.transaction(async (tx) => {
+        // Step 1: Create Party (the person buying insurance)
+        const [newParty] = await tx.insert(party).values({
+          party_name: `${input.driver.firstName} ${input.driver.lastName}`,
+          party_type_code: 'PERSON',
         }).returning();
-      }
 
-      // Step 5: Create Insurable Object (generic object)
-      const [newInsurableObject] = await this.db.insert(insurableObject).values({
-        insurable_object_type_code: 'VEHICLE',
-        object_description: `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`,
-      }).returning();
+        this.logger.debug('Created party', { partyId: newParty.party_identifier });
 
-      // Step 6: Create Vehicle (specific vehicle details)
-      const vehicleData: any = {
-        vehicle_identifier: newInsurableObject.insurable_object_identifier,
-        vin: primaryVehicle.vin || null,  // Use null instead of empty string for unique constraint
-        make: primaryVehicle.make,
-        model: primaryVehicle.model,
-        year: primaryVehicle.year,
-      };
+        // Step 2: Create Person (detailed person info)
+        await tx.insert(person).values({
+          person_identifier: newParty.party_identifier, // Subtype shares PK
+          first_name: input.driver.firstName,
+          last_name: input.driver.lastName,
+          birth_date: formatDateToYYYYMMDD(input.driver.birthDate),
+          gender_code: input.driver.gender || null,
+        }).returning();
 
-      // Only add optional fields if they have values
-      if (primaryVehicle.bodyType) vehicleData.body_style = primaryVehicle.bodyType;
-      if (primaryVehicle.annualMileage) vehicleData.annual_mileage = primaryVehicle.annualMileage;
+        // Step 3: Create Communication Identity (email)
+        await tx.insert(communicationIdentity).values({
+          party_identifier: newParty.party_identifier,
+          communication_type_code: 'EMAIL',
+          communication_value: input.driver.email,
+        }).returning();
 
-      await this.db.insert(vehicle).values(vehicleData).returning();
+        // Step 4: Create Communication Identity (phone) - only if provided
+        if (input.driver.phone) {
+          await tx.insert(communicationIdentity).values({
+            party_identifier: newParty.party_identifier,
+            communication_type_code: 'PHONE',
+            communication_value: input.driver.phone,
+          }).returning();
+        }
 
-      this.logger.debug('Created vehicle', { vehicleId: newInsurableObject.insurable_object_identifier });
+        // Step 5: Create Insurable Object (generic object)
+        const [newInsurableObject] = await tx.insert(insurableObject).values({
+          insurable_object_type_code: 'VEHICLE',
+          object_description: `${primaryVehicle.year} ${primaryVehicle.make} ${primaryVehicle.model}`,
+        }).returning();
 
-      // Step 7: Ensure Product exists (Personal Auto Insurance)
-      const productId = await this.ensureProductExists();
+        // Step 6: Create Vehicle (specific vehicle details)
+        const vehicleData: any = {
+          vehicle_identifier: newInsurableObject.insurable_object_identifier,
+          vin: primaryVehicle.vin || null,  // Use null instead of empty string for unique constraint
+          make: primaryVehicle.make,
+          model: primaryVehicle.model,
+          year: primaryVehicle.year,
+        };
 
-      // Step 8: Calculate premium (before creating agreement so we can store it)
-      const premium = this.calculatePremium(input);
+        // Only add optional fields if they have values
+        if (primaryVehicle.bodyType) vehicleData.body_style = primaryVehicle.bodyType;
+        if (primaryVehicle.annualMileage) vehicleData.annual_mileage = primaryVehicle.annualMileage;
 
-      // Step 9: Generate quote number
-      const quoteNumber = this.generateQuoteNumber();
+        await tx.insert(vehicle).values(vehicleData).returning();
 
-      // Step 10: Build complete quote snapshot for CRM (HYBRID APPROACH)
-      // Includes ALL drivers and ALL vehicles for complete CRM data
-      const quoteSnapshot = {
-        // Primary vehicle (backward compatibility)
-        vehicle: input.vehicle ? {
-          year: input.vehicle.year,
-          make: input.vehicle.make,
-          model: input.vehicle.model,
-          vin: input.vehicle.vin || null,
-          bodyType: input.vehicle.bodyType || null,
-          annualMileage: input.vehicle.annualMileage || null,
-        } : null,
-        // ALL vehicles (for multi-vehicle quotes)
-        vehicles: (input.vehicles || []).map(v => ({
-          year: v.year,
-          make: v.make,
-          model: v.model,
-          vin: v.vin || null,
-          bodyType: v.bodyType || null,
-          annualMileage: v.annualMileage || null,
-          primaryDriverId: v.primaryDriverId || null,
-        })),
-        // Primary driver (PNI - Primary Named Insured)
-        driver: {
-          firstName: input.driver.firstName,
-          lastName: input.driver.lastName,
-          birthDate: formatDateToYYYYMMDD(input.driver.birthDate),
-          email: input.driver.email,
-          phone: input.driver.phone,
-          gender: input.driver.gender || null,
-          maritalStatus: input.driver.maritalStatus || null,
-          yearsLicensed: input.driver.yearsLicensed || null,
-          isPrimary: true,
-        },
-        // ALL additional drivers (for multi-driver quotes)
-        additionalDrivers: (input.additionalDrivers || []).map(d => ({
-          firstName: d.firstName,
-          lastName: d.lastName,
-          birthDate: formatDateToYYYYMMDD(d.birthDate),
-          email: d.email,
-          phone: d.phone,
-          gender: d.gender || null,
-          maritalStatus: d.maritalStatus || null,
-          yearsLicensed: d.yearsLicensed || null,
-          relationship: d.relationship || null,
-        })),
-        address: {
-          addressLine1: input.address.addressLine1,
-          addressLine2: input.address.addressLine2 || null,
-          city: input.address.city,
-          state: input.address.state,
-          zipCode: input.address.zipCode,
-        },
-        coverages: {
-          startDate: input.coverages?.startDate || null,
-          bodilyInjuryLimit: input.coverages?.bodilyInjuryLimit || null,
-          propertyDamageLimit: input.coverages?.propertyDamageLimit || null,
-          hasCollision: input.coverages?.collision || false,
-          collisionDeductible: input.coverages?.collisionDeductible || null,
-          hasComprehensive: input.coverages?.comprehensive || false,
-          comprehensiveDeductible: input.coverages?.comprehensiveDeductible || null,
-          hasUninsured: input.coverages?.uninsuredMotorist || false,
-          hasRoadside: input.coverages?.roadsideAssistance || false,
-          hasRental: input.coverages?.rentalReimbursement || false,
-          rentalLimit: input.coverages?.rentalLimit || null,
-        },
-        premium: {
-          total: premium,
-          monthly: Math.round(premium / 6 * 100) / 100,
-          sixMonth: premium,
-        },
-        meta: {
-          createdAt: new Date().toISOString(),
-          quoteNumber: quoteNumber,
-          version: 2, // Incremented to v2 to indicate multi-driver/vehicle support
-        },
-      };
+        this.logger.debug('Created vehicle', { vehicleId: newInsurableObject.insurable_object_identifier });
 
-      // Step 11: Create Agreement (parent contract) with driver email and premium
-      const [newAgreement] = await this.db.insert(agreement).values({
-        agreement_type_code: 'POLICY',
-        product_identifier: productId,
-        driver_email: input.driver.email,
-        premium_amount: premium.toString(),
-      }).returning();
+        // Step 7: Ensure Product exists (Personal Auto Insurance)
+        const productId = await this.ensureProductExists(tx);
 
-      // Step 12: Create Policy with snapshot and denormalized fields
-      const [newPolicy] = await this.db.insert(policy).values({
-        policy_identifier: newAgreement.agreement_identifier,
-        policy_number: quoteNumber,
-        effective_date: formatDateToYYYYMMDD(new Date()),
-        expiration_date: formatDateToYYYYMMDD(this.calculateExpirationDate()),
-        status_code: 'QUOTED',
-        quote_snapshot: quoteSnapshot,  // ✅ Complete quote data
-        marital_status: input.driver.maritalStatus || null,  // ✅ Denormalized for queries
-        coverage_start_date: input.coverages?.startDate || null,  // ✅ Denormalized for queries
-      }).returning();
+        // Step 8: Calculate premium (before creating agreement so we can store it)
+        const premium = this.calculatePremium(input);
 
-      this.logger.log('Quote created successfully', {
-        quoteNumber,
-        policyId: newPolicy.policy_identifier,
-        premium
+        // Step 9: Generate quote number
+        const quoteNumber = this.generateQuoteNumber();
+
+        // Step 10: Build complete quote snapshot for CRM (HYBRID APPROACH)
+        // Includes ALL drivers and ALL vehicles for complete CRM data
+        const quoteSnapshot = {
+          // Primary vehicle (backward compatibility)
+          vehicle: input.vehicle ? {
+            year: input.vehicle.year,
+            make: input.vehicle.make,
+            model: input.vehicle.model,
+            vin: input.vehicle.vin || null,
+            bodyType: input.vehicle.bodyType || null,
+            annualMileage: input.vehicle.annualMileage || null,
+          } : null,
+          // ALL vehicles (for multi-vehicle quotes)
+          vehicles: (input.vehicles || []).map(v => ({
+            year: v.year,
+            make: v.make,
+            model: v.model,
+            vin: v.vin || null,
+            bodyType: v.bodyType || null,
+            annualMileage: v.annualMileage || null,
+            primaryDriverId: v.primaryDriverId || null,
+          })),
+          // Primary driver (PNI - Primary Named Insured)
+          driver: {
+            firstName: input.driver.firstName,
+            lastName: input.driver.lastName,
+            birthDate: formatDateToYYYYMMDD(input.driver.birthDate),
+            email: input.driver.email,
+            phone: input.driver.phone,
+            gender: input.driver.gender || null,
+            maritalStatus: input.driver.maritalStatus || null,
+            yearsLicensed: input.driver.yearsLicensed || null,
+            isPrimary: true,
+          },
+          // ALL additional drivers (for multi-driver quotes)
+          additionalDrivers: (input.additionalDrivers || []).map(d => ({
+            firstName: d.firstName,
+            lastName: d.lastName,
+            birthDate: formatDateToYYYYMMDD(d.birthDate),
+            email: d.email,
+            phone: d.phone,
+            gender: d.gender || null,
+            maritalStatus: d.maritalStatus || null,
+            yearsLicensed: d.yearsLicensed || null,
+            relationship: d.relationship || null,
+          })),
+          address: {
+            addressLine1: input.address.addressLine1,
+            addressLine2: input.address.addressLine2 || null,
+            city: input.address.city,
+            state: input.address.state,
+            zipCode: input.address.zipCode,
+          },
+          coverages: {
+            startDate: input.coverages?.startDate || null,
+            bodilyInjuryLimit: input.coverages?.bodilyInjuryLimit || null,
+            propertyDamageLimit: input.coverages?.propertyDamageLimit || null,
+            hasCollision: input.coverages?.collision || false,
+            collisionDeductible: input.coverages?.collisionDeductible || null,
+            hasComprehensive: input.coverages?.comprehensive || false,
+            comprehensiveDeductible: input.coverages?.comprehensiveDeductible || null,
+            hasUninsured: input.coverages?.uninsuredMotorist || false,
+            hasRoadside: input.coverages?.roadsideAssistance || false,
+            hasRental: input.coverages?.rentalReimbursement || false,
+            rentalLimit: input.coverages?.rentalLimit || null,
+          },
+          premium: {
+            total: premium,
+            monthly: Math.round(premium / 6 * 100) / 100,
+            sixMonth: premium,
+          },
+          meta: {
+            createdAt: new Date().toISOString(),
+            quoteNumber: quoteNumber,
+            version: 2, // Incremented to v2 to indicate multi-driver/vehicle support
+          },
+        };
+
+        // Step 11: Create Agreement (parent contract) with driver email and premium
+        const [newAgreement] = await tx.insert(agreement).values({
+          agreement_type_code: 'POLICY',
+          product_identifier: productId,
+          driver_email: input.driver.email,
+          premium_amount: premium.toString(),
+        }).returning();
+
+        // Step 12: Create Policy with snapshot and denormalized fields
+        const [newPolicy] = await tx.insert(policy).values({
+          policy_identifier: newAgreement.agreement_identifier,
+          policy_number: quoteNumber,
+          effective_date: formatDateToYYYYMMDD(new Date()),
+          expiration_date: formatDateToYYYYMMDD(this.calculateExpirationDate()),
+          status_code: 'QUOTED',
+          quote_snapshot: quoteSnapshot,  // ✅ Complete quote data
+          marital_status: input.driver.maritalStatus || null,  // ✅ Denormalized for queries
+          coverage_start_date: input.coverages?.startDate || null,  // ✅ Denormalized for queries
+        }).returning();
+
+        this.logger.log('Quote created successfully', {
+          quoteNumber,
+          policyId: newPolicy.policy_identifier,
+          premium
+        });
+
+        return {
+          quoteId: quoteNumber,      // Use quote number as the human-readable ID
+          quoteNumber,
+          premium,
+          createdAt: new Date(),
+          expiresAt: this.calculateQuoteExpiration(),
+        };
       });
-
-      return {
-        quoteId: quoteNumber,      // Use quote number as the human-readable ID
-        quoteNumber,
-        premium,
-        createdAt: new Date(),
-        expiresAt: this.calculateQuoteExpiration(),
-      };
     } catch (error) {
       this.logger.error('Failed to create quote', error);
       // Log full error details for debugging
@@ -543,11 +548,12 @@ export class QuoteService {
   /**
    * Ensure Product exists (create if not)
    */
-  private async ensureProductExists(): Promise<string> {
+  private async ensureProductExists(tx?: any): Promise<string> {
     const productName = 'Personal Auto Insurance';
+    const db = tx || this.db;
 
     // Check if product exists
-    const existing = await this.db
+    const existing = await db
       .select()
       .from(product)
       .where(eq(product.licensed_product_name, productName))
@@ -558,7 +564,7 @@ export class QuoteService {
     }
 
     // Create product
-    const [newProduct] = await this.db.insert(product).values({
+    const [newProduct] = await db.insert(product).values({
       licensed_product_name: productName,
       product_description: 'Standard personal auto insurance coverage',
     }).returning();
@@ -602,6 +608,8 @@ export class QuoteService {
       phone: string;
       gender?: string;
       maritalStatus?: string;
+      licenseNumber?: string;
+      licenseState?: string;
     },
     address: {
       addressLine1: string;
@@ -645,6 +653,8 @@ export class QuoteService {
           phone: driver.phone,
           gender: driver.gender || null,
           maritalStatus: driver.maritalStatus || null,
+          licenseNumber: driver.licenseNumber || null,
+          licenseState: driver.licenseState || null,
         },
         address: {
           addressLine1: address.addressLine1,
@@ -722,6 +732,8 @@ export class QuoteService {
       maritalStatus?: string;
       yearsLicensed?: number;
       relationship?: string;
+      licenseNumber?: string;
+      licenseState?: string;
     }>
   ): Promise<QuoteResult> {
     this.logger.log('Updating drivers for quote', { quoteNumber, driverCount: additionalDrivers.length });
@@ -777,6 +789,8 @@ export class QuoteService {
           maritalStatus: d.maritalStatus || null,
           yearsLicensed: d.yearsLicensed || null,
           relationship: d.relationship || null,
+          licenseNumber: d.licenseNumber || null,
+          licenseState: d.licenseState || null,
         })),
         meta: {
           ...currentSnapshot.meta,
@@ -954,6 +968,7 @@ export class QuoteService {
       startDate?: string;
       bodilyInjuryLimit?: string;
       propertyDamageLimit?: string;
+      medicalPaymentsLimit?: number;
       collision?: boolean;
       collisionDeductible?: number;
       comprehensive?: boolean;
@@ -962,6 +977,7 @@ export class QuoteService {
       roadsideAssistance?: boolean;
       rentalReimbursement?: boolean;
       rentalLimit?: number;
+      vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
     }
   ): Promise<QuoteResult> {
     this.logger.log('Updating coverage and finalizing quote', { quoteNumber });
@@ -994,6 +1010,7 @@ export class QuoteService {
           startDate: coverages.startDate || null,
           bodilyInjuryLimit: coverages.bodilyInjuryLimit || null,
           propertyDamageLimit: coverages.propertyDamageLimit || null,
+          medicalPaymentsLimit: coverages.medicalPaymentsLimit || null,
           hasCollision: coverages.collision || false,
           collisionDeductible: coverages.collisionDeductible || null,
           hasComprehensive: coverages.comprehensive || false,
@@ -1002,6 +1019,7 @@ export class QuoteService {
           hasRoadside: coverages.roadsideAssistance || false,
           hasRental: coverages.rentalReimbursement || false,
           rentalLimit: coverages.rentalLimit || null,
+          vehicleCoverages: coverages.vehicleCoverages || null,
         },
         meta: {
           ...currentSnapshot.meta,
@@ -1016,6 +1034,7 @@ export class QuoteService {
         additionalDrivers: currentSnapshot.additionalDrivers || [],
         vehicles: currentSnapshot.vehicles || [],
         coverages,
+        vehicleCoverages: coverages.vehicleCoverages,
       });
 
       // Update premium in snapshot
@@ -1073,6 +1092,7 @@ export class QuoteService {
     additionalDrivers?: any[];
     vehicles?: any[];
     coverages?: any;
+    vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
   }): number {
     // Base premium starts at $1000
     let basePremium = 1000;
@@ -1097,93 +1117,136 @@ export class QuoteService {
       additionalDriversFactor = 1 + (data.additionalDrivers.length * 0.15);
     }
 
-    // Vehicle factor (use first vehicle if provided, else assume average)
-    let vehicleFactor = 1.0;
+    // Calculate per-vehicle premiums
+    let totalVehiclePremium = 0;
     if (data.vehicles && data.vehicles.length > 0) {
-      const primaryVehicle = data.vehicles[0];
-      const currentYear = new Date().getFullYear();
-      const vehicleAge = currentYear - primaryVehicle.year;
+      data.vehicles.forEach((vehicle: any, index: number) => {
+        const currentYear = new Date().getFullYear();
+        const vehicleAge = currentYear - vehicle.year;
 
-      if (vehicleAge <= 3) {
-        vehicleFactor = 1.3; // New cars cost more to repair
-      } else if (vehicleAge <= 7) {
-        vehicleFactor = 1.0; // Mid-age baseline
-      } else {
-        vehicleFactor = 0.9; // Older cars less valuable
-      }
+        // Base vehicle factor
+        let vehicleFactor = 1.0;
+        if (vehicleAge <= 3) {
+          vehicleFactor = 1.3; // New cars cost more to repair
+        } else if (vehicleAge <= 7) {
+          vehicleFactor = 1.0; // Mid-age baseline
+        } else {
+          vehicleFactor = 0.9; // Older cars less valuable
+        }
 
-      // Multi-car discount (10% off for each additional vehicle)
+        // Get per-vehicle deductibles if provided, otherwise use global defaults
+        let collisionDeductible = data.coverages?.collisionDeductible || 500;
+        let comprehensiveDeductible = data.coverages?.comprehensiveDeductible || 500;
+
+        if (data.vehicleCoverages && data.vehicleCoverages[index]) {
+          collisionDeductible = data.vehicleCoverages[index].collision_deductible;
+          comprehensiveDeductible = data.vehicleCoverages[index].comprehensive_deductible;
+        }
+
+        // Collision deductible factor for this vehicle
+        let collisionFactor = 0;
+        if (data.coverages?.collision || data.coverages?.hasCollision) {
+          if (collisionDeductible === 250) collisionFactor = 0.35;       // Low deductible = higher premium
+          else if (collisionDeductible === 500) collisionFactor = 0.30;  // Standard deductible
+          else if (collisionDeductible === 750) collisionFactor = 0.275; // Mid-range deductible
+          else if (collisionDeductible === 1000) collisionFactor = 0.25; // High deductible = lower premium
+          else if (collisionDeductible === 2500) collisionFactor = 0.20; // Very high deductible = much lower premium
+          else collisionFactor = 0.30; // Default to standard
+        }
+
+        // Comprehensive deductible factor for this vehicle
+        let comprehensiveFactor = 0;
+        if (data.coverages?.comprehensive || data.coverages?.hasComprehensive) {
+          if (comprehensiveDeductible === 250) comprehensiveFactor = 0.25;       // Low deductible = higher premium
+          else if (comprehensiveDeductible === 500) comprehensiveFactor = 0.20;  // Standard deductible
+          else if (comprehensiveDeductible === 750) comprehensiveFactor = 0.175; // Mid-range deductible
+          else if (comprehensiveDeductible === 1000) comprehensiveFactor = 0.15; // High deductible = lower premium
+          else if (comprehensiveDeductible === 2500) comprehensiveFactor = 0.10; // Very high deductible = much lower premium
+          else comprehensiveFactor = 0.20; // Default to standard
+        }
+
+        // Calculate this vehicle's contribution to premium
+        const vehicleCoverageFactor = 1.0 + collisionFactor + comprehensiveFactor;
+        const vehiclePremium = basePremium * vehicleFactor * vehicleCoverageFactor;
+        totalVehiclePremium += vehiclePremium;
+
+        this.logger.debug(`Vehicle ${index + 1} premium calculation`, {
+          vehicleYear: vehicle.year,
+          vehicleAge,
+          vehicleFactor,
+          collisionDeductible,
+          comprehensiveDeductible,
+          collisionFactor,
+          comprehensiveFactor,
+          vehicleCoverageFactor,
+          vehiclePremium: Math.round(vehiclePremium),
+        });
+      });
+
+      // Apply multi-car discount to total vehicle premium
       if (data.vehicles.length > 1) {
         const multiCarDiscount = 0.9 - ((data.vehicles.length - 1) * 0.05);
-        vehicleFactor *= Math.max(multiCarDiscount, 0.75); // Cap at 25% discount
+        const discountMultiplier = Math.max(multiCarDiscount, 0.75); // Cap at 25% discount
+        totalVehiclePremium *= discountMultiplier;
+        this.logger.debug(`Multi-car discount applied: ${discountMultiplier}`);
       }
     }
 
-    // Coverage factor (use actual if provided, else minimum)
-    let coverageFactor = 1.0;
+    // Liability coverage factor (applies to entire policy, not per-vehicle)
+    let liabilityCoverageFactor = 1.0;
     if (data.coverages) {
       // Bodily Injury Liability - Higher limits cost more
       const biLimit = data.coverages.bodilyInjuryLimit || data.coverages.bodilyInjuryLimit;
-      if (biLimit === '25/50') coverageFactor += 0.05;       // Minimum
-      else if (biLimit === '50/100') coverageFactor += 0.10;  // Standard
-      else if (biLimit === '100/300') coverageFactor += 0.15; // Recommended (baseline)
-      else if (biLimit === '250/500') coverageFactor += 0.25; // High coverage
-      else coverageFactor += 0.15; // Default to recommended
+      if (biLimit === '25/50') liabilityCoverageFactor += 0.05;       // Minimum
+      else if (biLimit === '50/100') liabilityCoverageFactor += 0.10;  // Standard
+      else if (biLimit === '100/300') liabilityCoverageFactor += 0.15; // Recommended (baseline)
+      else if (biLimit === '250/500') liabilityCoverageFactor += 0.25; // High coverage
+      else liabilityCoverageFactor += 0.15; // Default to recommended
 
       // Property Damage Liability - Higher limits cost more
       const pdLimit = data.coverages.propertyDamageLimit || data.coverages.propertyDamageLimit;
-      if (pdLimit === '25000') coverageFactor += 0.03;      // Minimum
-      else if (pdLimit === '50000') coverageFactor += 0.05; // Standard (baseline)
-      else if (pdLimit === '100000') coverageFactor += 0.08; // High coverage
-      else coverageFactor += 0.05; // Default to standard
+      if (pdLimit === '25000') liabilityCoverageFactor += 0.03;      // Minimum
+      else if (pdLimit === '50000') liabilityCoverageFactor += 0.05; // Standard (baseline)
+      else if (pdLimit === '100000') liabilityCoverageFactor += 0.08; // High coverage
+      else liabilityCoverageFactor += 0.05; // Default to standard
 
-      // Collision Coverage - Deductible affects price (higher deductible = lower price)
-      if (data.coverages.collision || data.coverages.hasCollision) {
-        const collDeductible = data.coverages.collisionDeductible || data.coverages.collisionDeductible;
-        if (collDeductible === 250) coverageFactor += 0.35;       // Low deductible = higher premium
-        else if (collDeductible === 500) coverageFactor += 0.30;  // Standard deductible
-        else if (collDeductible === 1000) coverageFactor += 0.25; // High deductible = lower premium
-        else if (collDeductible === 2500) coverageFactor += 0.20; // Very high deductible = much lower premium
-        else coverageFactor += 0.30; // Default to standard
-      }
-
-      // Comprehensive Coverage - Deductible affects price (higher deductible = lower price)
-      if (data.coverages.comprehensive || data.coverages.hasComprehensive) {
-        const compDeductible = data.coverages.comprehensiveDeductible || data.coverages.comprehensiveDeductible;
-        if (compDeductible === 250) coverageFactor += 0.25;       // Low deductible = higher premium
-        else if (compDeductible === 500) coverageFactor += 0.20;  // Standard deductible
-        else if (compDeductible === 1000) coverageFactor += 0.15; // High deductible = lower premium
-        else if (compDeductible === 2500) coverageFactor += 0.10; // Very high deductible = much lower premium
-        else coverageFactor += 0.20; // Default to standard
+      // Medical Payments - Higher limits cost more
+      const medicalPaymentsLimit = data.coverages.medicalPaymentsLimit;
+      if (medicalPaymentsLimit) {
+        if (medicalPaymentsLimit === 1000) liabilityCoverageFactor += 0.02;       // $1,000
+        else if (medicalPaymentsLimit === 2000) liabilityCoverageFactor += 0.03;  // $2,000
+        else if (medicalPaymentsLimit === 5000) liabilityCoverageFactor += 0.05;  // $5,000 (baseline)
+        else if (medicalPaymentsLimit === 10000) liabilityCoverageFactor += 0.08; // $10,000
+        else liabilityCoverageFactor += 0.05; // Default to $5,000 baseline
       }
 
       // Uninsured/Underinsured Motorist
-      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) coverageFactor += 0.10;
+      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) liabilityCoverageFactor += 0.10;
 
       // Roadside Assistance
-      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) coverageFactor += 0.05;
+      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) liabilityCoverageFactor += 0.05;
 
       // Rental Reimbursement - Limit affects price
       if (data.coverages.rentalReimbursement || data.coverages.hasRental) {
         const rentalLimit = data.coverages.rentalLimit || data.coverages.rentalLimit;
-        if (rentalLimit === 30) coverageFactor += 0.03;      // $30/day
-        else if (rentalLimit === 50) coverageFactor += 0.05; // $50/day
-        else if (rentalLimit === 75) coverageFactor += 0.07; // $75/day
-        else coverageFactor += 0.05; // Default to $50/day
+        if (rentalLimit === 30) liabilityCoverageFactor += 0.03;      // $30/day
+        else if (rentalLimit === 50) liabilityCoverageFactor += 0.05; // $50/day
+        else if (rentalLimit === 75) liabilityCoverageFactor += 0.07; // $75/day
+        else liabilityCoverageFactor += 0.05; // Default to $50/day
       }
     }
 
-    // Calculate total
+    // Calculate total premium: per-vehicle premium + driver factors + liability coverage
     const totalPremium = Math.round(
-      basePremium * vehicleFactor * driverFactor * additionalDriversFactor * coverageFactor
+      totalVehiclePremium * driverFactor * additionalDriversFactor * liabilityCoverageFactor
     );
 
     this.logger.debug('Progressive premium calculated', {
       basePremium,
-      vehicleFactor,
+      totalVehiclePremium: Math.round(totalVehiclePremium),
       driverFactor,
       additionalDriversFactor,
-      coverageFactor,
+      liabilityCoverageFactor,
       totalPremium,
     });
 

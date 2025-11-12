@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Medical Payments UI Test</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+      background: #f5f5f5;
+    }
+    .card {
+      background: white;
+      border-radius: 8px;
+      padding: 30px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    h1 {
+      margin-top: 0;
+      color: #333;
+    }
+    .slider-group {
+      margin: 30px 0;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #555;
+    }
+    input[type="range"] {
+      width: 100%;
+      height: 8px;
+      border-radius: 4px;
+      background: #e0e0e0;
+      outline: none;
+    }
+    .value-display {
+      font-size: 24px;
+      color: #2196F3;
+      margin: 10px 0;
+      font-weight: bold;
+    }
+    .premium-display {
+      background: #e3f2fd;
+      padding: 20px;
+      border-radius: 8px;
+      margin-top: 30px;
+    }
+    .premium-label {
+      color: #666;
+      font-size: 14px;
+    }
+    .premium-value {
+      font-size: 32px;
+      color: #1976D2;
+      font-weight: bold;
+    }
+    button {
+      background: #2196F3;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 16px;
+      margin-top: 20px;
+    }
+    button:hover {
+      background: #1976D2;
+    }
+    .log {
+      margin-top: 30px;
+      padding: 15px;
+      background: #f5f5f5;
+      border-radius: 4px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    .log-entry {
+      margin: 5px 0;
+      padding: 5px;
+    }
+    .log-entry.success {
+      color: #4CAF50;
+    }
+    .log-entry.error {
+      color: #f44336;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>🧪 Medical Payments Slider Test</h1>
+    <p>Test that Medical Payments slider updates pricing via API</p>
+
+    <div class="slider-group">
+      <label for="bi-slider">Bodily Injury Liability</label>
+      <input type="range" id="bi-slider" min="0" max="3" value="0" step="1">
+      <div class="value-display" id="bi-value">$100,000 / $300,000</div>
+    </div>
+
+    <div class="slider-group">
+      <label for="pd-slider">Property Damage Liability</label>
+      <input type="range" id="pd-slider" min="0" max="3" value="0" step="1">
+      <div class="value-display" id="pd-value">$50,000</div>
+    </div>
+
+    <div class="slider-group">
+      <label for="medical-slider">Medical Payments</label>
+      <input type="range" id="medical-slider" min="0" max="4" value="2" step="1">
+      <div class="value-display" id="medical-value">$5,000</div>
+    </div>
+
+    <button onclick="updateCoverage()">Update Coverage & Get Price</button>
+
+    <div class="premium-display">
+      <div class="premium-label">Current Premium</div>
+      <div class="premium-value" id="premium">Loading...</div>
+    </div>
+
+    <div class="log" id="log"></div>
+  </div>
+
+  <script>
+    const QUOTE_NUMBER = 'DZCH74DEZX';
+    const API_BASE = 'http://localhost:3000/api/v1';
+
+    const biOptions = ['100000/300000', '250000/500000', '500000/1000000', '1000000/2000000'];
+    const pdOptions = [50000, 100000, 250000, 500000];
+    const medicalOptions = [1000, 2000, 5000, 10000, 25000];
+
+    let currentBI = biOptions[0];
+    let currentPD = pdOptions[0];
+    let currentMedical = medicalOptions[2];
+
+    // Update slider displays
+    document.getElementById('bi-slider').addEventListener('input', (e) => {
+      const idx = parseInt(e.target.value);
+      currentBI = biOptions[idx];
+      document.getElementById('bi-value').textContent = `$${currentBI.replace('/', ' / $')}`;
+    });
+
+    document.getElementById('pd-slider').addEventListener('input', (e) => {
+      const idx = parseInt(e.target.value);
+      currentPD = pdOptions[idx];
+      document.getElementById('pd-value').textContent = `$${currentPD.toLocaleString()}`;
+    });
+
+    document.getElementById('medical-slider').addEventListener('input', (e) => {
+      const idx = parseInt(e.target.value);
+      currentMedical = medicalOptions[idx];
+      document.getElementById('medical-value').textContent = `$${currentMedical.toLocaleString()}`;
+    });
+
+    function log(message, type = 'info') {
+      const logDiv = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logDiv.insertBefore(entry, logDiv.firstChild);
+    }
+
+    async function updateCoverage() {
+      try {
+        const payload = {
+          coverage_bodily_injury_limit: currentBI,
+          coverage_property_damage_limit: String(currentPD),
+          coverage_medical_payments_limit: currentMedical,
+          coverage_collision: true,
+          coverage_comprehensive: true
+        };
+
+        log(`Sending: BI=${currentBI}, PD=${currentPD}, Medical=${currentMedical}`);
+        log(`Payload: ${JSON.stringify(payload)}`);
+
+        const response = await fetch(`${API_BASE}/quotes/${QUOTE_NUMBER}/coverage`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const premium = data.premium || data.data?.premium || 'N/A';
+
+        document.getElementById('premium').textContent = `$${premium}`;
+        log(`✅ Success! Premium: $${premium}`, 'success');
+        log(`Response: ${JSON.stringify(data).substring(0, 200)}...`);
+      } catch (error) {
+        log(`❌ Error: ${error.message}`, 'error');
+        document.getElementById('premium').textContent = 'Error';
+      }
+    }
+
+    // Load initial price on page load
+    window.addEventListener('load', updateCoverage);
+  </script>
+</body>
+</html>

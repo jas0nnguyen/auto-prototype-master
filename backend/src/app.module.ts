@@ -3,6 +3,7 @@ import { ConfigModule } from '@nestjs/config';
 import { DatabaseModule } from './database/database.module';
 import { QuoteModule } from './services/quote/quote.module';
 import { DocumentServiceModule } from './services/document-service/document-service.module';
+import { SignatureModule } from './services/signature-service/signature.module';
 
 @Module({
   imports: [
@@ -17,6 +18,8 @@ import { DocumentServiceModule } from './services/document-service/document-serv
     QuoteModule,
     // Document service module - Feature 003 ✅
     DocumentServiceModule,
+    // Signature module - Feature 004 ✅
+    SignatureModule,
     // Policy module will be added in Phase 4
     // Portal module will be added in Phase 5
   ],

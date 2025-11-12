@@ -60,5 +60,8 @@ export * from './claim.schema';
 export * from './claim-party-role.schema';
 export * from './claim-event.schema';
 
+// Signature Entity (Feature 004 - Tech Startup Flow)
+export * from './signature.schema';
+
 // Base Schema Utilities
 export * from './_base.schema';

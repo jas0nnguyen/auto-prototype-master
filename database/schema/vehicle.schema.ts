@@ -4,8 +4,9 @@
  * Subtype of Insurable Object representing motor vehicles.
  */
 
-import { pgTable, uuid, varchar, integer, decimal, date, timestamp } from 'drizzle-orm/pg-core';
+import { pgTable, uuid, varchar, integer, decimal, date, timestamp, index } from 'drizzle-orm/pg-core';
 import { insurableObject } from './insurable-object.schema';
+import { party } from './party.schema';
 import { auditTimestamps } from './_base.schema';
 
 export const vehicle = pgTable('vehicle', {
@@ -47,9 +48,16 @@ export const vehicle = pgTable('vehicle', {
   anti_theft_device: varchar('anti_theft_device', { length: 100 }),
   safety_features: varchar('safety_features', { length: 500 }), // JSON array of features
 
+  // Lienholder Information (for financed/leased vehicles)
+  lienholder_party_id: uuid('lienholder_party_id')
+    .references(() => party.party_identifier, { onDelete: 'set null' }),
+
   // Audit Timestamps
   ...auditTimestamps,
-});
+}, (table) => ({
+  // Index for lienholder lookup optimization
+  vehicle_lienholder_party_id_idx: index('vehicle_lienholder_party_id_idx').on(table.lienholder_party_id),
+}));
 
 export type Vehicle = typeof vehicle.$inferSelect;
 export type NewVehicle = typeof vehicle.$inferInsert;

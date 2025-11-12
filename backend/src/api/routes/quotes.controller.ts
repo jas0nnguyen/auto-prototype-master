@@ -23,7 +23,8 @@ import {
   Logger,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse, ApiParam, ApiBody, ApiProperty } from '@nestjs/swagger';
-import { IsArray, IsEmail, IsOptional, IsBoolean, IsNumber, IsString } from 'class-validator';
+import { IsArray, IsEmail, IsOptional, IsBoolean, IsNumber, IsString, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
 import { QuoteService } from '../../services/quote/quote.service';
 import type { CreateQuoteInput, QuoteResult } from '../../services/quote/quote.service';
 
@@ -57,6 +58,12 @@ class DriverDTO {
 
   @ApiProperty({ example: 'spouse', required: false, description: 'Relationship to primary (for additional drivers)' })
   relationship?: string;
+
+  @ApiProperty({ example: 'DL123456', required: false, description: 'Driver license number' })
+  license_number?: string;
+
+  @ApiProperty({ example: 'CA', required: false, description: 'Driver license state' })
+  license_state?: string;
 
   @ApiProperty({ example: true, required: false, description: 'Is this the primary named insured?' })
   is_primary?: boolean;
@@ -118,6 +125,14 @@ class UpdatePrimaryDriverDTO {
   @IsString()
   driver_marital_status?: string;
 
+  @IsOptional()
+  @IsString()
+  driver_license_number?: string;
+
+  @IsOptional()
+  @IsString()
+  driver_license_state?: string;
+
   @IsString()
   address_line_1!: string;
 
@@ -168,6 +183,10 @@ class UpdateCoverageDTO {
   coverage_property_damage_limit?: string;
 
   @IsOptional()
+  @IsNumber()
+  coverage_medical_payments_limit?: number;
+
+  @IsOptional()
   @IsBoolean()
   coverage_collision?: boolean;
 
@@ -198,6 +217,26 @@ class UpdateCoverageDTO {
   @IsOptional()
   @IsNumber()
   coverage_rental_limit?: number;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VehicleCoverageDTO)
+  vehicle_coverages?: VehicleCoverageDTO[];
+}
+
+/**
+ * DTO for per-vehicle coverage (nested in UpdateCoverageDTO)
+ */
+class VehicleCoverageDTO {
+  @IsNumber()
+  vehicle_index: number;
+
+  @IsNumber()
+  collision_deductible: number;
+
+  @IsNumber()
+  comprehensive_deductible: number;
 }
 
 /**
@@ -676,6 +715,8 @@ export class QuotesController {
           phone: dto.driver_phone,
           gender: dto.driver_gender,
           maritalStatus: dto.driver_marital_status,
+          licenseNumber: dto.driver_license_number,
+          licenseState: dto.driver_license_state,
         },
         {
           addressLine1: dto.address_line_1,
@@ -744,6 +785,8 @@ export class QuotesController {
         maritalStatus: d.marital_status,
         yearsLicensed: d.years_licensed,
         relationship: d.relationship,
+        licenseNumber: d.license_number,
+        licenseState: d.license_state,
       }));
 
       const result = await this.quoteService.updateQuoteDrivers(
@@ -859,6 +902,12 @@ export class QuotesController {
     @Body() dto: UpdateCoverageDTO
   ): Promise<QuoteResult> {
     this.logger.log('Updating coverage for quote', { quoteNumber });
+    this.logger.debug('Received DTO', {
+      dto,
+      vehicle_coverages: dto.vehicle_coverages,
+      medical_payments_limit: dto.coverage_medical_payments_limit,
+      has_medical_field: 'coverage_medical_payments_limit' in dto
+    });
 
     try {
       // Transform DTO to service input format
@@ -866,6 +915,7 @@ export class QuotesController {
         startDate: dto.coverage_start_date,
         bodilyInjuryLimit: dto.coverage_bodily_injury_limit,
         propertyDamageLimit: dto.coverage_property_damage_limit,
+        medicalPaymentsLimit: dto.coverage_medical_payments_limit,
         collision: dto.coverage_collision,
         collisionDeductible: dto.coverage_collision_deductible,
         comprehensive: dto.coverage_comprehensive,
@@ -874,6 +924,7 @@ export class QuotesController {
         roadsideAssistance: dto.coverage_roadside_assistance,
         rentalReimbursement: dto.coverage_rental_reimbursement,
         rentalLimit: dto.coverage_rental_limit,
+        vehicleCoverages: dto.vehicle_coverages,
       };
 
       const result = await this.quoteService.updateQuoteCoverage(

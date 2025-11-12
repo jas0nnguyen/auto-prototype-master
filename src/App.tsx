@@ -39,6 +39,23 @@ import FileClaim from './pages/portal/FileClaim';
 // Import debug panel (T128 - Phase 6)
 import { QuoteDebugPanel } from './components/debug/QuoteDebugPanel';
 
+// Import RouteGuard for flow protection (T048 - Phase 2, Feature 004)
+import { RouteGuard } from './components/RouteGuard';
+
+// Import quote-v2 flow pages (Feature 004 - Phase 3)
+import GetStarted from './pages/quote-v2/GetStarted';
+import EffectiveDate from './pages/quote-v2/EffectiveDate';
+import EmailCollection from './pages/quote-v2/EmailCollection';
+import LoadingPrefill from './pages/quote-v2/LoadingPrefill';
+import Summary from './pages/quote-v2/Summary';
+
+// Import test page for debugging
+import { TestCoveragePage } from './pages/TestCoveragePage';
+import Coverage from './pages/quote-v2/Coverage';
+import AddOns from './pages/quote-v2/AddOns';
+import LoadingValidation from './pages/quote-v2/LoadingValidation';
+import Review from './pages/quote-v2/Review';
+
 /**
  * Create TanStack Query Client
  *
@@ -112,6 +129,37 @@ function App() {
           <Route path="/portal/:policyNumber/billing" element={<BillingHistory />} />
           <Route path="/portal/:policyNumber/claims" element={<ClaimsList />} />
           <Route path="/portal/:policyNumber/claims/new" element={<FileClaim />} />
+
+          {/* Quote-v2 Flow Routes (T048 - Feature 004: Tech Startup Flow Redesign) */}
+          {/* All routes wrapped in RouteGuard to ensure flow consistency */}
+          {/* Quote-v2 Flow Routes (Feature 004 - Tech Startup Progressive Flow) */}
+          <Route
+            path="/quote-v2/*"
+            element={
+              <RouteGuard expectedFlow="tech-startup">
+                <Routes>
+                  {/* Screens 1-4: Progressive data collection (no quote number yet) */}
+                  <Route path="get-started" element={<GetStarted />} />
+                  <Route path="effective-date" element={<EffectiveDate />} />
+                  <Route path="email-collection" element={<EmailCollection />} />
+                  <Route path="loading-prefill" element={<LoadingPrefill />} />
+
+                  {/* Screens 5-9: Quote exists, requires :quoteNumber param */}
+                  <Route path="summary/:quoteNumber" element={<Summary />} />
+                  <Route path="coverage/:quoteNumber" element={<Coverage />} />
+                  <Route path="add-ons/:quoteNumber" element={<AddOns />} />
+                  <Route path="loading-validation/:quoteNumber" element={<LoadingValidation />} />
+                  <Route path="review/:quoteNumber" element={<Review />} />
+
+                  {/* Catch-all: redirect to start */}
+                  <Route path="*" element={<Navigate to="/quote-v2/get-started" replace />} />
+                </Routes>
+              </RouteGuard>
+            }
+          />
+
+          {/* Test page for debugging Medical Payments functionality */}
+          <Route path="/test-coverage" element={<TestCoveragePage />} />
 
           {/* Catch all route - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />

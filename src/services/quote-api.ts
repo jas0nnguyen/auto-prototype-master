@@ -480,6 +480,7 @@ class QuoteApiService {
       coverage_start_date?: string;
       coverage_bodily_injury_limit?: string;
       coverage_property_damage_limit?: string;
+      coverage_medical_payments_limit?: number;
       coverage_collision?: boolean;
       coverage_collision_deductible?: number;
       coverage_comprehensive?: boolean;
@@ -488,9 +489,21 @@ class QuoteApiService {
       coverage_roadside_assistance?: boolean;
       coverage_rental_reimbursement?: boolean;
       coverage_rental_limit?: number;
+      vehicle_coverages?: Array<{
+        vehicle_index: number;
+        collision_deductible: number;
+        comprehensive_deductible: number;
+      }>;
     }
   ): Promise<QuoteResponse> {
     try {
+      console.log('[QuoteAPI] updateQuoteCoverage called with:', {
+        quoteNumber,
+        coverageData,
+        vehicle_coverages: coverageData.vehicle_coverages,
+        stringified: JSON.stringify(coverageData)
+      });
+
       const response = await fetch(
         `${this.baseUrl}/quotes/${quoteNumber}/coverage`,
         {
