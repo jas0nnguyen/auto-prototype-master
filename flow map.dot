@@ -1,0 +1,298 @@
+digraph FlowComparison {
+  rankdir=TB;
+  node [shape=box, style=rounded, fontname="Arial", fontsize=10];
+  edge [fontname="Arial", fontsize=9];
+
+  // ============================================================================
+  // ENTRY POINT
+  // ============================================================================
+
+  Start [label="HomePage.tsx\nUser selects flow", shape=ellipse, fillcolor="#FFE082", style=filled, fontsize=11];
+
+  FlowTracker [label="flowTracker.ts\nsetActiveFlow()", fillcolor="#FFF59D", style=filled];
+
+  // ============================================================================
+  // V1 FLOW
+  // ============================================================================
+
+  subgraph cluster_v1 {
+    label="V1 Flow - Classic Progressive (/quote/*)";
+    style=filled;
+    color="#BBDEFB";
+    fontsize=13;
+
+    subgraph cluster_v1_screens {
+      label="Screens (src/pages/quote/)";
+      style=filled;
+      color="#E3F2FD";
+
+      V1_1 [label="Screen 1: PrimaryDriverInfo.tsx\n/quote/driver-info\n\nCollects ALL data:\n• Driver details (name, DOB, gender)\n• Address (line1, city, state, zip)\n• Vehicle (year, make, model, VIN)\n\n⚡ CREATES QUOTE IMMEDIATELY\n💾 Writes to DB:\n  • Quote table\n  • Party, Person tables\n  • Vehicle table\n  • Premium calculated", fillcolor="#42A5F5", style=filled, fontcolor=white];
+
+      V1_2 [label="Screen 2: AdditionalDrivers.tsx\n/quote/additional-drivers/:quoteNumber\n\nAdd/edit additional drivers\n\n💾 Writes to DB:\n  • Person table (additional drivers)\n  • Party Role table\n  • Premium recalculated", fillcolor="#64B5F6", style=filled, fontcolor=white];
+
+      V1_3 [label="Screen 3: VehiclesList.tsx\n/quote/vehicles/:quoteNumber\n\nAdd/edit vehicles\n\n💾 Writes to DB:\n  • Vehicle table\n  • Insurable Object table\n  • Premium recalculated", fillcolor="#64B5F6", style=filled, fontcolor=white];
+
+      V1_4 [label="Screen 4: VehicleConfirmation.tsx\n/quote/vehicle-confirmation/:quoteNumber\n\nConfirm VIN decode results\n\n💾 Reads from DB:\n  • Vehicle details", fillcolor="#64B5F6", style=filled, fontcolor=white];
+
+      V1_5 [label="Screen 5: CoverageSelection.tsx\n/quote/coverage-selection/:quoteNumber\n\nSelect coverage levels:\n• Bodily injury, Property damage\n• Collision, Comprehensive\n\n💾 Writes to DB:\n  • Coverage tables (6 types)\n  • Premium recalculated", fillcolor="#64B5F6", style=filled, fontcolor=white];
+
+      V1_6 [label="Screen 6: QuoteResults.tsx\n/quote/results/:quoteNumber\n\n📊 Shows final premium\n• 6-month total\n• Monthly payment\n\n💾 Reads from DB:\n  • Quote with all coverage", fillcolor="#1976D2", style=filled, fontcolor=white];
+    }
+
+    V1_Components [label="UI Components:\n• AppTemplate (Canary)\n• PageHeader (Canary)\n• Form components (Canary)\n• Standard layout", fillcolor="#90CAF9", style=filled];
+
+    V1_Hooks [label="Uses Shared Hooks:\n• useCreateQuote()\n• useQuoteByNumber()\n• useUpdatePrimaryDriver()\n• useUpdateQuoteDrivers()\n• useUpdateQuoteVehicles()\n• useUpdateQuoteCoverage()", fillcolor="#90CAF9", style=filled];
+  }
+
+  // ============================================================================
+  // V2 FLOW
+  // ============================================================================
+
+  subgraph cluster_v2 {
+    label="V2 Flow - Tech Startup Redesign (/quote-v2/*)";
+    style=filled;
+    color="#E1BEE7";
+    fontsize=13;
+
+    V2_Guard [label="RouteGuard Component\nexpectedFlow='tech-startup'\n\n✓ Prevents cross-flow navigation", fillcolor="#CE93D8", style=filled, shape=hexagon];
+
+    subgraph cluster_v2_screens {
+      label="Screens (src/pages/quote-v2/)";
+      style=filled;
+      color="#F3E5F5";
+
+      V2_1 [label="Screen 1: GetStarted.tsx\n/quote-v2/get-started\n\nCollects:\n• First/Last name\n• Address\n• Date of birth\n\n💾 Stores in sessionStorage\n   'quote-v2-data'", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_2 [label="Screen 2: EffectiveDate.tsx\n/quote-v2/effective-date\n\nCollects:\n• Coverage start date\n\n💾 Stores in sessionStorage\n   'quote-v2-data'", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_3 [label="Screen 3: EmailCollection.tsx\n/quote-v2/email-collection\n\nCollects:\n• Email address\n• Mobile phone\n\n💾 Stores in sessionStorage\n   'quote-v2-data'", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_4 [label="Screen 4: LoadingPrefill.tsx\n/quote-v2/loading-prefill\n\n⚡ CREATES QUOTE HERE\nOrchestrates mock services:\n• VIN decode (useMockVINDecode)\n• MVR lookup (useMockDriverRecord)\n• Vehicle value (useMockVehicleValue)\n• Insurance history (useMockInsuranceHistory)\n\n🎬 Animated loading screen\n\n💾 Writes to DB:\n  • Quote table\n  • Party, Person tables\n  • Vehicle table (from VIN decode)\n  • Driver history (from MVR)\n  • Premium calculated", fillcolor="#7B1FA2", style="filled,bold", fontcolor=white];
+
+      V2_5 [label="Screen 5: Summary.tsx\n/quote-v2/summary/:quoteNumber\n\nShows:\n• Driver summary (with edit modals)\n• Vehicle summary (with edit modals)\n\nEdit via:\n• EditDriverModal\n• EditVehicleModal\n• EditVehicleFinancedModal\n\n💾 Writes to DB (on edit):\n  • Person table (driver edits)\n  • Vehicle table (vehicle edits)\n  • Premium recalculated", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_6 [label="Screen 6: Coverage.tsx\n/quote-v2/coverage/:quoteNumber\n\n3 sections:\n1. Liability (BI/PD limits)\n2. Medical/PIP\n3. Comp/Collision deductibles\n\n💾 Writes to DB:\n  • Coverage tables (6 types)\n  • Premium recalculated\n  • PriceSidebar updates", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_7 [label="Screen 7: AddOns.tsx\n/quote-v2/add-ons/:quoteNumber\n\nOptional coverage:\n• Rental reimbursement\n• Roadside assistance\n\n💾 Writes to DB:\n  • Coverage tables (add-ons)\n  • Premium recalculated\n  • PriceSidebar updates", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_8 [label="Screen 8: LoadingValidation.tsx\n/quote-v2/loading-validation/:quoteNumber\n\n✓ Final validation\n🎬 Animated loading screen\n\n💾 Reads from DB:\n  • Full quote validation", fillcolor="#AB47BC", style=filled, fontcolor=white];
+
+      V2_9 [label="Screen 9: Review.tsx\n/quote-v2/review/:quoteNumber\n\n📋 Final review:\n• All details\n• Signature capture\n• Terms acceptance\n\n💾 Writes to DB:\n  • Signature table\n  • Quote status updated", fillcolor="#9C27B0", style=filled, fontcolor=white];
+    }
+
+    subgraph cluster_v2_custom {
+      label="Custom Components (src/pages/quote-v2/components/)";
+      style=filled;
+      color="#CE93D8";
+
+      V2_Layout [label="TechStartupLayout.tsx\n+ TechStartupLayout.css\n\n• Provides QuoteContext\n• Purple gradient background\n• Card-based layout\n• Wraps all v2 screens", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Sidebar [label="PriceSidebar.tsx\n\n📊 Sticky price display:\n• 6-month total\n• Monthly payment\n• Real-time updates via\n  useRecalculateQuote()", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Context [label="QuoteContext.tsx\n(contexts/)\n\n• Provides quote data\n• recalculatePremium()\n• Consumed by all screens", fillcolor="#6A1B9A", style=filled, fontcolor=white];
+    }
+
+    V2_Hooks [label="Uses Shared Hooks +:\n• useCreateQuote()\n• useQuoteByNumber()\n• useUpdateQuoteDrivers()\n• useUpdateQuoteVehicles()\n• useUpdateQuoteCoverage()\n• useRecalculateQuote() ⚡\n• useMockVINDecode() ⚡\n• useMockDriverRecord() ⚡", fillcolor="#BA68C8", style=filled];
+  }
+
+  // ============================================================================
+  // SHARED INFRASTRUCTURE
+  // ============================================================================
+
+  subgraph cluster_shared {
+    label="Shared Infrastructure (100% Common)";
+    style=filled;
+    color="#C8E6C9";
+    fontsize=13;
+
+    subgraph cluster_frontend_shared {
+      label="Frontend Shared (src/)";
+      style=filled;
+      color="#E8F5E9";
+
+      SharedHooks [label="hooks/useQuote.ts\nTanStack Query Hooks:\n\n• useQuote()\n• useQuoteByNumber()\n• useCreateQuote()\n• useUpdatePrimaryDriver()\n• useUpdateQuoteDrivers()\n• useUpdateQuoteVehicles()\n• useUpdateQuoteCoverage()\n• useRecalculateQuote()", fillcolor="#66BB6A", style=filled, fontcolor=white];
+
+      ApiClient [label="services/quote-api.ts\nHTTP Client:\n\n• createQuote()\n• getQuoteById()\n• getQuoteByNumber()\n• updatePrimaryDriver()\n• updateDrivers()\n• updateVehicles()\n• updateCoverage()\n• recalculateQuote()", fillcolor="#66BB6A", style=filled, fontcolor=white];
+
+      MockHooks [label="hooks/useMockServices.ts\n\n• useMockVINDecode()\n• useMockInsuranceHistory()\n• useMockVehicleValue()\n• useMockDriverRecord()", fillcolor="#66BB6A", style=filled, fontcolor=white];
+    }
+
+    subgraph cluster_backend {
+      label="Backend (backend/src/)";
+      style=filled;
+      color="#E8F5E9";
+
+      Controller [label="api/routes/quotes.controller.ts\nREST Endpoints:\n\nPOST   /api/v1/quotes\nGET    /api/v1/quotes/:id\nGET    /api/v1/quotes/reference/:number\nPUT    /api/v1/quotes/:number/primary-driver\nPUT    /api/v1/quotes/:number/drivers\nPUT    /api/v1/quotes/:number/vehicles\nPUT    /api/v1/quotes/:number/coverage", fillcolor="#4CAF50", style=filled, fontcolor=white];
+
+      QuoteService [label="services/quote/quote.service.ts\nBusiness Logic:\n\n• Quote creation\n• Quote updates\n• Validation\n• Calls RatingEngine", fillcolor="#388E3C", style=filled, fontcolor=white];
+
+      RatingEngine [label="services/rating-engine/\nPremium Calculation:\n\n• Base rates by state\n• Age/gender factors\n• Vehicle rating\n• Multi-vehicle discount\n• Discounts & surcharges", fillcolor="#2E7D32", style=filled, fontcolor=white];
+
+      MockServices [label="services/mock-services/\nSimulated Integrations:\n\n• VIN decoder\n• MVR lookup\n• Vehicle valuation\n• Insurance history\n• Email service", fillcolor="#2E7D32", style=filled, fontcolor=white];
+    }
+
+    DB [label="Database\ndatabase/schema/\n\n31 OMG-compliant tables:\n• Quote, Policy, Coverage\n• Party, Person, Vehicle\n• Account, Payment, Claim\n• Rating tables, etc.\n\nNeon PostgreSQL", shape=cylinder, fillcolor="#1B5E20", style=filled, fontcolor=white];
+  }
+
+  // ============================================================================
+  // CONNECTIONS - Entry
+  // ============================================================================
+
+  Start -> FlowTracker [label="User clicks flow"];
+  FlowTracker -> V1_1 [label="setActiveFlow('classic')\nNavigate to /quote/driver-info", color="#1976D2", penwidth=2];
+  FlowTracker -> V2_Guard [label="setActiveFlow('tech-startup')\nNavigate to /quote-v2/*", color="#6A1B9A", penwidth=2];
+  V2_Guard -> V2_1 [label="Route allowed", color="#6A1B9A", penwidth=1.5];
+
+  // ============================================================================
+  // CONNECTIONS - V1 Screen Flow
+  // ============================================================================
+
+  V1_1 -> V1_2 [label="Navigate with\nquoteNumber", color="#1976D2", penwidth=1.5];
+  V1_2 -> V1_3 [label="Navigate", color="#1976D2", penwidth=1.5];
+  V1_3 -> V1_4 [label="Navigate", color="#1976D2", penwidth=1.5];
+  V1_4 -> V1_5 [label="Navigate", color="#1976D2", penwidth=1.5];
+  V1_5 -> V1_6 [label="Navigate", color="#1976D2", penwidth=1.5];
+
+  // ============================================================================
+  // CONNECTIONS - V2 Screen Flow
+  // ============================================================================
+
+  V2_1 -> V2_2 [label="sessionStorage\n'quote-v2-data'", color="#6A1B9A", penwidth=1.5];
+  V2_2 -> V2_3 [label="sessionStorage", color="#6A1B9A", penwidth=1.5];
+  V2_3 -> V2_4 [label="sessionStorage", color="#6A1B9A", penwidth=1.5];
+  V2_4 -> V2_5 [label="Navigate with\nquoteNumber", color="#6A1B9A", penwidth=1.5];
+  V2_5 -> V2_6 [label="Navigate", color="#6A1B9A", penwidth=1.5];
+  V2_6 -> V2_7 [label="Navigate", color="#6A1B9A", penwidth=1.5];
+  V2_7 -> V2_8 [label="Navigate", color="#6A1B9A", penwidth=1.5];
+  V2_8 -> V2_9 [label="Navigate", color="#6A1B9A", penwidth=1.5];
+
+  // ============================================================================
+  // CONNECTIONS - V1 to Shared
+  // ============================================================================
+
+  V1_1 -> SharedHooks [label="useCreateQuote()\nuseUpdatePrimaryDriver()", color="#1976D2", style=dotted];
+  V1_2 -> SharedHooks [label="useUpdateQuoteDrivers()", color="#1976D2", style=dotted];
+  V1_3 -> SharedHooks [label="useUpdateQuoteVehicles()", color="#1976D2", style=dotted];
+  V1_5 -> SharedHooks [label="useUpdateQuoteCoverage()", color="#1976D2", style=dotted];
+
+  // ============================================================================
+  // CONNECTIONS - V2 to Shared
+  // ============================================================================
+
+  V2_4 -> SharedHooks [label="useCreateQuote()", color="#6A1B9A", style=dotted];
+  V2_4 -> MockHooks [label="All mock hooks", color="#6A1B9A", style=dotted];
+  V2_5 -> SharedHooks [label="useQuoteByNumber()\nuseUpdateDrivers()\nuseUpdateVehicles()", color="#6A1B9A", style=dotted];
+  V2_6 -> SharedHooks [label="useUpdateQuoteCoverage()\nuseRecalculateQuote()", color="#6A1B9A", style=dotted];
+  V2_7 -> SharedHooks [label="useUpdateQuoteCoverage()\nuseRecalculateQuote()", color="#6A1B9A", style=dotted];
+
+  V2_Layout -> V2_Context [label="Provides", color="#6A1B9A"];
+  V2_Sidebar -> V2_Context [label="Consumes", color="#6A1B9A"];
+  V2_Layout -> V2_1 [label="Wraps", color="#6A1B9A", style=dotted];
+  V2_Layout -> V2_5 [label="Wraps", color="#6A1B9A", style=dotted];
+  V2_Layout -> V2_6 [label="Wraps", color="#6A1B9A", style=dotted];
+
+  // ============================================================================
+  // CONNECTIONS - Shared Infrastructure
+  // ============================================================================
+
+  SharedHooks -> ApiClient [label="Wraps HTTP calls", color="#2E7D32"];
+  MockHooks -> ApiClient [label="Wraps HTTP calls", color="#2E7D32"];
+  ApiClient -> Controller [label="HTTP requests", color="#2E7D32"];
+  Controller -> QuoteService [label="Delegates to service", color="#2E7D32"];
+  QuoteService -> RatingEngine [label="Calculate premium", color="#2E7D32"];
+  QuoteService -> DB [label="CRUD operations", color="#2E7D32"];
+  RatingEngine -> DB [label="Read rating tables", color="#2E7D32"];
+  MockServices -> DB [label="Write mock data", color="#2E7D32"];
+  Controller -> MockServices [label="Calls for prefill", color="#2E7D32", style=dashed];
+
+  // ============================================================================
+  // POST-QUOTE FLOWS (SHARED BY BOTH V1 AND V2)
+  // ============================================================================
+
+  subgraph cluster_post_quote {
+    label="Post-Quote Flows (Shared by Both V1 and V2)";
+    style=filled;
+    color="#FFF9C4";
+    fontsize=13;
+
+    subgraph cluster_binding {
+      label="Policy Binding";
+      style=filled;
+      color="#FFF59D";
+
+      Binding [label="Payment & Binding\n(Both flows proceed here)\n\nPOST /api/v1/policies/bind\n\nCollects:\n• Payment method (card/bank)\n• Billing frequency (monthly/6-month)\n• Card details (number, expiry, CVV)\n\n💾 Writes to DB:\n  • Policy table (from quote)\n  • Agreement table\n  • Account table\n  • Payment table\n  • Document generation triggered", fillcolor="#FFD54F", style=filled];
+    }
+
+    subgraph cluster_documents {
+      label="Document Generation";
+      style=filled;
+      color="#FFF59D";
+
+      DocGen [label="Document Service\nbackend/src/services/document-service/\n\nGenerates PDF documents:\n• Policy Declarations Page\n• Coverage Summary\n• Terms & Conditions\n• ID Cards (per vehicle)\n\n💾 Writes to DB:\n  • Document table\n  • Links to Policy\n\nGET /api/v1/documents/:id", fillcolor="#FFB300", style=filled];
+    }
+
+    subgraph cluster_portal {
+      label="Self-Service Portal";
+      style=filled;
+      color="#FFF59D";
+
+      Portal_Entry [label="Portal Access\n/portal/:policyNumber\n\n⚠️ NO AUTHENTICATION (Demo mode)\nAccess via URL with policy number\n\nExample:\n/portal/POL-ABC123", fillcolor="#FF6F00", style=filled, fontcolor=white];
+
+      Portal_Dashboard [label="Dashboard Page\nsrc/pages/portal/Dashboard.tsx\n\nGET /api/v1/portal/:policyNumber/dashboard\n\nShows:\n• Policy status & expiry\n• Coverage summary\n• Recent payments\n• Active claims\n\n💾 Reads from DB:\n  • Policy, Coverage tables\n  • Payment table\n  • Claim table", fillcolor="#FFA726", style=filled];
+
+      Portal_Policy [label="Policy Details Page\nsrc/pages/portal/PolicyDetails.tsx\n\nGET /api/v1/portal/:policyNumber/policy\n\nShows:\n• Full policy details\n• All drivers & vehicles\n• Coverage breakdown\n• Download documents\n\n💾 Reads from DB:\n  • Policy, Agreement tables\n  • Person, Vehicle tables\n  • Coverage tables\n  • Document table", fillcolor="#FFA726", style=filled];
+
+      Portal_Billing [label="Billing Page\nsrc/pages/portal/Billing.tsx\n\nGET /api/v1/portal/:policyNumber/billing\n\nShows:\n• Payment history\n• Next payment due\n• Billing frequency\n• Payment method\n\n💾 Reads from DB:\n  • Payment table\n  • Account table", fillcolor="#FFA726", style=filled];
+
+      Portal_Claims [label="Claims Page\nsrc/pages/portal/Claims.tsx\n\nGET /api/v1/portal/:policyNumber/claims\n\nShows:\n• Active claims\n• Claim status\n• Claim history\n• File new claim (future)\n\n💾 Reads from DB:\n  • Claim table\n  • Claim Party Role table\n  • Claim Event table", fillcolor="#FFA726", style=filled];
+    }
+  }
+
+  // ============================================================================
+  // CONNECTIONS - V1/V2 to Binding
+  // ============================================================================
+
+  V1_6 -> Binding [label="User clicks\n'Proceed to bind'", color="#1976D2", penwidth=2];
+  V2_9 -> Binding [label="User clicks\n'Proceed to bind'", color="#6A1B9A", penwidth=2];
+
+  // ============================================================================
+  // CONNECTIONS - Binding to Documents & Portal
+  // ============================================================================
+
+  Binding -> DocGen [label="Triggers on\npolicy creation", color="#F57F17", penwidth=1.5];
+  Binding -> Portal_Entry [label="Policy created\nUser can access portal", color="#F57F17", penwidth=1.5];
+
+  DocGen -> DB [label="Write documents", color="#F57F17", style=dashed];
+
+  Portal_Entry -> Portal_Dashboard [label="Navigate to\n/portal/:policyNumber/dashboard", color="#FF6F00", penwidth=1.5];
+  Portal_Dashboard -> Portal_Policy [label="Navigate", color="#FF6F00"];
+  Portal_Dashboard -> Portal_Billing [label="Navigate", color="#FF6F00"];
+  Portal_Dashboard -> Portal_Claims [label="Navigate", color="#FF6F00"];
+
+  Portal_Policy -> DB [label="Read policy data", color="#FF6F00", style=dotted];
+  Portal_Billing -> DB [label="Read billing data", color="#FF6F00", style=dotted];
+  Portal_Claims -> DB [label="Read claims data", color="#FF6F00", style=dotted];
+  Portal_Dashboard -> DB [label="Read dashboard data", color="#FF6F00", style=dotted];
+
+  Portal_Policy -> DocGen [label="Download\nPDF documents", color="#FF6F00", style=dashed];
+
+  // ============================================================================
+  // LEGEND
+  // ============================================================================
+
+  subgraph cluster_legend {
+    label="Legend";
+    style=filled;
+    color=white;
+    fontsize=11;
+
+    L1 [label="V1 Flow", fillcolor="#64B5F6", style=filled, fontcolor=white];
+    L2 [label="V2 Flow", fillcolor="#AB47BC", style=filled, fontcolor=white];
+    L3 [label="Shared Code", fillcolor="#66BB6A", style=filled, fontcolor=white];
+    L4 [label="Post-Quote (Binding/Portal)", fillcolor="#FFD54F", style=filled];
+
+    L1 -> L2 [label="Solid = Navigation/Flow", style=solid];
+    L2 -> L3 [label="Dotted = Uses/Calls", style=dotted];
+    L3 -> L4 [label="Dashed = Triggers/Downloads", style=dashed];
+  }
+}
