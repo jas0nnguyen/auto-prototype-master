@@ -61,6 +61,8 @@ const CoverageContent: React.FC = () => {
   const [biLiability, setBiLiability] = useState('100000/300000');
   const [pdLiability, setPdLiability] = useState(50000);
   const [medicalPayments, setMedicalPayments] = useState(5000);
+  const [umbiLimit, setUmbiLimit] = useState('100000/300000');
+  const [uimbiLimit, setUimbiLimit] = useState('100000/300000');
   const [isInitialized, setIsInitialized] = useState(false);
 
   // Per-vehicle coverage state (comprehensive and collision deductibles)
@@ -99,6 +101,8 @@ const CoverageContent: React.FC = () => {
   const debouncedBiLiability = useDebounce(biLiability, 300);
   const debouncedPdLiability = useDebounce(pdLiability, 300);
   const debouncedMedicalPayments = useDebounce(medicalPayments, 300);
+  const debouncedUmbiLimit = useDebounce(umbiLimit, 300);
+  const debouncedUimbiLimit = useDebounce(uimbiLimit, 300);
 
   // For objects, we need to serialize to detect changes properly
   const vehicleCoveragesJson = JSON.stringify(vehicleCoverages);
@@ -144,6 +148,8 @@ const CoverageContent: React.FC = () => {
           coverage_bodily_injury_limit: debouncedBiLiability,
           coverage_property_damage_limit: debouncedPdLiability,
           coverage_medical_payments_limit: debouncedMedicalPayments,
+          coverage_uninsured_motorist_bodily_injury: debouncedUmbiLimit,
+          coverage_underinsured_motorist_bodily_injury: debouncedUimbiLimit,
           coverage_collision: true,
           coverage_comprehensive: true,
           vehicle_coverages: vehicleCoveragesArray.length > 0 ? vehicleCoveragesArray : undefined,
@@ -168,6 +174,8 @@ const CoverageContent: React.FC = () => {
     debouncedPdLiability,
     debouncedVehicleCoveragesJson, // Use serialized version for proper change detection
     debouncedMedicalPayments,
+    debouncedUmbiLimit,
+    debouncedUimbiLimit,
     quoteNumber,
     isInitialized,
     // NOTE: Do NOT include updateCoverage here - it changes on every render and causes infinite loop
@@ -244,7 +252,7 @@ const CoverageContent: React.FC = () => {
                 <Layout display="flex-column" gap="small">
                   <Title variant="title-4">Bodily Injury Liability</Title>
                   <Text variant="body-regular" color="subtle">
-                    Covers injuries to others in an accident you cause
+                    Accidents happen. So do injuries to other people. Help protect yourself in the event you're found at fault.
                   </Text>
                   <Select
                     label="Coverage Limit"
@@ -261,7 +269,7 @@ const CoverageContent: React.FC = () => {
                 <Layout display="flex-column" gap="small">
                   <Title variant="title-4">Medical Payments</Title>
                   <Text variant="body-regular" color="subtle">
-                    Covers medical expenses for you and your passengers
+                    These coverages can help cover medical costs wherever someone you love is injured. If that happens, though, this coverage can help lessen the impact to your wallet or theirs.
                   </Text>
                   <input
                     type="range"
@@ -276,16 +284,59 @@ const CoverageContent: React.FC = () => {
                     ${medicalPayments.toLocaleString()} per person
                   </Text>
                 </Layout>
+
+                <Layout display="flex-column" gap="small">
+                  <Title variant="title-4">Uninsured Motorist Bodily Injury</Title>
+                  <Text variant="body-regular" color="subtle">
+                    That pain is you're not back is not just from the accident – it's also from finding out that the person who hit you has no insurance. This coverage can help.
+                  </Text>
+                  <Select
+                    label="Coverage Limit"
+                    value={umbiLimit}
+                    onChange={(value) => setUmbiLimit(value)}
+                    options={[
+                      { label: '$100,000 / $300,000', value: '100000/300000' },
+                      { label: '$300,000 / $500,000', value: '300000/500000' },
+                      { label: '$500,000 / $1,000,000', value: '500000/1000000' }
+                    ]}
+                  />
+                  <Text variant="body-small" color="subtle" style={{ fontStyle: 'italic' }}>
+                    Limit recommended
+                  </Text>
+                </Layout>
+
+                <Layout display="flex-column" gap="small">
+                  <Title variant="title-4">Underinsured Motorist Bodily Injury</Title>
+                  <Text variant="body-regular" color="subtle">
+                    If you or your passenger is injured in an accident and the driver at fault has insurance but not quite enough, this coverage can help make up the difference.
+                  </Text>
+                  <Select
+                    label="Coverage Limit"
+                    value={uimbiLimit}
+                    onChange={(value) => setUimbiLimit(value)}
+                    options={[
+                      { label: '$100,000 / $300,000', value: '100000/300000' },
+                      { label: '$300,000 / $500,000', value: '300000/500000' },
+                      { label: '$500,000 / $1,000,000', value: '500000/1000000' }
+                    ]}
+                  />
+                  <Text variant="body-small" color="subtle" style={{ fontStyle: 'italic' }}>
+                    Limit recommended
+                  </Text>
+                </Layout>
               </Layout>
 
               {/* Section 2: Protect Your Assets */}
               <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
                 <Title variant="title-3">Protect Your Assets</Title>
+                <Text variant="body-regular" color="subtle">
+                  These coverages help protect you and your assets from damages that you caused. They can be the difference between a bad day and a bad decade.
+                </Text>
 
                 <Layout display="flex-column" gap="small">
                   <Title variant="title-4">Property Damage Liability</Title>
                   <Text variant="body-regular" color="subtle">
-                    Covers damage to others' property in an accident you cause
+                    You don't really get to pick which car you accidentally rear-end – whether it's a beater or a Bentley, this coverage can help.
                   </Text>
                   <input
                     type="range"
@@ -306,7 +357,7 @@ const CoverageContent: React.FC = () => {
               <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
                 <Title variant="title-3">Protect Your Vehicles</Title>
                 <Text variant="body-regular" color="subtle">
-                  Comprehensive and Collision coverage helps repair or replace your vehicle if it's damaged or stolen. Choose your deductible for each vehicle.
+                  How important is your car to you? How much do you depend on it? If something happens to it, these coverages will help get you back on the road. We've combined these coverages because if you'd need to worry about the intricacy of whether that storm, fender bender, and broken windshield are just a few examples. Required coverage for leased or financed vehicles.
                 </Text>
 
                 {/* Per-vehicle sliders */}

@@ -1197,31 +1197,58 @@ export class QuoteService {
     if (data.coverages) {
       // Bodily Injury Liability - Higher limits cost more
       const biLimit = data.coverages.bodilyInjuryLimit || data.coverages.bodilyInjuryLimit;
-      if (biLimit === '25/50') liabilityCoverageFactor += 0.05;       // Minimum
-      else if (biLimit === '50/100') liabilityCoverageFactor += 0.10;  // Standard
-      else if (biLimit === '100/300') liabilityCoverageFactor += 0.15; // Recommended (baseline)
-      else if (biLimit === '250/500') liabilityCoverageFactor += 0.25; // High coverage
+      if (biLimit === '25000/50000' || biLimit === '25/50') liabilityCoverageFactor += 0.05;       // Minimum
+      else if (biLimit === '50000/100000' || biLimit === '50/100') liabilityCoverageFactor += 0.10;  // Standard
+      else if (biLimit === '100000/300000' || biLimit === '100/300') liabilityCoverageFactor += 0.15; // Recommended (baseline)
+      else if (biLimit === '300000/500000' || biLimit === '300/500') liabilityCoverageFactor += 0.25; // High coverage
+      else if (biLimit === '500000/1000000' || biLimit === '500/1000') liabilityCoverageFactor += 0.35; // Premium coverage
       else liabilityCoverageFactor += 0.15; // Default to recommended
 
       // Property Damage Liability - Higher limits cost more
       const pdLimit = data.coverages.propertyDamageLimit || data.coverages.propertyDamageLimit;
-      if (pdLimit === '25000') liabilityCoverageFactor += 0.03;      // Minimum
-      else if (pdLimit === '50000') liabilityCoverageFactor += 0.05; // Standard (baseline)
+      if (pdLimit === '25000') liabilityCoverageFactor += 0.03;       // Minimum
+      else if (pdLimit === '50000') liabilityCoverageFactor += 0.05;  // Standard (baseline)
+      else if (pdLimit === '75000') liabilityCoverageFactor += 0.065; // Above standard
       else if (pdLimit === '100000') liabilityCoverageFactor += 0.08; // High coverage
       else liabilityCoverageFactor += 0.05; // Default to standard
 
       // Medical Payments - Higher limits cost more
       const medicalPaymentsLimit = data.coverages.medicalPaymentsLimit;
       if (medicalPaymentsLimit) {
-        if (medicalPaymentsLimit === 1000) liabilityCoverageFactor += 0.02;       // $1,000
-        else if (medicalPaymentsLimit === 2000) liabilityCoverageFactor += 0.03;  // $2,000
-        else if (medicalPaymentsLimit === 5000) liabilityCoverageFactor += 0.05;  // $5,000 (baseline)
-        else if (medicalPaymentsLimit === 10000) liabilityCoverageFactor += 0.08; // $10,000
+        if (medicalPaymentsLimit === 1000) liabilityCoverageFactor += 0.02;        // $1,000
+        else if (medicalPaymentsLimit === 2000) liabilityCoverageFactor += 0.03;   // $2,000
+        else if (medicalPaymentsLimit === 3000) liabilityCoverageFactor += 0.035;  // $3,000
+        else if (medicalPaymentsLimit === 4000) liabilityCoverageFactor += 0.04;   // $4,000
+        else if (medicalPaymentsLimit === 5000) liabilityCoverageFactor += 0.05;   // $5,000 (baseline)
+        else if (medicalPaymentsLimit === 6000) liabilityCoverageFactor += 0.055;  // $6,000
+        else if (medicalPaymentsLimit === 7000) liabilityCoverageFactor += 0.06;   // $7,000
+        else if (medicalPaymentsLimit === 8000) liabilityCoverageFactor += 0.07;   // $8,000
+        else if (medicalPaymentsLimit === 9000) liabilityCoverageFactor += 0.075;  // $9,000
+        else if (medicalPaymentsLimit === 10000) liabilityCoverageFactor += 0.08;  // $10,000
         else liabilityCoverageFactor += 0.05; // Default to $5,000 baseline
       }
 
-      // Uninsured/Underinsured Motorist
-      if (data.coverages.uninsuredMotorist || data.coverages.hasUninsured) liabilityCoverageFactor += 0.10;
+      // Uninsured Motorist Bodily Injury (UMBI) - Protects from uninsured drivers
+      const umbiLimit = data.coverages.uninsuredMotoristBodilyInjury || data.coverages.umbiLimit;
+      if (umbiLimit) {
+        if (umbiLimit === '25000/50000' || umbiLimit === '25/50') liabilityCoverageFactor += 0.05;       // Minimum
+        else if (umbiLimit === '50000/100000' || umbiLimit === '50/100') liabilityCoverageFactor += 0.08;  // Standard
+        else if (umbiLimit === '100000/300000' || umbiLimit === '100/300') liabilityCoverageFactor += 0.10; // Recommended (baseline)
+        else if (umbiLimit === '300000/500000' || umbiLimit === '300/500') liabilityCoverageFactor += 0.15; // High coverage
+        else if (umbiLimit === '500000/1000000' || umbiLimit === '500/1000') liabilityCoverageFactor += 0.20; // Premium coverage
+        else liabilityCoverageFactor += 0.10; // Default to recommended
+      }
+
+      // Underinsured Motorist Bodily Injury (UIMBI) - Protects when at-fault driver has insufficient coverage
+      const uimbiLimit = data.coverages.underinsuredMotoristBodilyInjury || data.coverages.uimbiLimit;
+      if (uimbiLimit) {
+        if (uimbiLimit === '25000/50000' || uimbiLimit === '25/50') liabilityCoverageFactor += 0.04;       // Minimum
+        else if (uimbiLimit === '50000/100000' || uimbiLimit === '50/100') liabilityCoverageFactor += 0.07;  // Standard
+        else if (uimbiLimit === '100000/300000' || uimbiLimit === '100/300') liabilityCoverageFactor += 0.09; // Recommended (baseline)
+        else if (uimbiLimit === '300000/500000' || uimbiLimit === '300/500') liabilityCoverageFactor += 0.13; // High coverage
+        else if (uimbiLimit === '500000/1000000' || uimbiLimit === '500/1000') liabilityCoverageFactor += 0.18; // Premium coverage
+        else liabilityCoverageFactor += 0.09; // Default to recommended
+      }
 
       // Roadside Assistance
       if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) liabilityCoverageFactor += 0.05;

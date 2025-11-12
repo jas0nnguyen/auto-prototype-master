@@ -187,6 +187,14 @@ class UpdateCoverageDTO {
   coverage_medical_payments_limit?: number;
 
   @IsOptional()
+  @IsString()
+  coverage_uninsured_motorist_bodily_injury?: string;
+
+  @IsOptional()
+  @IsString()
+  coverage_underinsured_motorist_bodily_injury?: string;
+
+  @IsOptional()
   @IsBoolean()
   coverage_collision?: boolean;
 
@@ -348,6 +356,9 @@ class CreateQuoteDTO {
   coverage_start_date?: string;  // NEW
   coverage_bodily_injury_limit?: string;  // NEW (renamed from coverage_bodily_injury)
   coverage_property_damage_limit?: string;  // NEW (renamed from coverage_property_damage)
+  coverage_medical_payments_limit?: number;  // NEW
+  coverage_uninsured_motorist_bodily_injury?: string;  // NEW - UMBI limit
+  coverage_underinsured_motorist_bodily_injury?: string;  // NEW - UIMBI limit
   coverage_has_collision?: boolean;  // NEW
   coverage_collision_deductible?: number;
   coverage_has_comprehensive?: boolean;  // NEW
@@ -916,6 +927,8 @@ export class QuotesController {
         bodilyInjuryLimit: dto.coverage_bodily_injury_limit,
         propertyDamageLimit: dto.coverage_property_damage_limit,
         medicalPaymentsLimit: dto.coverage_medical_payments_limit,
+        uninsuredMotoristBodilyInjury: dto.coverage_uninsured_motorist_bodily_injury,
+        underinsuredMotoristBodilyInjury: dto.coverage_underinsured_motorist_bodily_injury,
         collision: dto.coverage_collision,
         collisionDeductible: dto.coverage_collision_deductible,
         comprehensive: dto.coverage_comprehensive,
