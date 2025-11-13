@@ -320,6 +320,102 @@ const SummaryContent: React.FC = () => {
     setIsDriverModalOpen(true);
   };
 
+  const handleRemoveVehicle = async (vehicleId: string) => {
+    if (!quoteNumber || !quote) return;
+
+    // Prevent removing the last vehicle (must have at least one)
+    if (vehicles.length <= 1) {
+      alert('You must have at least one vehicle on your policy.');
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm('Are you sure you want to remove this vehicle?')) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      // Get the vehicle index to remove
+      const vehicleIndex = parseInt(vehicleId.replace('vehicle-', ''));
+
+      // Filter out the vehicle to remove
+      const remainingVehicles = (quote.vehicles || [])
+        .filter((_, index) => index !== vehicleIndex)
+        .map(v => ({
+          year: v.year,
+          make: v.make,
+          model: v.model,
+          vin: v.vin,
+          bodyType: v.bodyType,
+          annualMileage: v.annualMileage
+        }));
+
+      await updateVehicles.mutateAsync({
+        quoteNumber,
+        vehicles: remainingVehicles
+      });
+
+      console.log('[Summary] Vehicle removed successfully');
+    } catch (err) {
+      console.error('[Summary] Error removing vehicle:', err);
+      alert('Failed to remove vehicle. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleRemoveDriver = async (driverId: string) => {
+    if (!quoteNumber || !quote) return;
+
+    // Prevent removing primary driver
+    if (driverId === 'driver-0') {
+      alert('Cannot remove the primary driver.');
+      return;
+    }
+
+    // Confirm deletion
+    if (!confirm('Are you sure you want to remove this driver?')) {
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+
+      // Get the driver index to remove (subtract 1 because primary driver is driver-0)
+      const driverIndex = parseInt(driverId.replace('driver-', '')) - 1;
+
+      // Filter out the driver to remove
+      const remainingDrivers = (quote.additionalDrivers || [])
+        .filter((_, index) => index !== driverIndex)
+        .map(d => ({
+          first_name: d.firstName,
+          last_name: d.lastName,
+          birth_date: d.birthDate,
+          email: d.email || '',
+          phone: d.phone || '',
+          gender: d.gender,
+          marital_status: d.maritalStatus,
+          relationship: d.relationship,
+          license_number: d.licenseNumber,
+          license_state: d.licenseState
+        }));
+
+      await updateAdditionalDrivers.mutateAsync({
+        quoteNumber,
+        additionalDrivers: remainingDrivers
+      });
+
+      console.log('[Summary] Driver removed successfully');
+    } catch (err) {
+      console.error('[Summary] Error removing driver:', err);
+      alert('Failed to remove driver. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   // Loading state
   if (isLoading) {
     return (
@@ -480,14 +576,27 @@ const SummaryContent: React.FC = () => {
                             </Text>
                           )}
                         </Layout>
-                        <Button
-                          variant="secondary"
-                          size="medium"
-                          onClick={() => handleEditVehicle(vehicle)}
-                          style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
-                        >
-                          Edit
-                        </Button>
+                        <Layout display="flex" gap="small">
+                          <Button
+                            variant="secondary"
+                            size="medium"
+                            onClick={() => handleEditVehicle(vehicle)}
+                            style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
+                          >
+                            Edit
+                          </Button>
+                          {vehicles.length > 1 && (
+                            <Button
+                              variant="secondary"
+                              size="medium"
+                              onClick={() => handleRemoveVehicle(vehicle.id)}
+                              style={{ backgroundColor: '#ef4444', color: 'white', border: 'none' }}
+                              disabled={isSaving}
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </Layout>
                       </Layout>
                     </Card>
                   ))
@@ -529,14 +638,27 @@ const SummaryContent: React.FC = () => {
                             </Text>
                           )}
                         </Layout>
-                        <Button
-                          variant="secondary"
-                          size="medium"
-                          onClick={() => handleEditDriver(driver)}
-                          style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
-                        >
-                          Edit
-                        </Button>
+                        <Layout display="flex" gap="small">
+                          <Button
+                            variant="secondary"
+                            size="medium"
+                            onClick={() => handleEditDriver(driver)}
+                            style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
+                          >
+                            Edit
+                          </Button>
+                          {index !== 0 && (
+                            <Button
+                              variant="secondary"
+                              size="medium"
+                              onClick={() => handleRemoveDriver(driver.id)}
+                              style={{ backgroundColor: '#ef4444', color: 'white', border: 'none' }}
+                              disabled={isSaving}
+                            >
+                              Remove
+                            </Button>
+                          )}
+                        </Layout>
                       </Layout>
                     </Card>
                   ))

@@ -22,7 +22,7 @@ import CoverageSelection from './pages/quote/CoverageSelection';
 import QuoteResults from './pages/quote/QuoteResults';
 
 // Import binding flow pages (T101 - Phase 4)
-import Checkout from './pages/binding/Checkout';
+import BindingCheckout from './pages/binding/Checkout';
 import Confirmation from './pages/binding/Confirmation';
 
 // Import portal pages (T121 - Phase 5)
@@ -55,6 +55,13 @@ import Coverage from './pages/quote-v2/Coverage';
 import AddOns from './pages/quote-v2/AddOns';
 import LoadingValidation from './pages/quote-v2/LoadingValidation';
 import Review from './pages/quote-v2/Review';
+
+// Import quote-v2 Phase 4 pages (Feature 004 - User Story 2: Payment & Signing)
+import { Sign } from './pages/quote-v2/Sign';
+import { Checkout } from './pages/quote-v2/Checkout';
+import { Payment } from './pages/quote-v2/Payment';
+import { Processing } from './pages/quote-v2/Processing';
+import { Success } from './pages/quote-v2/Success';
 
 /**
  * Create TanStack Query Client
@@ -115,7 +122,7 @@ function App() {
           <Route path="/quote/results/:quoteNumber" element={<QuoteResults />} />
 
           {/* Binding Flow Routes (T101 - Phase 4: Policy Binding & Payment) */}
-          <Route path="/binding/checkout/:quoteNumber" element={<Checkout />} />
+          <Route path="/binding/checkout/:quoteNumber" element={<BindingCheckout />} />
           <Route path="/binding/confirmation/:quoteNumber" element={<Confirmation />} />
           {/* TODO: Add ReviewBind route when implemented (optional) */}
 
@@ -151,12 +158,21 @@ function App() {
                   <Route path="loading-validation/:quoteNumber" element={<LoadingValidation />} />
                   <Route path="review/:quoteNumber" element={<Review />} />
 
+                  {/* Screens 10-13: Signing ceremony, payment, and processing (Phase 4) */}
+                  <Route path="sign/:quoteNumber" element={<Sign />} />
+                  <Route path="checkout/:quoteNumber" element={<Checkout />} />
+                  <Route path="payment/:quoteNumber" element={<Payment />} />
+                  <Route path="processing/:quoteNumber" element={<Processing />} />
+
                   {/* Catch-all: redirect to start */}
                   <Route path="*" element={<Navigate to="/quote-v2/get-started" replace />} />
                 </Routes>
               </RouteGuard>
             }
           />
+
+          {/* Success route - Outside RouteGuard since flow is complete */}
+          <Route path="/quote-v2/success/:quoteNumber" element={<Success />} />
 
           {/* Test page for debugging Medical Payments functionality */}
           <Route path="/test-coverage" element={<TestCoveragePage />} />

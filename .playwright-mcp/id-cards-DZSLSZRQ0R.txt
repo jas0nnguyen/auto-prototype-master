@@ -1,0 +1,7 @@
+Insurance ID Card
+
+Policy Number: DZSLSZRQ0R
+Effective: 11/11/2025
+Expires: 5/11/2026
+
+This is a mock document for demo purposes.

@@ -82,7 +82,7 @@ const LoadingPrefill: React.FC = () => {
         const formattedPhone = phoneDigits ? `${phoneDigits.slice(0,3)}-${phoneDigits.slice(3,6)}-${phoneDigits.slice(6)}` : '';
 
         // Create quote with collected data
-        const quoteResult = await createQuote.mutateAsync({
+        const quotePayload = {
           // Primary driver info (from GetStarted)
           driver_first_name: quoteData.getStarted.first_name,
           driver_last_name: quoteData.getStarted.last_name,
@@ -106,8 +106,36 @@ const LoadingPrefill: React.FC = () => {
           vehicle_body_type: mockVehicle.body_type,
 
           // Coverage start date (from EffectiveDate)
-          coverage_start_date: quoteData.effectiveDate
+          coverage_start_date: quoteData.effectiveDate,
+
+          // Default coverages - match Coverage screen defaults
+          // This ensures Summary screen shows accurate initial premium
+          coverage_bodily_injury_limit: '100000/300000',
+          coverage_property_damage_limit: '50000',
+          coverage_medical_payments_limit: 5000,
+          coverage_uninsured_motorist_bodily_injury: '100000/300000',
+          coverage_underinsured_motorist_bodily_injury: '100000/300000',
+          coverage_has_collision: true,
+          coverage_collision_deductible: 500,
+          coverage_has_comprehensive: true,
+          coverage_comprehensive_deductible: 500,
+          coverage_has_roadside: true, // Always included
+        };
+
+        console.log('[LoadingPrefill] Creating quote with payload:', quotePayload);
+        console.log('[LoadingPrefill] Coverage fields in payload:', {
+          coverage_bodily_injury_limit: quotePayload.coverage_bodily_injury_limit,
+          coverage_property_damage_limit: quotePayload.coverage_property_damage_limit,
+          coverage_medical_payments_limit: quotePayload.coverage_medical_payments_limit,
+          coverage_uninsured_motorist_bodily_injury: quotePayload.coverage_uninsured_motorist_bodily_injury,
+          coverage_underinsured_motorist_bodily_injury: quotePayload.coverage_underinsured_motorist_bodily_injury,
+          coverage_has_collision: quotePayload.coverage_has_collision,
+          coverage_collision_deductible: quotePayload.coverage_collision_deductible,
+          coverage_has_comprehensive: quotePayload.coverage_has_comprehensive,
+          coverage_comprehensive_deductible: quotePayload.coverage_comprehensive_deductible,
+          coverage_has_roadside: quotePayload.coverage_has_roadside,
         });
+        const quoteResult = await createQuote.mutateAsync(quotePayload);
 
         setSteps(prev => prev.map((step, i) =>
           i === 2 ? { ...step, status: 'completed' as const } : step

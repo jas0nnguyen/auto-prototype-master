@@ -11,7 +11,6 @@ import {
 import { TechStartupLayout } from './components/shared/TechStartupLayout';
 import { PriceSidebar } from './components/PriceSidebar';
 import { ScreenProgress } from './components/ScreenProgress';
-import { QuoteProvider } from './contexts/QuoteContext';
 import { useQuoteByNumber, useUpdateQuoteCoverage } from '../../hooks/useQuote';
 
 /**
@@ -52,7 +51,11 @@ const CoverageContent: React.FC = () => {
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
   // Fetch quote data - this will auto-refetch when cache is invalidated
-  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber);
+  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber) as {
+    data: any;
+    isLoading: boolean;
+    error: any;
+  };
 
   // Mutation for updating coverage
   const updateCoverage = useUpdateQuoteCoverage();
@@ -68,34 +71,82 @@ const CoverageContent: React.FC = () => {
   // Per-vehicle coverage state (comprehensive and collision deductibles)
   const [vehicleCoverages, setVehicleCoverages] = useState<Record<number, { comprehensive: number; collision: number }>>({});
 
+  // Track the last quote number we initialized from to prevent re-initialization loops
+  const [lastInitializedQuoteNumber, setLastInitializedQuoteNumber] = useState<string | null>(null);
+
   // Initialize coverage values from quote
   useEffect(() => {
-    if (quote && !isInitialized) {
-      // Parse BI liability from quote
-      if (quote.coverage?.bodily_injury_limit) {
-        setBiLiability(quote.coverage.bodily_injury_limit);
+    // Only initialize if we have a quote and either:
+    // 1. We haven't initialized yet (!isInitialized), OR
+    // 2. The quote number has changed (user went back and forward)
+    const shouldInitialize = quote && (
+      !isInitialized ||
+      (quote.quote_number && quote.quote_number !== lastInitializedQuoteNumber)
+    );
+
+    if (shouldInitialize) {
+      const coverages = quote.coverages || {};
+
+      console.log('[Coverage] Initializing from quote:', {
+        quoteNumber: quote.quote_number,
+        coverages,
+        bodilyInjuryLimit: coverages.bodilyInjuryLimit,
+        propertyDamageLimit: coverages.propertyDamageLimit,
+        medicalPaymentsLimit: coverages.medicalPaymentsLimit,
+        collisionDeductible: coverages.collisionDeductible,
+        comprehensiveDeductible: coverages.comprehensiveDeductible,
+        vehicleCoverages: coverages.vehicleCoverages,
+      });
+
+      // Parse BI liability from quote (use coverages, not coverage)
+      if (coverages.bodilyInjuryLimit) {
+        setBiLiability(coverages.bodilyInjuryLimit);
       }
-      if (quote.coverage?.property_damage_limit !== undefined) {
-        setPdLiability(quote.coverage.property_damage_limit);
+      if (coverages.propertyDamageLimit !== undefined && coverages.propertyDamageLimit !== null) {
+        // Handle both string and number formats
+        const pdLimit = typeof coverages.propertyDamageLimit === 'string'
+          ? parseInt(coverages.propertyDamageLimit.replace(/\D/g, ''))
+          : coverages.propertyDamageLimit;
+        setPdLiability(pdLimit);
       }
-      if (quote.coverage?.medical_payments_limit !== undefined) {
-        setMedicalPayments(quote.coverage.medical_payments_limit);
+      if (coverages.medicalPaymentsLimit !== undefined && coverages.medicalPaymentsLimit !== null) {
+        setMedicalPayments(coverages.medicalPaymentsLimit);
+      }
+      if (coverages.uninsuredMotoristBodilyInjury) {
+        setUmbiLimit(coverages.uninsuredMotoristBodilyInjury);
+      }
+      if (coverages.underinsuredMotoristBodilyInjury) {
+        setUimbiLimit(coverages.underinsuredMotoristBodilyInjury);
       }
 
-      // Initialize per-vehicle coverages (default to $500 deductible for both)
+      // Initialize per-vehicle coverages from saved data or defaults
       const vehicles = quote.vehicles || [];
       const initialVehicleCoverages: Record<number, { comprehensive: number; collision: number }> = {};
+
+      // Check if we have saved vehicle coverages in the quote
+      const savedVehicleCoverages = coverages.vehicleCoverages;
+
       vehicles.forEach((_: any, index: number) => {
+        // Try to find saved coverage for this vehicle index
+        const savedCoverage = savedVehicleCoverages?.find((vc: any) => vc.vehicle_index === index);
+
         initialVehicleCoverages[index] = {
-          comprehensive: quote.coverage?.comprehensive_deductible || 500,
-          collision: quote.coverage?.collision_deductible || 500,
+          comprehensive: savedCoverage?.comprehensive_deductible
+            || coverages.comprehensiveDeductible
+            || 500,
+          collision: savedCoverage?.collision_deductible
+            || coverages.collisionDeductible
+            || 500,
         };
       });
+
+      console.log('[Coverage] Initialized vehicle coverages:', initialVehicleCoverages);
       setVehicleCoverages(initialVehicleCoverages);
 
       setIsInitialized(true);
+      setLastInitializedQuoteNumber(quote.quote_number);
     }
-  }, [quote, isInitialized]);
+  }, [quote, isInitialized, lastInitializedQuoteNumber]);
 
   // Debounce coverage changes (300ms)
   const debouncedBiLiability = useDebounce(biLiability, 300);
@@ -132,7 +183,7 @@ const CoverageContent: React.FC = () => {
     const updateCoverageData = async () => {
       try {
         // Convert vehicleCoverages object to array format for API
-        const vehicleCoveragesArray = Object.entries(debouncedVehicleCoverages).map(([index, coverage]) => ({
+        const vehicleCoveragesArray = Object.entries(debouncedVehicleCoverages).map(([index, coverage]: [string, any]) => ({
           vehicle_index: parseInt(index),
           collision_deductible: coverage.collision,
           comprehensive_deductible: coverage.comprehensive

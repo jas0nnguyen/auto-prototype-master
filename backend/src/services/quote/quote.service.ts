@@ -103,6 +103,9 @@ export interface CreateQuoteInput {
     startDate?: string;  // Coverage start date
     bodilyInjuryLimit?: string;  // e.g., "100/300"
     propertyDamageLimit?: string;  // e.g., "50000"
+    medicalPaymentsLimit?: number;  // e.g., 5000
+    uninsuredMotoristBodilyInjury?: string;  // e.g., "100/300"
+    underinsuredMotoristBodilyInjury?: string;  // e.g., "100/300"
     collision?: boolean;
     collisionDeductible?: number;  // e.g., 500
     comprehensive?: boolean;
@@ -216,7 +219,39 @@ export class QuoteService {
         const productId = await this.ensureProductExists(tx);
 
         // Step 8: Calculate premium (before creating agreement so we can store it)
-        const premium = this.calculatePremium(input);
+        // Use calculatePremiumProgressive to include coverage selections in initial calculation
+        const premium = this.calculatePremiumProgressive({
+          driver: {
+            firstName: input.driver.firstName,
+            lastName: input.driver.lastName,
+            birthDate: input.driver.birthDate,
+            email: input.driver.email,
+          },
+          additionalDrivers: input.additionalDrivers || [],
+          vehicles: input.vehicles || (input.vehicle ? [input.vehicle] : []),
+          coverages: input.coverages ? {
+            bodilyInjuryLimit: input.coverages.bodilyInjuryLimit,
+            propertyDamageLimit: input.coverages.propertyDamageLimit,
+            medicalPaymentsLimit: input.coverages.medicalPaymentsLimit,
+            uninsuredMotoristBodilyInjury: input.coverages.uninsuredMotoristBodilyInjury,
+            underinsuredMotoristBodilyInjury: input.coverages.underinsuredMotoristBodilyInjury,
+            hasCollision: input.coverages.collision,
+            collision: input.coverages.collision,
+            collisionDeductible: input.coverages.collisionDeductible,
+            hasComprehensive: input.coverages.comprehensive,
+            comprehensive: input.coverages.comprehensive,
+            comprehensiveDeductible: input.coverages.comprehensiveDeductible,
+            hasRoadside: input.coverages.roadsideAssistance,
+            hasRental: input.coverages.rentalReimbursement,
+          } : undefined,
+          vehicleCoverages: input.coverages?.collisionDeductible || input.coverages?.comprehensiveDeductible
+            ? (input.vehicles || (input.vehicle ? [input.vehicle] : [])).map((_v, index) => ({
+                vehicle_index: index,
+                collision_deductible: input.coverages!.collisionDeductible || 500,
+                comprehensive_deductible: input.coverages!.comprehensiveDeductible || 500,
+              }))
+            : undefined,
+        });
 
         // Step 9: Generate quote number
         const quoteNumber = this.generateQuoteNumber();
@@ -278,6 +313,9 @@ export class QuoteService {
             startDate: input.coverages?.startDate || null,
             bodilyInjuryLimit: input.coverages?.bodilyInjuryLimit || null,
             propertyDamageLimit: input.coverages?.propertyDamageLimit || null,
+            medicalPaymentsLimit: input.coverages?.medicalPaymentsLimit || null,
+            uninsuredMotoristBodilyInjury: input.coverages?.uninsuredMotoristBodilyInjury || null,
+            underinsuredMotoristBodilyInjury: input.coverages?.underinsuredMotoristBodilyInjury || null,
             hasCollision: input.coverages?.collision || false,
             collisionDeductible: input.coverages?.collisionDeductible || null,
             hasComprehensive: input.coverages?.comprehensive || false,
@@ -450,6 +488,12 @@ export class QuoteService {
         monthly: Math.round(parseFloat(quote.premiumAmount || '0') / 6 * 100) / 100,
         sixMonth: parseFloat(quote.premiumAmount || '0'),
       },
+
+      // Vehicle add-ons (from snapshot)
+      vehicleAddOns: snapshot?.vehicleAddOns || [],
+
+      // Discounts (from snapshot)
+      discounts: snapshot?.discounts || [],
     };
   }
 
@@ -969,6 +1013,8 @@ export class QuoteService {
       bodilyInjuryLimit?: string;
       propertyDamageLimit?: string;
       medicalPaymentsLimit?: number;
+      uninsuredMotoristBodilyInjury?: string;
+      underinsuredMotoristBodilyInjury?: string;
       collision?: boolean;
       collisionDeductible?: number;
       comprehensive?: boolean;
@@ -978,6 +1024,7 @@ export class QuoteService {
       rentalReimbursement?: boolean;
       rentalLimit?: number;
       vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
+      vehicleAddOns?: Array<{ vehicle_index: number; rental_reimbursement?: boolean; additional_equipment_amount?: number; original_parts_replacement?: boolean }>;
     }
   ): Promise<QuoteResult> {
     this.logger.log('Updating coverage and finalizing quote', { quoteNumber });
@@ -1004,23 +1051,29 @@ export class QuoteService {
       const currentSnapshot = policyRecord.quote_snapshot as any;
 
       // Build updated snapshot with new coverages
+      // IMPORTANT: Preserve existing coverage values if not explicitly provided in the update
+      const existingCoverages = currentSnapshot.coverages || {};
       const updatedSnapshot = {
         ...currentSnapshot,
         coverages: {
-          startDate: coverages.startDate || null,
-          bodilyInjuryLimit: coverages.bodilyInjuryLimit || null,
-          propertyDamageLimit: coverages.propertyDamageLimit || null,
-          medicalPaymentsLimit: coverages.medicalPaymentsLimit || null,
-          hasCollision: coverages.collision || false,
-          collisionDeductible: coverages.collisionDeductible || null,
-          hasComprehensive: coverages.comprehensive || false,
-          comprehensiveDeductible: coverages.comprehensiveDeductible || null,
-          hasUninsured: coverages.uninsuredMotorist || false,
-          hasRoadside: coverages.roadsideAssistance || false,
-          hasRental: coverages.rentalReimbursement || false,
-          rentalLimit: coverages.rentalLimit || null,
-          vehicleCoverages: coverages.vehicleCoverages || null,
+          startDate: coverages.startDate !== undefined ? coverages.startDate : existingCoverages.startDate || null,
+          bodilyInjuryLimit: coverages.bodilyInjuryLimit !== undefined ? coverages.bodilyInjuryLimit : existingCoverages.bodilyInjuryLimit || null,
+          propertyDamageLimit: coverages.propertyDamageLimit !== undefined ? coverages.propertyDamageLimit : existingCoverages.propertyDamageLimit || null,
+          medicalPaymentsLimit: coverages.medicalPaymentsLimit !== undefined ? coverages.medicalPaymentsLimit : existingCoverages.medicalPaymentsLimit || null,
+          uninsuredMotoristBodilyInjury: coverages.uninsuredMotoristBodilyInjury !== undefined ? coverages.uninsuredMotoristBodilyInjury : existingCoverages.uninsuredMotoristBodilyInjury || null,
+          underinsuredMotoristBodilyInjury: coverages.underinsuredMotoristBodilyInjury !== undefined ? coverages.underinsuredMotoristBodilyInjury : existingCoverages.underinsuredMotoristBodilyInjury || null,
+          hasCollision: coverages.collision !== undefined ? coverages.collision : (existingCoverages.hasCollision !== undefined ? existingCoverages.hasCollision : false),
+          collisionDeductible: coverages.collisionDeductible !== undefined ? coverages.collisionDeductible : (existingCoverages.collisionDeductible || null),
+          hasComprehensive: coverages.comprehensive !== undefined ? coverages.comprehensive : (existingCoverages.hasComprehensive !== undefined ? existingCoverages.hasComprehensive : false),
+          comprehensiveDeductible: coverages.comprehensiveDeductible !== undefined ? coverages.comprehensiveDeductible : (existingCoverages.comprehensiveDeductible || null),
+          hasUninsured: coverages.uninsuredMotorist !== undefined ? coverages.uninsuredMotorist : (existingCoverages.hasUninsured !== undefined ? existingCoverages.hasUninsured : false),
+          hasRoadside: coverages.roadsideAssistance !== undefined ? coverages.roadsideAssistance : (existingCoverages.hasRoadside !== undefined ? existingCoverages.hasRoadside : false),
+          hasRental: coverages.rentalReimbursement !== undefined ? coverages.rentalReimbursement : (existingCoverages.hasRental !== undefined ? existingCoverages.hasRental : false),
+          rentalLimit: coverages.rentalLimit !== undefined ? coverages.rentalLimit : existingCoverages.rentalLimit || null,
+          vehicleCoverages: coverages.vehicleCoverages !== undefined ? coverages.vehicleCoverages : existingCoverages.vehicleCoverages || null,
         },
+        // Save vehicle add-ons in snapshot for persistence
+        vehicleAddOns: coverages.vehicleAddOns !== undefined ? coverages.vehicleAddOns : currentSnapshot.vehicleAddOns || null,
         meta: {
           ...currentSnapshot.meta,
           updatedAt: new Date().toISOString(),
@@ -1029,12 +1082,15 @@ export class QuoteService {
       };
 
       // Recalculate final premium with all coverages
+      // IMPORTANT: Use updatedSnapshot.coverages, not the coverages parameter
+      // because the parameter might not include existing vehicle coverages or preserved boolean values
       const newPremium = this.calculatePremiumProgressive({
         driver: currentSnapshot.driver,
         additionalDrivers: currentSnapshot.additionalDrivers || [],
         vehicles: currentSnapshot.vehicles || [],
-        coverages,
-        vehicleCoverages: coverages.vehicleCoverages,
+        coverages: updatedSnapshot.coverages,
+        vehicleCoverages: updatedSnapshot.coverages.vehicleCoverages,
+        vehicleAddOns: updatedSnapshot.vehicleAddOns,
       });
 
       // Update premium in snapshot
@@ -1093,6 +1149,7 @@ export class QuoteService {
     vehicles?: any[];
     coverages?: any;
     vehicleCoverages?: Array<{ vehicle_index: number; collision_deductible: number; comprehensive_deductible: number }>;
+    vehicleAddOns?: Array<{ vehicle_index: number; rental_reimbursement?: boolean; additional_equipment_amount?: number; original_parts_replacement?: boolean }>;
   }): number {
     // Base premium starts at $1000
     let basePremium = 1000;
@@ -1165,8 +1222,34 @@ export class QuoteService {
           else comprehensiveFactor = 0.20; // Default to standard
         }
 
+        // Per-vehicle add-ons factor
+        let vehicleAddOnsFactor = 0;
+
+        // Check for per-vehicle add-ons from vehicleAddOns array
+        if (data.vehicleAddOns && data.vehicleAddOns[index]) {
+          const addOns = data.vehicleAddOns[index];
+
+          // Rental Reimbursement (per vehicle)
+          if (addOns.rental_reimbursement) {
+            vehicleAddOnsFactor += 0.04; // +4% per vehicle with rental coverage
+          }
+
+          // Additional Equipment Coverage (amount-based)
+          if (addOns.additional_equipment_amount) {
+            const amount = addOns.additional_equipment_amount;
+            if (amount === 1000) vehicleAddOnsFactor += 0.02;
+            else if (amount === 5000) vehicleAddOnsFactor += 0.05;
+            else vehicleAddOnsFactor += 0.03; // Default for any amount
+          }
+
+          // Original Parts Replacement Coverage
+          if (addOns.original_parts_replacement) {
+            vehicleAddOnsFactor += 0.06; // +6% for OEM parts guarantee
+          }
+        }
+
         // Calculate this vehicle's contribution to premium
-        const vehicleCoverageFactor = 1.0 + collisionFactor + comprehensiveFactor;
+        const vehicleCoverageFactor = 1.0 + collisionFactor + comprehensiveFactor + vehicleAddOnsFactor;
         const vehiclePremium = basePremium * vehicleFactor * vehicleCoverageFactor;
         totalVehiclePremium += vehiclePremium;
 
@@ -1177,6 +1260,7 @@ export class QuoteService {
           collisionDeductible,
           comprehensiveDeductible,
           collisionFactor,
+          vehicleAddOnsFactor,
           comprehensiveFactor,
           vehicleCoverageFactor,
           vehiclePremium: Math.round(vehiclePremium),
@@ -1250,17 +1334,16 @@ export class QuoteService {
         else liabilityCoverageFactor += 0.09; // Default to recommended
       }
 
-      // Roadside Assistance
-      if (data.coverages.roadsideAssistance || data.coverages.hasRoadside) liabilityCoverageFactor += 0.05;
-
-      // Rental Reimbursement - Limit affects price
-      if (data.coverages.rentalReimbursement || data.coverages.hasRental) {
-        const rentalLimit = data.coverages.rentalLimit || data.coverages.rentalLimit;
-        if (rentalLimit === 30) liabilityCoverageFactor += 0.03;      // $30/day
-        else if (rentalLimit === 50) liabilityCoverageFactor += 0.05; // $50/day
-        else if (rentalLimit === 75) liabilityCoverageFactor += 0.07; // $75/day
-        else liabilityCoverageFactor += 0.05; // Default to $50/day
+      // Roadside Assistance - Always included (no additional cost in this version)
+      // Keeping this for future pricing flexibility
+      if (data.coverages.roadsideAssistance !== false) {
+        // Currently included at no extra charge
+        // liabilityCoverageFactor += 0.0; // No premium increase
       }
+
+      // Note: Rental Reimbursement is now per-vehicle (see vehicleAddOnsFactor above)
+      // Note: Additional Equipment Coverage is now per-vehicle (see vehicleAddOnsFactor above)
+      // Note: Original Parts Replacement is now per-vehicle (see vehicleAddOnsFactor above)
     }
 
     // Calculate total premium: per-vehicle premium + driver factors + liability coverage
@@ -1458,8 +1541,20 @@ export class QuoteService {
     if (paymentData.paymentMethod === 'credit_card') {
       const cardNumber = paymentData.cardNumber?.replace(/\s/g, '');
 
+      // Enhanced debugging
+      this.logger.debug('Card validation debug', {
+        receivedCardNumber: paymentData.cardNumber,
+        cleanedCardNumber: cardNumber,
+        cardNumberType: typeof cardNumber,
+        cardNumberLength: cardNumber?.length,
+      });
+
       // Luhn algorithm validation
       if (!this.validateLuhn(cardNumber)) {
+        this.logger.warn('Card validation failed', {
+          cardNumber: cardNumber,
+          reason: 'Luhn check failed',
+        });
         return { success: false, errorMessage: 'Invalid card number (failed Luhn check)' };
       }
 
@@ -1551,7 +1646,19 @@ export class QuoteService {
    * Luhn algorithm for credit card validation
    */
   private validateLuhn(cardNumber: string): boolean {
-    if (!cardNumber || !/^\d+$/.test(cardNumber)) return false;
+    if (!cardNumber) {
+      this.logger.debug('Luhn validation: cardNumber is falsy', { cardNumber });
+      return false;
+    }
+
+    if (!/^\d+$/.test(cardNumber)) {
+      this.logger.debug('Luhn validation: cardNumber contains non-digits', {
+        cardNumber,
+        pattern: /^\d+$/,
+        test: !/^\d+$/.test(cardNumber)
+      });
+      return false;
+    }
 
     let sum = 0;
     let isEven = false;
@@ -1568,7 +1675,15 @@ export class QuoteService {
       isEven = !isEven;
     }
 
-    return sum % 10 === 0;
+    const isValid = sum % 10 === 0;
+    this.logger.debug('Luhn validation complete', {
+      cardNumber,
+      sum,
+      modulo: sum % 10,
+      isValid,
+    });
+
+    return isValid;
   }
 
   /**

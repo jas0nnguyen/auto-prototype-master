@@ -49,12 +49,10 @@ interface Vehicle {
   vin: string;
 }
 
-interface VehicleCoverage {
-  vehicleId: string;
-  comprehensive: string;
-  collision: string;
-  rental: string;
-  roadside: string;
+interface CoverageDescription {
+  name: string;
+  description: string;
+  value: string;
 }
 
 const ReviewContent: React.FC = () => {
@@ -62,15 +60,19 @@ const ReviewContent: React.FC = () => {
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
   // Fetch quote data
-  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber);
+  const { data: quote, isLoading, error } = useQuoteByNumber(quoteNumber) as {
+    data: any;
+    isLoading: boolean;
+    error: any;
+  };
 
   const handleMakeChanges = () => {
     navigate(`/quote-v2/summary/${quoteNumber}`);
   };
 
   const handleContinue = () => {
-    // Will navigate to signing ceremony in Phase 4
-    alert('Signing ceremony not implemented yet (Phase 4)');
+    // Navigate to signing ceremony (Phase 4)
+    navigate(`/quote-v2/sign/${quoteNumber}`);
   };
 
   // Loading state
@@ -94,7 +96,10 @@ const ReviewContent: React.FC = () => {
         <ScreenProgress currentScreen={9} totalScreens={19} />
         <Container padding="large">
           <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2" color="error">Error Loading Quote</Title>
+            <Title variant="title-2">Error Loading Quote</Title>
+            <Text variant="body-regular" color="subtle">
+              {error ? 'Unable to load quote details. Please try again.' : 'Quote not found.'}
+            </Text>
             <Button variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
               Start Over
             </Button>
@@ -107,66 +112,104 @@ const ReviewContent: React.FC = () => {
   // Map API response to display format
   const drivers: Driver[] = [];
 
-  // Add primary driver
+  // Add primary driver (note: backend returns camelCase)
   if (quote.driver) {
     drivers.push({
-      id: quote.driver.party_id,
-      firstName: quote.driver.first_name,
-      lastName: quote.driver.last_name,
-      licenseNumber: quote.driver.license_number,
-      licenseState: quote.driver.license_state_code,
+      id: (quote.driver as any).party_id || (quote.driver as any).partyId || 'primary',
+      firstName: quote.driver.firstName,
+      lastName: quote.driver.lastName,
+      licenseNumber: (quote.driver as any).license_number || (quote.driver as any).licenseNumber,
+      licenseState: (quote.driver as any).license_state_code || (quote.driver as any).licenseState,
     });
   }
 
   // Add additional drivers
-  if (quote.additionalDrivers) {
-    quote.additionalDrivers.forEach(driver => {
+  if (quote.additionalDrivers && Array.isArray(quote.additionalDrivers)) {
+    quote.additionalDrivers.forEach((driver: any, index: number) => {
       drivers.push({
-        id: driver.party_id,
-        firstName: driver.first_name,
-        lastName: driver.last_name,
-        licenseNumber: driver.license_number,
-        licenseState: driver.license_state_code,
+        id: driver.party_id || driver.partyId || `additional-${index}`,
+        firstName: driver.firstName || driver.first_name,
+        lastName: driver.lastName || driver.last_name,
+        licenseNumber: driver.license_number || driver.licenseNumber,
+        licenseState: driver.license_state_code || driver.licenseState,
       });
     });
   }
 
-  // Map vehicles
-  const vehicles: Vehicle[] = quote.vehicles?.map(v => ({
-    id: v.vehicle_id,
+  // Map vehicles (backend returns camelCase)
+  const vehicles: Vehicle[] = quote.vehicles?.map((v: any, index: number) => ({
+    id: v.vehicle_id || v.vehicleId || `vehicle-${index}`,
     year: v.year,
     make: v.make,
     model: v.model,
     vin: v.vin || 'N/A',
   })) || [];
 
-  // Extract liability coverage
+  // Extract liability coverage (use coverages object from backend)
+  const coverages = quote.coverages || {};
   const liabilityCoverage = {
-    bodilyInjury: quote.coverage?.bodily_injury_limit
-      ? quote.coverage.bodily_injury_limit.replace('/', ' / ')
-      : '$100,000 / $300,000',
-    propertyDamage: quote.coverage?.property_damage_limit
-      ? `$${quote.coverage.property_damage_limit.toLocaleString()}`
+    bodilyInjury: coverages.bodilyInjuryLimit || '$100,000 / $300,000',
+    propertyDamage: coverages.propertyDamageLimit
+      ? (coverages.propertyDamageLimit.startsWith('$') ? coverages.propertyDamageLimit : `$${coverages.propertyDamageLimit}`)
       : '$50,000',
   };
 
-  // Map vehicle coverages
-  const vehicleCoverages: VehicleCoverage[] = vehicles.map(vehicle => ({
-    vehicleId: vehicle.id,
-    comprehensive: quote.coverage?.comprehensive_deductible
-      ? `$${quote.coverage.comprehensive_deductible} deductible`
-      : '$500 deductible',
-    collision: quote.coverage?.collision_deductible
-      ? `$${quote.coverage.collision_deductible} deductible`
-      : '$500 deductible',
-    rental: quote.coverage?.rental_reimbursement
-      ? `$${quote.coverage.rental_limit || 1200} limit`
-      : 'Not included',
-    roadside: 'Always included',
-  }));
+  // Coverage descriptions with detailed explanations
+  const coverageDescriptions: CoverageDescription[] = [
+    {
+      name: 'Bodily Injury Liability',
+      description: 'Covers injuries you cause to others in an accident',
+      value: liabilityCoverage.bodilyInjury,
+    },
+    {
+      name: 'Property Damage Liability',
+      description: "Covers damage you cause to others' property",
+      value: liabilityCoverage.propertyDamage,
+    },
+  ];
+
+  if (coverages.hasCollision) {
+    coverageDescriptions.push({
+      name: 'Collision',
+      description: 'Covers damage to your vehicle from collisions',
+      value: `$${coverages.collisionDeductible} deductible`,
+    });
+  }
+
+  if (coverages.hasComprehensive) {
+    coverageDescriptions.push({
+      name: 'Comprehensive',
+      description: 'Covers damage from theft, vandalism, weather, etc.',
+      value: `$${coverages.comprehensiveDeductible} deductible`,
+    });
+  }
+
+  if (coverages.hasUninsured) {
+    coverageDescriptions.push({
+      name: 'Uninsured Motorist',
+      description: 'Protects you if hit by an uninsured driver',
+      value: 'Included',
+    });
+  }
+
+  if (coverages.hasRental) {
+    coverageDescriptions.push({
+      name: 'Rental Reimbursement',
+      description: 'Covers rental car costs while your car is being repaired',
+      value: `$${coverages.rentalLimit} limit`,
+    });
+  }
+
+  if (coverages.hasRoadside) {
+    coverageDescriptions.push({
+      name: 'Roadside Assistance',
+      description: 'Covers towing, flat tires, lockouts, and jump starts',
+      value: 'Included',
+    });
+  }
 
   // Extract discounts
-  const discounts = quote.discounts?.map(d => ({
+  const discounts = quote.discounts?.map((d: any) => ({
     name: d.name || d.code,
     amount: Math.abs(d.amount),
   })) || [];
@@ -222,66 +265,34 @@ const ReviewContent: React.FC = () => {
                 ))}
               </Layout>
 
-              {/* Liability Coverage Section */}
+              {/* Coverage Summary Section */}
               <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Liability Coverage</Title>
+                <Title variant="title-3">Your Coverage</Title>
+                <Text variant="body-regular" color="subtle">
+                  Complete protection for you and your vehicle
+                </Text>
 
-                <Card padding="medium">
-                  <Layout display="flex-column" gap="small">
-                    <Layout display="flex" flexJustify="space-between">
-                      <Text variant="body-regular">Bodily Injury Liability</Text>
-                      <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                        {liabilityCoverage.bodilyInjury}
-                      </Text>
-                    </Layout>
-                    <Layout display="flex" flexJustify="space-between">
-                      <Text variant="body-regular">Property Damage Liability</Text>
-                      <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                        {liabilityCoverage.propertyDamage}
-                      </Text>
-                    </Layout>
-                  </Layout>
-                </Card>
-              </Layout>
-
-              {/* Vehicle Coverage Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Vehicle Coverage</Title>
-
-                {vehicleCoverages.map((coverage, index) => (
-                  <Card key={coverage.vehicleId} padding="medium">
+                {coverageDescriptions.map((coverage, index) => (
+                  <Card key={index} padding="medium">
                     <Layout display="flex-column" gap="small">
-                      <Title variant="title-4">
-                        {vehicles[index].year} {vehicles[index].make} {vehicles[index].model}
-                      </Title>
-                      <Layout display="flex" flexJustify="space-between">
-                        <Text variant="body-regular">Comprehensive</Text>
+                      <Layout display="flex" flexJustify="space-between" flexAlign="center">
+                        <div>
+                          <Text variant="body-regular" style={{ fontWeight: 600 }}>
+                            {coverage.name}
+                          </Text>
+                          <Text variant="body-small" color="subtle">
+                            {coverage.description}
+                          </Text>
+                        </div>
                         <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                          {coverage.comprehensive}
-                        </Text>
-                      </Layout>
-                      <Layout display="flex" flexJustify="space-between">
-                        <Text variant="body-regular">Collision</Text>
-                        <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                          {coverage.collision}
-                        </Text>
-                      </Layout>
-                      <Layout display="flex" flexJustify="space-between">
-                        <Text variant="body-regular">Rental Reimbursement</Text>
-                        <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                          {coverage.rental}
-                        </Text>
-                      </Layout>
-                      <Layout display="flex" flexJustify="space-between">
-                        <Text variant="body-regular">Roadside Assistance</Text>
-                        <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                          {coverage.roadside}
+                          {coverage.value}
                         </Text>
                       </Layout>
                     </Layout>
                   </Card>
                 ))}
               </Layout>
+
 
               {/* Discounts Section */}
               {discounts.length > 0 && (
@@ -290,7 +301,7 @@ const ReviewContent: React.FC = () => {
 
                   <Card padding="medium">
                     <Layout display="flex-column" gap="small">
-                      {discounts.map(discount => (
+                      {discounts.map((discount: { name: string; amount: number }) => (
                         <Layout key={discount.name} display="flex" flexJustify="space-between">
                           <Text variant="body-regular">{discount.name}</Text>
                           <Text variant="body-regular" style={{ fontWeight: 600, color: '#10b981' }}>
@@ -304,10 +315,9 @@ const ReviewContent: React.FC = () => {
               )}
 
               {/* Navigation Buttons */}
-              <Layout display="flex" gap="medium" flexJustify="space-between" padding={{ top: 'medium' }}>
+              <Layout display="flex" gap="medium" flexJustify="space-between">
                 <Button
                   type="button"
-                  variant="secondary"
                   size="large"
                   onClick={handleMakeChanges}
                 >
@@ -327,7 +337,7 @@ const ReviewContent: React.FC = () => {
 
           {/* Price Sidebar */}
           <div style={{ width: '320px' }}>
-            <PriceSidebar />
+            <PriceSidebar quote={quote} isLoading={false} />
           </div>
         </Layout>
       </Container>
@@ -343,9 +353,9 @@ const ReviewContent: React.FC = () => {
  */
 const Review: React.FC = () => {
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
-  const { data: quote } = useQuoteByNumber(quoteNumber);
+  const { data: quote } = useQuoteByNumber(quoteNumber) as { data: any };
 
-  if (!quote) {
+  if (!quote || !quote.quoteId) {
     return <ReviewContent />;
   }
 

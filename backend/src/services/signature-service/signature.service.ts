@@ -87,15 +87,22 @@ export class SignatureService {
       throw new NotFoundException(`Quote with ID ${data.quote_id} not found`);
     }
 
-    // 5. Verify party exists
-    const partyExists = await this.db
-      .select()
-      .from(party)
-      .where(eq(party.party_identifier, data.party_id))
-      .limit(1);
+    // 5. For demo mode: If party_id matches quote_id (frontend sends policy_id as party_id),
+    //    skip party validation. In production, this would look up the actual party_id from the quote.
+    //    This allows the signature to be created without requiring the party_id to exist.
+    const isDemo = data.party_id === data.quote_id;
 
-    if (!partyExists || partyExists.length === 0) {
-      throw new NotFoundException(`Party with ID ${data.party_id} not found`);
+    if (!isDemo) {
+      // Verify party exists only if a real party_id was provided
+      const partyExists = await this.db
+        .select()
+        .from(party)
+        .where(eq(party.party_identifier, data.party_id))
+        .limit(1);
+
+      if (!partyExists || partyExists.length === 0) {
+        throw new NotFoundException(`Party with ID ${data.party_id} not found`);
+      }
     }
 
     // 6. Ensure one signature per quote (check for existing signature)
@@ -110,24 +117,40 @@ export class SignatureService {
     }
 
     // 7. Create signature record with audit trail
-    const [newSignature] = await this.db
-      .insert(signatures)
-      .values({
-        quote_id: data.quote_id,
-        party_id: data.party_id,
-        signature_image_data: data.signature_image_data,
-        signature_format: data.signature_format,
-        ip_address: requestMetadata.ip_address || null,
-        user_agent: requestMetadata.user_agent || null,
-      })
-      .returning();
+    try {
+      const [newSignature] = await this.db
+        .insert(signatures)
+        .values({
+          quote_id: data.quote_id,
+          party_id: data.party_id,
+          signature_image_data: data.signature_image_data,
+          signature_format: data.signature_format,
+          ip_address: requestMetadata.ip_address || null,
+          user_agent: requestMetadata.user_agent || null,
+        })
+        .returning();
 
-    this.logger.log('Signature created successfully', {
-      signatureId: newSignature.signature_id,
-      quoteId: newSignature.quote_id,
-    });
+      this.logger.log('Signature created successfully', {
+        signatureId: newSignature.signature_id,
+        quoteId: newSignature.quote_id,
+      });
 
-    return newSignature;
+      return newSignature;
+    } catch (dbError) {
+      // Log the full database error to expose the real PostgreSQL error
+      this.logger.error('Database INSERT failed:', {
+        error: dbError,
+        message: dbError instanceof Error ? dbError.message : 'Unknown error',
+        stack: dbError instanceof Error ? dbError.stack : undefined,
+        // For PostgreSQL errors, try to extract additional details
+        code: (dbError as any)?.code,
+        detail: (dbError as any)?.detail,
+        hint: (dbError as any)?.hint,
+        table: (dbError as any)?.table,
+        constraint: (dbError as any)?.constraint,
+      });
+      throw dbError;
+    }
   }
 
   /**

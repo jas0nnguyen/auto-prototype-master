@@ -4,6 +4,7 @@ import { DatabaseModule } from './database/database.module';
 import { QuoteModule } from './services/quote/quote.module';
 import { DocumentServiceModule } from './services/document-service/document-service.module';
 import { SignatureModule } from './services/signature-service/signature.module';
+import { UserAccountModule } from './services/user-account-service/user-account.module';
 
 @Module({
   imports: [
@@ -20,6 +21,8 @@ import { SignatureModule } from './services/signature-service/signature.module';
     DocumentServiceModule,
     // Signature module - Feature 004 ✅
     SignatureModule,
+    // User Account module - Feature 004 Phase 4 ✅
+    UserAccountModule,
     // Policy module will be added in Phase 4
     // Portal module will be added in Phase 5
   ],
