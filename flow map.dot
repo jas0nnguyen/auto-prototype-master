@@ -85,9 +85,13 @@ digraph FlowComparison {
       style=filled;
       color="#CE93D8";
 
-      V2_Layout [label="TechStartupLayout.tsx\n+ TechStartupLayout.css\n\n• Provides QuoteContext\n• Purple gradient background\n• Card-based layout\n• Wraps all v2 screens", fillcolor="#8E24AA", style=filled, fontcolor=white];
+      V2_Layout [label="TechStartupLayout.tsx\n+ TechStartupLayout.css\n\n🎨 Phase 5 Enhancements:\n• CSS Custom Properties\n  - Colors: --primary, --secondary, --accent\n  - Spacing: --spacing-screen, --spacing-card\n  - Border Radius: --radius-card, --radius-button\n• Purple gradient: 135deg (667eea → 764ba2 → f093fb)\n• Inter font with system fallbacks\n• Card styles with hover effects\n• Modal overlays with blur\n• Focus indicators (a11y)\n• Responsive breakpoints (mobile/tablet)\n\n• Provides QuoteContext\n• Wraps all v2 screens", fillcolor="#8E24AA", style=filled, fontcolor=white];
 
-      V2_Sidebar [label="PriceSidebar.tsx\n\n📊 Sticky price display:\n• 6-month total\n• Monthly payment\n• Real-time updates via\n  useRecalculateQuote()", fillcolor="#8E24AA", style=filled, fontcolor=white];
+      V2_Button [label="TechStartupButton.tsx\n+ TechStartupButton.css\n\n🎨 Custom Button Component:\n• Gradient background (135deg)\n• Hover lift effect (translateY)\n• Active press state\n• Focus ring for accessibility\n• Box shadow depth", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Sidebar [label="PriceSidebar.tsx\n+ PriceSidebar.css\n\n🎨 Phase 5 Fixes:\n• min-width: 300px (prevent narrow shape)\n• max-width: 400px\n• Removed duplicate styling\n  (Canary Card handles background/padding/shadow)\n\n📊 Sticky price display:\n• 6-month total\n• Monthly payment\n• Real-time updates via useRecalculateQuote()\n\n📱 Mobile responsive:\n• Fixed bottom bar (<1024px)\n• Modal with slide-up animation\n• Backdrop blur", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Loading [label="LoadingAnimation.tsx\n+ LoadingAnimation.css\n\n🎨 Performance Optimized:\n• Bouncing car icon (will-change: transform)\n• Progress bar with gradient fill\n• Step list: pending/loading/completed states\n• Spinner rotation (GPU accelerated)\n• Checkmark appearance animation\n\n♿ Accessibility:\n• prefers-reduced-motion support\n• will-change cleanup after completion", fillcolor="#8E24AA", style=filled, fontcolor=white];
 
       V2_Context [label="QuoteContext.tsx\n(contexts/)\n\n• Provides quote data\n• recalculatePremium()\n• Consumed by all screens", fillcolor="#6A1B9A", style=filled, fontcolor=white];
     }
@@ -190,6 +194,9 @@ digraph FlowComparison {
   V2_Layout -> V2_1 [label="Wraps", color="#6A1B9A", style=dotted];
   V2_Layout -> V2_5 [label="Wraps", color="#6A1B9A", style=dotted];
   V2_Layout -> V2_6 [label="Wraps", color="#6A1B9A", style=dotted];
+  V2_Button -> V2_1 [label="Used in all screens", color="#6A1B9A", style=dotted];
+  V2_Loading -> V2_4 [label="Used in LoadingPrefill", color="#6A1B9A", style=dotted];
+  V2_Loading -> V2_8 [label="Used in LoadingValidation", color="#6A1B9A", style=dotted];
 
   // ============================================================================
   // CONNECTIONS - Shared Infrastructure
