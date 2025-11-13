@@ -14,10 +14,10 @@ import {
  *
  * Modal for editing owned vehicle information.
  * Fields:
- * - vehicle_year
- * - vehicle_make
- * - vehicle_model
- * - vin (17 characters)
+ * - vehicle_year (required)
+ * - vehicle_make (required)
+ * - vehicle_model (required)
+ * - vin (optional, 17 characters if provided)
  * - ownership_status (OWNED, FINANCED, LEASED)
  * - annual_mileage
  * - vehicle_use_code (COMMUTE, PLEASURE, BUSINESS)
@@ -33,7 +33,7 @@ interface Vehicle {
   year: number;
   make: string;
   model: string;
-  vin: string;
+  vin?: string; // VIN is now optional
   ownershipStatus?: string;
   annualMileage?: number;
   useCode?: string;
@@ -114,10 +114,9 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
     if (!formData.model.trim()) {
       newErrors.model = 'Vehicle model is required';
     }
-    if (!formData.vin.trim()) {
-      newErrors.vin = 'VIN is required';
-    } else if (formData.vin.length !== 17) {
-      newErrors.vin = 'VIN must be 17 characters';
+    // VIN is optional, but if provided, must be 17 characters
+    if (formData.vin && formData.vin.trim() && formData.vin.length !== 17) {
+      newErrors.vin = 'VIN must be 17 characters (or leave blank)';
     }
 
     setErrors(newErrors);
@@ -225,12 +224,12 @@ export const EditVehicleModal: React.FC<EditVehicleModalProps> = ({
 
               <TextInput
                 type="text"
-                label="VIN (17 characters)"
-                value={formData.vin}
+                label="VIN (optional, 17 characters if provided)"
+                value={formData.vin || ''}
                 onChange={(e) => handleInputChange('vin', e.target.value.toUpperCase())}
                 error={!!errors.vin}
                 maxLength={17}
-                required
+                placeholder="Leave blank if unknown"
               />
 
               <Select
