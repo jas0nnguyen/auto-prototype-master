@@ -1,17 +1,26 @@
 /**
- * PriceSidebar Styling
+ * PriceSidebar Styling (T078, T205, T211-T212)
  *
  * Responsive behavior:
- * - Desktop (≥1024px): Sticky sidebar at top: 120px
+ * - Desktop (≥1024px): Sticky sidebar at top: 120px with white background
  * - Mobile (<1024px): Fixed bottom bar with "View Details" modal
  */
 
-/* Desktop: Sticky Sidebar */
+/* Desktop: Sticky Sidebar (T078, T205) */
 .price-sidebar-desktop {
   display: block;
   position: sticky;
   top: 120px;
   height: fit-content;
+
+  /* Minimum width to prevent awkward wrapping */
+  min-width: 300px;
+  max-width: 400px;
+
+  /* Text color for content */
+  color: var(--text-dark, #1a202c);
+
+  /* Note: Canary Card component handles background, padding, border-radius, and shadow */
 }
 
 /* Hide mobile view on desktop */

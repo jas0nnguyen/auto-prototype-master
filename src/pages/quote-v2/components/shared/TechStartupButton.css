@@ -15,13 +15,13 @@
  */
 
 /**
- * Base Button Styling (T047)
+ * Base Button Styling (T047, T199)
  *
  * Gradient background and rounded corners for tech startup aesthetic.
  */
 .tech-startup-button {
-  /* Gradient Background: Purple spectrum */
-  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  /* Gradient Background: Purple spectrum (T199) */
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 
   /* Override any default background color from Canary */
   background-color: transparent;
@@ -32,20 +32,20 @@
   /* Border: None (gradient provides visual boundary) */
   border: none;
 
-  /* Rounded corners for modern look */
-  border-radius: 8px;
+  /* Rounded corners for modern look (T199) */
+  border-radius: var(--radius-button, 12px);
 
-  /* Padding: Comfortable spacing */
-  padding: 12px 24px;
+  /* Padding: Comfortable spacing (T199) */
+  padding: 12px 32px;
 
-  /* Font: Bold and clean */
+  /* Font: Bold and clean (T199) */
   font-weight: 600;
   font-size: 16px;
 
   /* Cursor: Indicate clickability */
   cursor: pointer;
 
-  /* Transition: Smooth animations */
+  /* Transition: Smooth animations (T199) */
   transition: all 0.2s ease-in-out;
 
   /* Base shadow: Subtle depth */
