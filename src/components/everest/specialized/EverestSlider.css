@@ -1,0 +1,183 @@
+/* Slider container */
+.everest-slider-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Header with label and value */
+.everest-slider-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.everest-slider-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a202c;
+}
+
+.everest-slider-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+/* Slider wrapper */
+.everest-slider-wrapper {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  display: flex;
+  align-items: center;
+}
+
+.everest-slider-wrapper.everest-slider-dragging {
+  cursor: grabbing;
+}
+
+/* Slider track (background) */
+.everest-slider-track {
+  position: absolute;
+  width: 100%;
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  pointer-events: none;
+}
+
+/* Slider fill (progress) */
+.everest-slider-fill {
+  position: absolute;
+  height: 100%;
+  background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 4px;
+  transition: width 0.1s ease;
+}
+
+/* Slider input */
+.everest-slider-input {
+  position: relative;
+  width: 100%;
+  height: 28px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+  cursor: pointer;
+  z-index: 1;
+}
+
+.everest-slider-input:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Remove default focus outline, add custom */
+.everest-slider-input:focus {
+  outline: none;
+}
+
+.everest-slider-input:focus::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+.everest-slider-input:focus::-moz-range-thumb {
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2);
+}
+
+/* Chrome/Safari/Edge thumb */
+.everest-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 28px;
+  height: 28px;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.everest-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.everest-slider-input::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+/* Firefox thumb */
+.everest-slider-input::-moz-range-thumb {
+  width: 28px;
+  height: 28px;
+  background: #ffffff;
+  border: 3px solid #3b82f6;
+  border-radius: 50%;
+  cursor: grab;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+}
+
+.everest-slider-input::-moz-range-thumb:hover {
+  transform: scale(1.1);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.everest-slider-input::-moz-range-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+
+/* Firefox track (needs to be transparent) */
+.everest-slider-input::-moz-range-track {
+  background: transparent;
+  height: 8px;
+}
+
+/* Min/Max labels */
+.everest-slider-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  color: #718096;
+}
+
+.everest-slider-label-min,
+.everest-slider-label-max {
+  font-weight: 500;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-slider-label {
+    font-size: 15px;
+  }
+
+  .everest-slider-value {
+    font-size: 16px;
+  }
+
+  .everest-slider-input::-webkit-slider-thumb {
+    width: 24px;
+    height: 24px;
+  }
+
+  .everest-slider-input::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+/* Accessibility: Reduce motion */
+@media (prefers-reduced-motion: reduce) {
+  .everest-slider-fill,
+  .everest-slider-input::-webkit-slider-thumb,
+  .everest-slider-input::-moz-range-thumb {
+    transition: none;
+  }
+}

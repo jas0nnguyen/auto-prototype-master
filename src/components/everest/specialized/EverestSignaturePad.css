@@ -1,0 +1,105 @@
+/* Signature container */
+.everest-signature-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+/* Label */
+.everest-signature-label {
+  font-size: 16px;
+  font-weight: 500;
+  color: #1a202c;
+}
+
+/* Signature wrapper (contains canvas and placeholder) */
+.everest-signature-wrapper {
+  position: relative;
+  width: 100%;
+  background: #ffffff;
+  border: 2px solid #3b82f6;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Canvas */
+.everest-signature-canvas {
+  display: block;
+  width: 100%;
+  height: 200px;
+  cursor: crosshair;
+  touch-action: none; /* Prevent scrolling on touch devices */
+}
+
+/* Placeholder text */
+.everest-signature-placeholder {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 18px;
+  font-weight: 500;
+  color: #cbd5e1;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* Clear button */
+.everest-signature-clear {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  padding: 8px 16px;
+  background: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #718096;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.everest-signature-clear:hover {
+  background: #f8fafc;
+  border-color: #94a3b8;
+  color: #1a202c;
+}
+
+.everest-signature-clear:active {
+  transform: translateY(1px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.everest-signature-clear:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-signature-canvas {
+    height: 150px;
+  }
+
+  .everest-signature-placeholder {
+    font-size: 16px;
+  }
+
+  .everest-signature-clear {
+    padding: 6px 12px;
+    font-size: 13px;
+    top: 8px;
+    right: 8px;
+  }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .everest-signature-canvas {
+    height: 180px;
+  }
+}

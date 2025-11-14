@@ -1,0 +1,171 @@
+/* Frosted glass header */
+.everest-header {
+  position: sticky;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 2px 20px rgba(30, 58, 138, 0.1);
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(20px)) {
+  .everest-header {
+    background: rgba(255, 255, 255, 1);
+  }
+}
+
+/* Container */
+.everest-header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px 40px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+
+/* Sections */
+.everest-header-section {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Logo */
+.everest-header-logo {
+  flex-shrink: 0;
+}
+
+.everest-header-logo-text {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  color: #1a202c;
+}
+
+.everest-header-logo-icon {
+  font-size: 24px;
+  line-height: 1;
+}
+
+.everest-header-logo-name {
+  font-size: 18px;
+}
+
+/* Quote ID */
+.everest-header-quote {
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.everest-header-quote-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #718096;
+}
+
+.everest-header-quote-id {
+  font-size: 14px;
+  font-weight: 700;
+  color: #3b82f6;
+  font-family: 'Courier New', monospace;
+}
+
+/* Support */
+.everest-header-support {
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.everest-header-support-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #718096;
+}
+
+.everest-header-support-phone {
+  font-size: 16px;
+  font-weight: 700;
+  color: #3b82f6;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.everest-header-support-phone:hover {
+  color: #2563eb;
+  text-decoration: underline;
+}
+
+.everest-header-support-phone:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-header-container {
+    padding: 16px 20px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .everest-header-logo {
+    order: 1;
+    flex-basis: 100%;
+    justify-content: center;
+    margin-bottom: 8px;
+  }
+
+  .everest-header-logo-name {
+    font-size: 16px;
+  }
+
+  .everest-header-quote {
+    order: 2;
+    flex-basis: 50%;
+    align-items: flex-start;
+  }
+
+  .everest-header-support {
+    order: 3;
+    flex-basis: 50%;
+    align-items: flex-end;
+  }
+
+  .everest-header-quote-label,
+  .everest-header-support-label {
+    font-size: 10px;
+  }
+
+  .everest-header-quote-id {
+    font-size: 12px;
+  }
+
+  .everest-header-support-phone {
+    font-size: 14px;
+  }
+}
+
+/* Tablet responsiveness */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .everest-header-container {
+    padding: 18px 32px;
+  }
+
+  .everest-header-logo-name {
+    font-size: 17px;
+  }
+}

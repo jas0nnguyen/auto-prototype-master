@@ -1,0 +1,153 @@
+/* Dark blue gradient sidebar for pricing */
+.everest-price-sidebar {
+  background: linear-gradient(135deg, #1e40af 0%, #2563eb 100%);
+  border-radius: 24px;
+  padding: 40px;
+  color: #ffffff;
+  box-shadow: 0 20px 60px rgba(30, 58, 138, 0.25);
+}
+
+/* Sticky positioning on desktop */
+.everest-price-sidebar-sticky {
+  position: sticky;
+  top: 120px;
+  align-self: flex-start;
+}
+
+/* Content wrapper */
+.everest-price-sidebar-content {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Section spacing */
+.everest-price-sidebar-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Labels */
+.everest-price-sidebar-label {
+  font-size: 14px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  opacity: 0.9;
+}
+
+/* Large price (monthly) */
+.everest-price-sidebar-price-large {
+  font-size: 48px;
+  font-weight: 800;
+  line-height: 1;
+  margin: 8px 0;
+}
+
+/* Medium price (6-month) */
+.everest-price-sidebar-price-medium {
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1;
+  margin: 4px 0;
+}
+
+/* Subtext */
+.everest-price-sidebar-subtext {
+  font-size: 14px;
+  opacity: 0.85;
+}
+
+/* Coverage details section */
+.everest-price-sidebar-details {
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  padding-top: 24px;
+  margin-top: 8px;
+}
+
+.everest-price-sidebar-details-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.everest-price-sidebar-detail-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.everest-price-sidebar-detail-label {
+  font-size: 14px;
+  font-weight: 500;
+  opacity: 0.9;
+  flex-shrink: 0;
+}
+
+.everest-price-sidebar-detail-value {
+  font-size: 14px;
+  font-weight: 600;
+  text-align: right;
+}
+
+/* Loading state */
+.everest-price-sidebar-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.everest-price-sidebar-skeleton {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  animation: everest-skeleton-pulse 1.5s ease-in-out infinite;
+}
+
+.everest-price-sidebar-skeleton-title {
+  height: 14px;
+  width: 120px;
+}
+
+.everest-price-sidebar-skeleton-price {
+  height: 48px;
+  width: 180px;
+  margin: 8px 0;
+}
+
+.everest-price-sidebar-skeleton-text {
+  height: 14px;
+  width: 80px;
+}
+
+@keyframes everest-skeleton-pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-price-sidebar {
+    padding: 32px;
+    border-radius: 20px;
+  }
+
+  /* Remove sticky positioning on mobile */
+  .everest-price-sidebar-sticky {
+    position: static;
+  }
+
+  .everest-price-sidebar-price-large {
+    font-size: 40px;
+  }
+
+  .everest-price-sidebar-price-medium {
+    font-size: 28px;
+  }
+}
