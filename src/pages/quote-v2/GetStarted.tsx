@@ -234,7 +234,7 @@ const GetStarted: React.FC = () => {
               <EverestSelect
                 label="State"
                 value={formData.state_code}
-                onChange={(value) => handleInputChange('state_code', value)}
+                onChange={(e) => handleInputChange('state_code', e.target.value)}
                 options={US_STATES}
                 error={errors.state_code}
                 required
