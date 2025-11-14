@@ -1,0 +1,21 @@
+/* Everest responsive container */
+.everest-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 60px 40px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-container {
+    padding: 40px 20px;
+  }
+}
+
+/* Desktop centering */
+@media (min-width: 1400px) {
+  .everest-container {
+    margin-left: auto;
+    margin-right: auto;
+  }
+}

@@ -1,0 +1,45 @@
+/* Frosted glass card design */
+.everest-card {
+  background: rgba(255, 255, 255, 0.96);
+  backdrop-filter: blur(20px);
+  border-radius: 24px;
+  padding: 60px;
+  margin-bottom: 60px;
+  box-shadow: 0 20px 60px rgba(30, 58, 138, 0.15);
+  transition: all 0.3s ease;
+}
+
+/* Fallback for browsers without backdrop-filter support */
+@supports not (backdrop-filter: blur(20px)) {
+  .everest-card {
+    background: rgba(255, 255, 255, 1);
+  }
+}
+
+/* Clickable card hover state */
+.everest-card-clickable {
+  cursor: pointer;
+}
+
+.everest-card-clickable:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15);
+}
+
+.everest-card-clickable:active {
+  transform: translateY(-2px);
+}
+
+/* Focus state for accessibility */
+.everest-card-clickable:focus {
+  outline: 2px solid #3b82f6;
+  outline-offset: 4px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-card {
+    padding: 32px;
+    margin-bottom: 40px;
+  }
+}
