@@ -1,5 +1,50 @@
+/* Import Inter font for Everest Insurance visual identity */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
 html,
 body,
 #app {
   height: 100%;
+}
+
+/* Everest Insurance Global Styles */
+.everest-page {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: #3b82f6;
+  color: #1a202c;
+  line-height: 1.6;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Background imagery for Everest pages */
+.everest-background-imagery {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.everest-car-image {
+  position: fixed;
+  bottom: -50px;
+  right: -50px;
+  width: 1000px;
+  height: auto;
+  opacity: 0.12;
+  filter: brightness(3) contrast(2) invert(1) blur(0.5px);
+  mix-blend-mode: soft-light;
+}
+
+/* Responsive car image sizing */
+@media (max-width: 768px) {
+  .everest-car-image {
+    width: 600px;
+    bottom: -30px;
+    right: -30px;
+  }
 } 
