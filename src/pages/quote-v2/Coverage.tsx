@@ -7,7 +7,7 @@ import { EverestTitle } from '../../components/everest/core/EverestTitle';
 import { EverestText } from '../../components/everest/core/EverestText';
 import { EverestButton } from '../../components/everest/core/EverestButton';
 import { EverestSelect } from '../../components/everest/core/EverestSelect';
-import { EverestSlider } from '../../components/everest/core/EverestSlider';
+import { EverestSlider } from '../../components/everest/specialized/EverestSlider';
 import { EverestPriceSidebar } from '../../components/everest/specialized/EverestPriceSidebar';
 import { useQuoteByNumber, useUpdateQuoteCoverage } from '../../hooks/useQuote';
 import './Coverage.css';
