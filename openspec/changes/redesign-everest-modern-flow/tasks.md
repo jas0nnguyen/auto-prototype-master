@@ -2,42 +2,42 @@
 
 ## 1. Setup & Infrastructure
 
-- [ ] 1.1 Create Everest component library directory structure (`src/components/everest/`)
-- [ ] 1.2 Add car silhouette image asset to `public/images/car-silhouette.png`
-- [ ] 1.3 Update `src/global.css` with Everest-specific global styles (Inter font import, blue background base)
-- [ ] 1.4 Create Everest color palette constants (`src/components/everest/constants/colors.ts`)
-- [ ] 1.5 Create Everest spacing/sizing constants (`src/components/everest/constants/spacing.ts`)
+- [x] 1.1 Create Everest component library directory structure (`src/components/everest/`)
+- [x] 1.2 Add car silhouette image asset to `public/images/car-silhouette.png`
+- [x] 1.3 Update `src/global.css` with Everest-specific global styles (Inter font import, blue background base)
+- [x] 1.4 Create Everest color palette constants (`src/components/everest/constants/colors.ts`)
+- [x] 1.5 Create Everest spacing/sizing constants (`src/components/everest/constants/spacing.ts`)
 
 ## 2. Core Everest Components
 
-- [ ] 2.1 Implement `EverestLayout` component (replaces TechStartupLayout)
+- [x] 2.1 Implement `EverestLayout` component (replaces TechStartupLayout)
   - Sticky header with frosted glass
   - Blue gradient background
   - Car silhouette overlay
-- [ ] 2.2 Implement `EverestContainer` component (max-width 1400px, responsive padding)
-- [ ] 2.3 Implement `EverestCard` component (frosted glass, rounded 24px, shadow)
-- [ ] 2.4 Implement `EverestTitle` component (52px hero, 36px h2, 24px h3, 18px h4)
-- [ ] 2.5 Implement `EverestText` component (subtitle, body, label variants)
-- [ ] 2.6 Implement `EverestButton` component (primary blue, secondary outline, actions)
-- [ ] 2.7 Implement `EverestTextInput` component (14px 18px padding, focus states)
-- [ ] 2.8 Implement `EverestSelect` component (matches input styling)
-- [ ] 2.9 Implement `EverestBadge` component (success green, info blue variants)
+- [x] 2.2 Implement `EverestContainer` component (max-width 1400px, responsive padding)
+- [x] 2.3 Implement `EverestCard` component (frosted glass, rounded 24px, shadow)
+- [x] 2.4 Implement `EverestTitle` component (52px hero, 36px h2, 24px h3, 18px h4)
+- [x] 2.5 Implement `EverestText` component (subtitle, body, label variants)
+- [x] 2.6 Implement `EverestButton` component (primary blue, secondary outline, actions)
+- [x] 2.7 Implement `EverestTextInput` component (14px 18px padding, focus states)
+- [x] 2.8 Implement `EverestSelect` component (matches input styling)
+- [x] 2.9 Implement `EverestBadge` component (success green, info blue variants)
 
 ## 3. Specialized Everest Components
 
-- [ ] 3.1 Implement `EverestPriceSidebar` component
+- [x] 3.1 Implement `EverestPriceSidebar` component
   - Dark blue gradient background (#1e40af)
   - Sticky positioning (top: 120px)
   - Price term, amount (64px font), details, breakdown sections
   - Real-time price updates on coverage changes
-- [ ] 3.2 Implement `EverestLoadingAnimation` component
+- [x] 3.2 Implement `EverestLoadingAnimation` component
   - Animated car icon (100px × 50px blue rectangle, drive animation)
   - Progress bar with animated fill
   - Step indicators (complete checkmark, active spinner, pending gray)
-- [ ] 3.3 Implement `EverestToggleSwitch` component (64px × 36px, smooth transition)
-- [ ] 3.4 Implement `EverestSlider` component (28px thumb, blue track, labels)
-- [ ] 3.5 Implement `EverestSignaturePad` component (expanded canvas, blue border, placeholder)
-- [ ] 3.6 Implement `EverestHeader` component
+- [x] 3.3 Implement `EverestToggleSwitch` component (64px × 36px, smooth transition)
+- [x] 3.4 Implement `EverestSlider` component (28px thumb, blue track, labels)
+- [x] 3.5 Implement `EverestSignaturePad` component (expanded canvas, blue border, placeholder)
+- [x] 3.6 Implement `EverestHeader` component
   - Logo with mountain emoji
   - Quote ID display
   - Support phone number
@@ -45,18 +45,18 @@
 
 ## 4. Screen Redesigns (Screens 1-9: Quote Generation)
 
-- [ ] 4.1 Redesign `GetStarted.tsx` (Screen 1)
+- [x] 4.1 Redesign `GetStarted.tsx` (Screen 1)
   - Hero headline "Reach new heights with better coverage"
   - Subtitle with value proposition
   - 2-column form grid for name, address, city, state, zip, DOB
   - Primary button "Get My Quote →"
-- [ ] 4.2 Redesign `EffectiveDate.tsx` (Screen 2)
+- [x] 4.2 Redesign `EffectiveDate.tsx` (Screen 2)
   - Centered single-field layout
   - Large headline "When do you want coverage to begin?"
   - Subtitle explaining common choices
   - Date input centered in max-width 500px
   - Back + Continue buttons
-- [ ] 4.3 Redesign `EmailCollection.tsx` (Screen 3)
+- [x] 4.3 Redesign `EmailCollection.tsx` (Screen 3)
   - Centered layout
   - Headline "How can we reach you?"
   - Email input (required) + Phone input (optional)
