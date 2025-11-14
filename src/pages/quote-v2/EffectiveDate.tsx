@@ -1,21 +1,26 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestTextInput } from '../../components/everest/core/EverestTextInput';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import './EffectiveDate.css';
 
 /**
- * EffectiveDate Screen (Screen 02 of 19)
+ * EffectiveDate Screen (Screen 02 of 16) - Everest Design
  *
  * Collects the desired coverage start date.
  * Defaults to tomorrow (today + 1 day) per spec.
+ *
+ * Design:
+ * - Centered single-field layout
+ * - Large headline: "When do you want coverage to begin?"
+ * - Subtitle explaining common choices
+ * - Date input centered with max-width 500px
+ * - Back + Continue buttons
  *
  * Business Rule: Coverage can start as early as tomorrow
  */
@@ -62,7 +67,7 @@ const EffectiveDate: React.FC = () => {
     e.preventDefault();
 
     if (validateDate()) {
-      // T087: Store effective date in unified quote-v2-data structure
+      // Store effective date in unified quote-v2-data structure
       const quoteData = JSON.parse(sessionStorage.getItem('quote-v2-data') || '{}');
       quoteData.effectiveDate = effectiveDate;
       sessionStorage.setItem('quote-v2-data', JSON.stringify(quoteData));
@@ -80,56 +85,49 @@ const EffectiveDate: React.FC = () => {
   };
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={2} totalScreens={19} />
+    <EverestLayout>
+      <EverestContainer>
+        <EverestCard>
+          {/* Centered content */}
+          <div className="effective-date-content">
+            <EverestTitle variant="h2">
+              When do you want coverage to begin?
+            </EverestTitle>
+            <EverestText variant="subtitle">
+              Most customers choose to start coverage tomorrow or on the first day of the month
+            </EverestText>
 
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" flexAlign="center">
-          <Title variant="display-2" align="center">
-            When do you want coverage to begin?
-          </Title>
-
-          <Text variant="body-large" align="center" color="subtle">
-            Select the date your policy should start
-          </Text>
-
-          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '400px' }}>
-            <Layout display="flex-column" gap="large">
-              <div>
-                <TextInput
+            <form onSubmit={handleSubmit} className="effective-date-form">
+              <div className="effective-date-input-wrapper">
+                <EverestTextInput
                   type="date"
                   label="Coverage Start Date"
                   value={effectiveDate}
                   onChange={(e) => handleDateChange(e.target.value)}
-                  error={!!error}
+                  error={error}
                   min={new Date(Date.now() + 86400000).toISOString().split('T')[0]} // tomorrow
                   required
                 />
-                {error && (
-                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                    {error}
-                  </Text>
-                )}
               </div>
 
-              <Layout display="flex" gap="medium" flexJustify="space-between">
-                <Button
+              <div className="effective-date-actions">
+                <EverestButton
                   type="button"
                   variant="secondary"
                   size="large"
                   onClick={handleBack}
                 >
                   Back
-                </Button>
-                <Button type="submit" variant="primary" size="large">
+                </EverestButton>
+                <EverestButton type="submit" variant="primary" size="large">
                   Continue
-                </Button>
-              </Layout>
-            </Layout>
-          </form>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+                </EverestButton>
+              </div>
+            </form>
+          </div>
+        </EverestCard>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 

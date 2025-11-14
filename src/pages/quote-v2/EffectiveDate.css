@@ -1,0 +1,60 @@
+/* EffectiveDate Screen Styles */
+
+/* Centered content container */
+.effective-date-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.effective-date-content .everest-title {
+  margin-bottom: 16px;
+}
+
+.effective-date-content .everest-text {
+  margin-bottom: 48px;
+}
+
+/* Form layout */
+.effective-date-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Input wrapper (max-width 500px) */
+.effective-date-input-wrapper {
+  max-width: 500px;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Action buttons */
+.effective-date-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .effective-date-content .everest-text {
+    margin-bottom: 32px;
+  }
+
+  .effective-date-form {
+    gap: 24px;
+  }
+
+  .effective-date-actions {
+    flex-direction: column;
+  }
+
+  .effective-date-actions button {
+    width: 100%;
+  }
+}
