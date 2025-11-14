@@ -1,0 +1,136 @@
+/* Coverage Screen Styles - Everest Design */
+
+/* Two-column layout */
+.coverage-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Main content column */
+.coverage-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header section */
+.coverage-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Coverage section within cards */
+.coverage-section {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Coverage item (each coverage type) */
+.coverage-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Coverage recommendation text */
+.coverage-recommendation {
+  font-style: italic;
+  color: #64748b;
+  margin-top: -4px;
+}
+
+/* Per-vehicle coverage section */
+.coverage-vehicle {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Navigation actions */
+.coverage-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar (sticky positioning) */
+.coverage-sidebar {
+  position: sticky;
+  top: 120px;
+}
+
+/* Loading and error states */
+.coverage-loading,
+.coverage-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  min-height: 400px;
+  padding: 60px 20px;
+}
+
+/* Tablet breakpoint (768px - 1200px) */
+@media (max-width: 1200px) {
+  .coverage-layout {
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+  }
+
+  .coverage-main {
+    gap: 28px;
+  }
+
+  .coverage-section {
+    gap: 28px;
+  }
+}
+
+/* Mobile breakpoint (≤768px) */
+@media (max-width: 768px) {
+  .coverage-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Move sidebar below main content on mobile */
+  .coverage-sidebar {
+    position: static;
+    order: 2;
+  }
+
+  .coverage-main {
+    order: 1;
+    gap: 24px;
+  }
+
+  .coverage-section {
+    gap: 24px;
+  }
+
+  .coverage-vehicle {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .coverage-actions {
+    flex-direction: column;
+  }
+
+  .coverage-actions button {
+    width: 100%;
+  }
+}

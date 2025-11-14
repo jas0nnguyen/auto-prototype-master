@@ -1,32 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  Select,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { PriceSidebar } from './components/PriceSidebar';
-import { ScreenProgress } from './components/ScreenProgress';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestSelect } from '../../components/everest/core/EverestSelect';
+import { EverestSlider } from '../../components/everest/core/EverestSlider';
+import { EverestPriceSidebar } from '../../components/everest/specialized/EverestPriceSidebar';
 import { useQuoteByNumber, useUpdateQuoteCoverage } from '../../hooks/useQuote';
+import './Coverage.css';
 
 /**
- * Coverage Screen (Screen 06 of 19) - T096
+ * Coverage Screen (Screen 06 of 16) - Everest Design
  *
  * Coverage selection with three sections:
- * 1. Protect You & Loved Ones (Bodily Injury, Medical Payments)
+ * 1. Protect You & Loved Ones (Bodily Injury, Medical Payments, UM/UIM)
  * 2. Protect Your Assets (Property Damage Liability)
  * 3. Protect Your Vehicles (Comprehensive, Collision per vehicle)
  *
- * Features:
- * - BI Liability dropdown with 3 options
- * - PD Liability slider
- * - Comprehensive/Collision sliders per vehicle
- * - Medical Payments slider
- * - Real-time premium updates in PriceSidebar with debouncing (300ms)
+ * Design:
+ * - Two-column layout with EverestPriceSidebar
+ * - Coverage sections in EverestCards
+ * - EverestSelect for liability limits
+ * - EverestSlider for deductibles and limits
+ * - Real-time premium updates with debouncing (300ms)
+ * - Per-vehicle comprehensive and collision sliders
  */
 
 // Custom hook for debouncing values
@@ -46,7 +46,7 @@ function useDebounce<T>(value: T, delay: number): T {
   return debouncedValue;
 }
 
-const CoverageContent: React.FC = () => {
+const Coverage: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
@@ -98,7 +98,7 @@ const CoverageContent: React.FC = () => {
         vehicleCoverages: coverages.vehicleCoverages,
       });
 
-      // Parse BI liability from quote (use coverages, not coverage)
+      // Parse BI liability from quote
       if (coverages.bodilyInjuryLimit) {
         setBiLiability(coverages.bodilyInjuryLimit);
       }
@@ -157,9 +157,7 @@ const CoverageContent: React.FC = () => {
 
   // For objects, we need to serialize to detect changes properly
   const vehicleCoveragesJson = JSON.stringify(vehicleCoverages);
-  console.log('[Coverage] vehicleCoveragesJson:', vehicleCoveragesJson);
   const debouncedVehicleCoveragesJson = useDebounce(vehicleCoveragesJson, 300);
-  console.log('[Coverage] debouncedVehicleCoveragesJson:', debouncedVehicleCoveragesJson);
 
   // Update coverage when debounced values change
   useEffect(() => {
@@ -190,10 +188,6 @@ const CoverageContent: React.FC = () => {
         }));
 
         console.log('[Coverage] Calling API with vehicle coverages:', vehicleCoveragesArray);
-        console.log('[Coverage] Vehicle coverages array stringified:', JSON.stringify(vehicleCoveragesArray));
-        vehicleCoveragesArray.forEach((vc, idx) => {
-          console.log(`[Coverage] Vehicle ${idx}: index=${vc.vehicle_index}, collision=${vc.collision_deductible}, comprehensive=${vc.comprehensive_deductible}`);
-        });
 
         const coveragePayload = {
           coverage_bodily_injury_limit: debouncedBiLiability,
@@ -206,7 +200,6 @@ const CoverageContent: React.FC = () => {
           vehicle_coverages: vehicleCoveragesArray.length > 0 ? vehicleCoveragesArray : undefined,
         };
         console.log('[Coverage] Sending coverage payload:', coveragePayload);
-        console.log('[Coverage] Medical Payments value:', debouncedMedicalPayments);
 
         await updateCoverage.mutateAsync({
           quoteNumber,
@@ -223,13 +216,12 @@ const CoverageContent: React.FC = () => {
   }, [
     debouncedBiLiability,
     debouncedPdLiability,
-    debouncedVehicleCoveragesJson, // Use serialized version for proper change detection
+    debouncedVehicleCoveragesJson,
     debouncedMedicalPayments,
     debouncedUmbiLimit,
     debouncedUimbiLimit,
     quoteNumber,
     isInitialized,
-    // NOTE: Do NOT include updateCoverage here - it changes on every render and causes infinite loop
     // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
@@ -244,275 +236,254 @@ const CoverageContent: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={6} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center" flexJustify="center">
-            <Title variant="title-2">Loading coverage options...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="coverage-loading">
+            <EverestTitle variant="h2">Loading coverage options...</EverestTitle>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Error state
   if (error || !quote) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={6} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2" color="error">Error Loading Quote</Title>
-            <Button variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="coverage-error">
+            <EverestTitle variant="h2">Error Loading Quote</EverestTitle>
+            <EverestButton variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
               Start Over
-            </Button>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+            </EverestButton>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Get all vehicles for display
   const vehicles = quote.vehicles || [];
   console.log('[Coverage] Quote vehicles:', vehicles);
-  console.log('[Coverage] Vehicle count:', vehicles.length);
-
-  const vehicleDisplay = vehicles.length > 0
-    ? vehicles.map((v: any) => `${v.year} ${v.make} ${v.model}`).join(', ')
-    : 'No vehicles found';
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={6} totalScreens={19} />
-
-      <Container padding="large">
-        <Layout display="flex" gap="large">
+    <EverestLayout>
+      <EverestContainer>
+        <div className="coverage-layout">
           {/* Main Content */}
-          <div style={{ flex: 1 }}>
-            <Layout display="flex-column" gap="large">
-              <Title variant="display-2">Customize Your Coverage</Title>
-
-              <Text variant="body-large" color="subtle">
+          <div className="coverage-main">
+            <div className="coverage-header">
+              <EverestTitle variant="h2">Customize Your Coverage</EverestTitle>
+              <EverestText variant="subtitle">
                 Select the coverage levels that work best for you
-              </Text>
+              </EverestText>
+            </div>
 
-              {/* Section 1: Protect You & Loved Ones */}
-              <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                <Title variant="title-3">Protect You & Loved Ones</Title>
+            {/* Section 1: Protect You & Loved Ones */}
+            <EverestCard>
+              <div className="coverage-section">
+                <EverestTitle variant="h3">Protect You & Loved Ones</EverestTitle>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Bodily Injury Liability</Title>
-                  <Text variant="body-regular" color="subtle">
+                <div className="coverage-item">
+                  <EverestTitle variant="h4">Bodily Injury Liability</EverestTitle>
+                  <EverestText variant="body">
                     Accidents happen. So do injuries to other people. Help protect yourself in the event you're found at fault.
-                  </Text>
-                  <Select
+                  </EverestText>
+                  <EverestSelect
                     label="Coverage Limit"
                     value={biLiability}
-                    onChange={(value) => setBiLiability(value)}
+                    onChange={(e) => setBiLiability(e.target.value)}
                     options={[
                       { label: '$100,000 / $300,000', value: '100000/300000' },
                       { label: '$300,000 / $500,000', value: '300000/500000' },
                       { label: '$500,000 / $1,000,000', value: '500000/1000000' }
                     ]}
                   />
-                </Layout>
+                </div>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Medical Payments</Title>
-                  <Text variant="body-regular" color="subtle">
-                    These coverages can help cover medical costs wherever someone you love is injured. If that happens, though, this coverage can help lessen the impact to your wallet or theirs.
-                  </Text>
-                  <input
-                    type="range"
-                    min="1000"
-                    max="10000"
-                    step="1000"
+                <div className="coverage-item">
+                  <EverestTitle variant="h4">Medical Payments</EverestTitle>
+                  <EverestText variant="body">
+                    These coverages can help cover medical costs wherever someone you love is injured.
+                  </EverestText>
+                  <EverestSlider
+                    label="Coverage Limit"
+                    min={1000}
+                    max={10000}
+                    step={1000}
                     value={medicalPayments}
-                    onChange={(e) => setMedicalPayments(Number(e.target.value))}
-                    style={{ width: '100%' }}
+                    onChange={setMedicalPayments}
+                    formatValue={(value) => `$${value.toLocaleString()} per person`}
                   />
-                  <Text variant="body-regular">
-                    ${medicalPayments.toLocaleString()} per person
-                  </Text>
-                </Layout>
+                </div>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Uninsured Motorist Bodily Injury</Title>
-                  <Text variant="body-regular" color="subtle">
-                    That pain is you're not back is not just from the accident – it's also from finding out that the person who hit you has no insurance. This coverage can help.
-                  </Text>
-                  <Select
+                <div className="coverage-item">
+                  <EverestTitle variant="h4">Uninsured Motorist Bodily Injury</EverestTitle>
+                  <EverestText variant="body">
+                    That pain in your back is not just from the accident – it's also from finding out that the person who hit you has no insurance.
+                  </EverestText>
+                  <EverestSelect
                     label="Coverage Limit"
                     value={umbiLimit}
-                    onChange={(value) => setUmbiLimit(value)}
+                    onChange={(e) => setUmbiLimit(e.target.value)}
                     options={[
                       { label: '$100,000 / $300,000', value: '100000/300000' },
                       { label: '$300,000 / $500,000', value: '300000/500000' },
                       { label: '$500,000 / $1,000,000', value: '500000/1000000' }
                     ]}
                   />
-                  <Text variant="body-small" color="subtle" style={{ fontStyle: 'italic' }}>
+                  <EverestText variant="small" className="coverage-recommendation">
                     Limit recommended
-                  </Text>
-                </Layout>
+                  </EverestText>
+                </div>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Underinsured Motorist Bodily Injury</Title>
-                  <Text variant="body-regular" color="subtle">
+                <div className="coverage-item">
+                  <EverestTitle variant="h4">Underinsured Motorist Bodily Injury</EverestTitle>
+                  <EverestText variant="body">
                     If you or your passenger is injured in an accident and the driver at fault has insurance but not quite enough, this coverage can help make up the difference.
-                  </Text>
-                  <Select
+                  </EverestText>
+                  <EverestSelect
                     label="Coverage Limit"
                     value={uimbiLimit}
-                    onChange={(value) => setUimbiLimit(value)}
+                    onChange={(e) => setUimbiLimit(e.target.value)}
                     options={[
                       { label: '$100,000 / $300,000', value: '100000/300000' },
                       { label: '$300,000 / $500,000', value: '300000/500000' },
                       { label: '$500,000 / $1,000,000', value: '500000/1000000' }
                     ]}
                   />
-                  <Text variant="body-small" color="subtle" style={{ fontStyle: 'italic' }}>
+                  <EverestText variant="small" className="coverage-recommendation">
                     Limit recommended
-                  </Text>
-                </Layout>
-              </Layout>
+                  </EverestText>
+                </div>
+              </div>
+            </EverestCard>
 
-              {/* Section 2: Protect Your Assets */}
-              <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                <Title variant="title-3">Protect Your Assets</Title>
-                <Text variant="body-regular" color="subtle">
-                  These coverages help protect you and your assets from damages that you caused. They can be the difference between a bad day and a bad decade.
-                </Text>
+            {/* Section 2: Protect Your Assets */}
+            <EverestCard>
+              <div className="coverage-section">
+                <EverestTitle variant="h3">Protect Your Assets</EverestTitle>
+                <EverestText variant="body">
+                  These coverages help protect you and your assets from damages that you caused.
+                </EverestText>
 
-                <Layout display="flex-column" gap="small">
-                  <Title variant="title-4">Property Damage Liability</Title>
-                  <Text variant="body-regular" color="subtle">
+                <div className="coverage-item">
+                  <EverestTitle variant="h4">Property Damage Liability</EverestTitle>
+                  <EverestText variant="body">
                     You don't really get to pick which car you accidentally rear-end – whether it's a beater or a Bentley, this coverage can help.
-                  </Text>
-                  <input
-                    type="range"
-                    min="25000"
-                    max="100000"
-                    step="25000"
+                  </EverestText>
+                  <EverestSlider
+                    label="Coverage Limit"
+                    min={25000}
+                    max={100000}
+                    step={25000}
                     value={pdLiability}
-                    onChange={(e) => setPdLiability(Number(e.target.value))}
-                    style={{ width: '100%' }}
+                    onChange={setPdLiability}
+                    formatValue={(value) => `$${value.toLocaleString()}`}
                   />
-                  <Text variant="body-regular">
-                    ${pdLiability.toLocaleString()}
-                  </Text>
-                </Layout>
-              </Layout>
+                </div>
+              </div>
+            </EverestCard>
 
-              {/* Section 3: Protect Your Vehicles */}
-              <Layout display="flex-column" gap="medium" padding="medium" style={{ border: '1px solid #e2e8f0', borderRadius: '16px' }}>
-                <Title variant="title-3">Protect Your Vehicles</Title>
-                <Text variant="body-regular" color="subtle">
-                  How important is your car to you? How much do you depend on it? If something happens to it, these coverages will help get you back on the road. We've combined these coverages because if you'd need to worry about the intricacy of whether that storm, fender bender, and broken windshield are just a few examples. Required coverage for leased or financed vehicles.
-                </Text>
+            {/* Section 3: Protect Your Vehicles */}
+            <EverestCard>
+              <div className="coverage-section">
+                <EverestTitle variant="h3">Protect Your Vehicles</EverestTitle>
+                <EverestText variant="body">
+                  How important is your car to you? These coverages will help get you back on the road if something happens to it.
+                </EverestText>
 
                 {/* Per-vehicle sliders */}
                 {vehicles.map((vehicle: any, index: number) => (
-                  <Layout key={index} display="flex-column" gap="medium" padding="medium" style={{ background: '#f7fafc', borderRadius: '12px' }}>
-                    <Title variant="title-4">
+                  <div key={index} className="coverage-vehicle">
+                    <EverestTitle variant="h4">
                       Vehicle {index + 1}: {vehicle.year} {vehicle.make} {vehicle.model}
-                    </Title>
+                    </EverestTitle>
 
-                    <Layout display="flex-column" gap="small">
-                      <Text variant="body-small" style={{ fontWeight: 600 }}>Comprehensive Deductible</Text>
-                      <Text variant="body-small" color="subtle">
+                    <div className="coverage-item">
+                      <EverestText variant="label">Comprehensive Deductible</EverestText>
+                      <EverestText variant="small">
                         Covers theft, vandalism, weather damage
-                      </Text>
-                      <input
-                        type="range"
-                        min="250"
-                        max="1000"
-                        step="250"
+                      </EverestText>
+                      <EverestSlider
+                        min={250}
+                        max={1000}
+                        step={250}
                         value={vehicleCoverages[index]?.comprehensive || 500}
-                        onChange={(e) => {
-                          const newValue = Number(e.target.value);
-                          console.log(`[Coverage] Vehicle ${index} comprehensive slider changed to:`, newValue);
+                        onChange={(value) => {
+                          console.log(`[Coverage] Vehicle ${index} comprehensive slider changed to:`, value);
                           setVehicleCoverages(prev => {
                             const updated = {
                               ...prev,
                               [index]: {
                                 ...prev[index],
-                                comprehensive: newValue
+                                comprehensive: value
                               }
                             };
                             console.log('[Coverage] Updated vehicleCoverages:', updated);
                             return updated;
                           });
                         }}
-                        style={{ width: '100%' }}
+                        formatValue={(value) => `$${value} deductible`}
                       />
-                      <Text variant="body-regular">
-                        ${vehicleCoverages[index]?.comprehensive || 500} deductible
-                      </Text>
-                    </Layout>
+                    </div>
 
-                    <Layout display="flex-column" gap="small">
-                      <Text variant="body-small" style={{ fontWeight: 600 }}>Collision Deductible</Text>
-                      <Text variant="body-small" color="subtle">
+                    <div className="coverage-item">
+                      <EverestText variant="label">Collision Deductible</EverestText>
+                      <EverestText variant="small">
                         Covers damage from accidents
-                      </Text>
-                      <input
-                        type="range"
-                        min="250"
-                        max="1000"
-                        step="250"
+                      </EverestText>
+                      <EverestSlider
+                        min={250}
+                        max={1000}
+                        step={250}
                         value={vehicleCoverages[index]?.collision || 500}
-                        onChange={(e) => {
-                          const newValue = Number(e.target.value);
+                        onChange={(value) => {
                           setVehicleCoverages(prev => ({
                             ...prev,
                             [index]: {
                               ...prev[index],
-                              collision: newValue
+                              collision: value
                             }
                           }));
                         }}
-                        style={{ width: '100%' }}
+                        formatValue={(value) => `$${value} deductible`}
                       />
-                      <Text variant="body-regular">
-                        ${vehicleCoverages[index]?.collision || 500} deductible
-                      </Text>
-                    </Layout>
-                  </Layout>
+                    </div>
+                  </div>
                 ))}
-              </Layout>
+              </div>
+            </EverestCard>
 
-              {/* Navigation Buttons */}
-              <Layout display="flex" gap="medium" flexJustify="space-between" padding={{ top: 'medium' }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="large"
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="large"
-                  onClick={handleContinue}
-                >
-                  Continue
-                </Button>
-              </Layout>
-            </Layout>
+            {/* Navigation Buttons */}
+            <div className="coverage-actions">
+              <EverestButton
+                type="button"
+                variant="secondary"
+                size="large"
+                onClick={handleBack}
+              >
+                Back
+              </EverestButton>
+              <EverestButton
+                type="button"
+                variant="primary"
+                size="large"
+                onClick={handleContinue}
+              >
+                Continue
+              </EverestButton>
+            </div>
           </div>
 
           {/* Price Sidebar */}
-          <div style={{ width: '320px' }}>
-            <PriceSidebar quote={quote} isLoading={isLoading} />
+          <div className="coverage-sidebar">
+            <EverestPriceSidebar quote={quote} />
           </div>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+        </div>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 
-// Export CoverageContent directly as Coverage
-export default CoverageContent;
+export default Coverage;

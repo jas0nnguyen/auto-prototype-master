@@ -73,12 +73,13 @@
   - Driver cards grid (2 columns) with badges (Named Insured, Household Member)
   - "Add Another Driver" button
   - Back + Continue to Coverage buttons
-- [ ] 4.6 Redesign `Coverage.tsx` (Screen 6)
+- [x] 4.6 Redesign `Coverage.tsx` (Screen 6)
   - Two-column layout with PriceSidebar
-  - Coverage sections: Protect Assets, Protect Vehicles, Protect People
-  - Coverage items with title, value, description, slider/select controls
-  - Per-vehicle deductible sliders
-  - Back + Next buttons
+  - Coverage sections: Protect You & Loved Ones, Protect Assets, Protect Vehicles
+  - EverestSelect for liability limits
+  - EverestSlider for deductibles and medical payments
+  - Per-vehicle comprehensive and collision deductible sliders
+  - Back + Continue buttons
 - [ ] 4.7 Redesign `AddOns.tsx` (Screen 7)
   - Two-column layout with PriceSidebar
   - Rental Reimbursement toggles per vehicle
