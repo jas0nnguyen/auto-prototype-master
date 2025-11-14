@@ -1,0 +1,172 @@
+/* Review Screen Styles - Everest Design */
+
+/* Two-column layout */
+.review-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Main content column */
+.review-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header section */
+.review-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Review section within cards */
+.review-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Review items container */
+.review-items {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Individual review item (group of rows) */
+.review-item {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.review-item:last-child {
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+/* Review row (label-value pair) */
+.review-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+}
+
+.review-row:not(:last-child) {
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+/* Per-vehicle coverage section */
+.review-vehicle-coverage {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Per-vehicle add-ons section */
+.review-vehicle-addons {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+  margin-top: 12px;
+}
+
+/* Navigation actions */
+.review-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar (sticky positioning) */
+.review-sidebar {
+  position: sticky;
+  top: 120px;
+}
+
+/* Loading and error states */
+.review-loading,
+.review-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  min-height: 400px;
+  padding: 60px 20px;
+}
+
+/* Tablet breakpoint (768px - 1200px) */
+@media (max-width: 1200px) {
+  .review-layout {
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+  }
+
+  .review-main {
+    gap: 28px;
+  }
+
+  .review-section {
+    gap: 20px;
+  }
+}
+
+/* Mobile breakpoint (≤768px) */
+@media (max-width: 768px) {
+  .review-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Move sidebar below main content on mobile */
+  .review-sidebar {
+    position: static;
+    order: 2;
+  }
+
+  .review-main {
+    order: 1;
+    gap: 24px;
+  }
+
+  .review-section {
+    gap: 20px;
+  }
+
+  .review-items {
+    gap: 16px;
+  }
+
+  .review-vehicle-coverage,
+  .review-vehicle-addons {
+    padding: 12px;
+  }
+
+  .review-actions {
+    flex-direction: column;
+  }
+
+  .review-actions button {
+    width: 100%;
+  }
+}

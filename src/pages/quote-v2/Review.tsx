@@ -1,36 +1,28 @@
 import React from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  Card,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { PriceSidebar } from './components/PriceSidebar';
-import { ScreenProgress } from './components/ScreenProgress';
-import { QuoteProvider } from './contexts/QuoteContext';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestPriceSidebar } from '../../components/everest/specialized/EverestPriceSidebar';
 import { useQuoteByNumber } from '../../hooks/useQuote';
+import './Review.css';
 
 /**
- * Review Screen (Screen 09 of 19) - T099
+ * Review Screen (Screen 09 of 16) - Everest Design
  *
  * Comprehensive quote summary displaying:
- * - Drivers with license numbers
+ * - Drivers with license information
  * - Vehicles with VINs
- * - Liability Coverage (BI + PD limits)
- * - Vehicle Coverage per vehicle (comprehensive, collision, rental)
- * - Full discount breakdown
+ * - Coverage details organized by section
+ * - Add-ons and included features
  *
- * This is the final screen before signing ceremony (Phase 4)
- *
- * Data Flow:
- * 1. Get quoteNumber from URL params
- * 2. Fetch quote data using useQuoteByNumber hook
- * 3. Map API response to display format
- * 4. Render comprehensive summary with all quote details
+ * Design:
+ * - Two-column layout with EverestPriceSidebar
+ * - Review sections in cards with label-value rows
+ * - Make Changes + Looks Good buttons
  */
 
 interface Driver {
@@ -49,13 +41,7 @@ interface Vehicle {
   vin: string;
 }
 
-interface CoverageDescription {
-  name: string;
-  description: string;
-  value: string;
-}
-
-const ReviewContent: React.FC = () => {
+const Review: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
@@ -71,48 +57,45 @@ const ReviewContent: React.FC = () => {
   };
 
   const handleContinue = () => {
-    // Navigate to signing ceremony (Phase 4)
     navigate(`/quote-v2/sign/${quoteNumber}`);
   };
 
   // Loading state
   if (isLoading) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={9} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center" flexJustify="center">
-            <Title variant="title-2">Loading your quote...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="review-loading">
+            <EverestTitle variant="h2">Loading your quote...</EverestTitle>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Error state
   if (error || !quote) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={9} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2">Error Loading Quote</Title>
-            <Text variant="body-regular" color="subtle">
+      <EverestLayout>
+        <EverestContainer>
+          <div className="review-error">
+            <EverestTitle variant="h2">Error Loading Quote</EverestTitle>
+            <EverestText variant="body">
               {error ? 'Unable to load quote details. Please try again.' : 'Quote not found.'}
-            </Text>
-            <Button variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
+            </EverestText>
+            <EverestButton variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
               Start Over
-            </Button>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+            </EverestButton>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Map API response to display format
   const drivers: Driver[] = [];
 
-  // Add primary driver (note: backend returns camelCase)
+  // Add primary driver
   if (quote.driver) {
     drivers.push({
       id: (quote.driver as any).party_id || (quote.driver as any).partyId || 'primary',
@@ -136,7 +119,7 @@ const ReviewContent: React.FC = () => {
     });
   }
 
-  // Map vehicles (backend returns camelCase)
+  // Map vehicles
   const vehicles: Vehicle[] = quote.vehicles?.map((v: any, index: number) => ({
     id: v.vehicle_id || v.vehicleId || `vehicle-${index}`,
     year: v.year,
@@ -145,224 +128,242 @@ const ReviewContent: React.FC = () => {
     vin: v.vin || 'N/A',
   })) || [];
 
-  // Extract liability coverage (use coverages object from backend)
+  // Extract coverages
   const coverages = quote.coverages || {};
-  const liabilityCoverage = {
-    bodilyInjury: coverages.bodilyInjuryLimit || '$100,000 / $300,000',
-    propertyDamage: coverages.propertyDamageLimit
-      ? (coverages.propertyDamageLimit.startsWith('$') ? coverages.propertyDamageLimit : `$${coverages.propertyDamageLimit}`)
-      : '$50,000',
-  };
-
-  // Coverage descriptions with detailed explanations
-  const coverageDescriptions: CoverageDescription[] = [
-    {
-      name: 'Bodily Injury Liability',
-      description: 'Covers injuries you cause to others in an accident',
-      value: liabilityCoverage.bodilyInjury,
-    },
-    {
-      name: 'Property Damage Liability',
-      description: "Covers damage you cause to others' property",
-      value: liabilityCoverage.propertyDamage,
-    },
-  ];
-
-  if (coverages.hasCollision) {
-    coverageDescriptions.push({
-      name: 'Collision',
-      description: 'Covers damage to your vehicle from collisions',
-      value: `$${coverages.collisionDeductible} deductible`,
-    });
-  }
-
-  if (coverages.hasComprehensive) {
-    coverageDescriptions.push({
-      name: 'Comprehensive',
-      description: 'Covers damage from theft, vandalism, weather, etc.',
-      value: `$${coverages.comprehensiveDeductible} deductible`,
-    });
-  }
-
-  if (coverages.hasUninsured) {
-    coverageDescriptions.push({
-      name: 'Uninsured Motorist',
-      description: 'Protects you if hit by an uninsured driver',
-      value: 'Included',
-    });
-  }
-
-  if (coverages.hasRental) {
-    coverageDescriptions.push({
-      name: 'Rental Reimbursement',
-      description: 'Covers rental car costs while your car is being repaired',
-      value: `$${coverages.rentalLimit} limit`,
-    });
-  }
-
-  if (coverages.hasRoadside) {
-    coverageDescriptions.push({
-      name: 'Roadside Assistance',
-      description: 'Covers towing, flat tires, lockouts, and jump starts',
-      value: 'Included',
-    });
-  }
-
-  // Extract discounts
-  const discounts = quote.discounts?.map((d: any) => ({
-    name: d.name || d.code,
-    amount: Math.abs(d.amount),
-  })) || [];
+  const vehicleCoverages = coverages.vehicleCoverages || [];
+  const vehicleAddOns = quote.vehicleAddOns || [];
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={9} totalScreens={19} />
-
-      <Container padding="large">
-        <Layout display="flex" gap="large">
+    <EverestLayout>
+      <EverestContainer>
+        <div className="review-layout">
           {/* Main Content */}
-          <div style={{ flex: 1 }}>
-            <Layout display="flex-column" gap="large">
-              <Title variant="display-2">Review Your Quote</Title>
-
-              <Text variant="body-large" color="subtle">
+          <div className="review-main">
+            <div className="review-header">
+              <EverestTitle variant="h2">Review Your Quote</EverestTitle>
+              <EverestText variant="subtitle">
                 Everything looks good? Review your coverage details below.
-              </Text>
+              </EverestText>
+            </div>
 
-              {/* Drivers Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Drivers</Title>
+            {/* Drivers Section */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Drivers</EverestTitle>
 
-                {drivers.map(driver => (
-                  <Card key={driver.id} padding="medium">
-                    <Layout display="flex-column" gap="small">
-                      <Title variant="title-4">
-                        {driver.firstName} {driver.lastName}
-                      </Title>
-                      <Text variant="body-regular" color="subtle">
-                        License: {driver.licenseNumber} ({driver.licenseState})
-                      </Text>
-                    </Layout>
-                  </Card>
-                ))}
-              </Layout>
+                <div className="review-items">
+                  {drivers.map((driver, index) => (
+                    <div key={driver.id} className="review-item">
+                      <div className="review-row">
+                        <EverestText variant="label">
+                          {index === 0 ? 'Named Insured' : `Additional Driver ${index}`}
+                        </EverestText>
+                        <EverestText variant="body">
+                          {driver.firstName} {driver.lastName}
+                        </EverestText>
+                      </div>
+                      <div className="review-row">
+                        <EverestText variant="label">License</EverestText>
+                        <EverestText variant="body">
+                          {driver.licenseNumber} ({driver.licenseState})
+                        </EverestText>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </EverestCard>
 
-              {/* Vehicles Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Vehicles</Title>
+            {/* Vehicles Section */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Vehicles</EverestTitle>
 
-                {vehicles.map(vehicle => (
-                  <Card key={vehicle.id} padding="medium">
-                    <Layout display="flex-column" gap="small">
-                      <Title variant="title-4">
-                        {vehicle.year} {vehicle.make} {vehicle.model}
-                      </Title>
-                      <Text variant="body-regular" color="subtle">
-                        VIN: {vehicle.vin}
-                      </Text>
-                    </Layout>
-                  </Card>
-                ))}
-              </Layout>
+                <div className="review-items">
+                  {vehicles.map((vehicle, index) => (
+                    <div key={vehicle.id} className="review-item">
+                      <div className="review-row">
+                        <EverestText variant="label">Vehicle {index + 1}</EverestText>
+                        <EverestText variant="body">
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </EverestText>
+                      </div>
+                      <div className="review-row">
+                        <EverestText variant="label">VIN</EverestText>
+                        <EverestText variant="body">{vehicle.vin}</EverestText>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </EverestCard>
 
-              {/* Coverage Summary Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Your Coverage</Title>
-                <Text variant="body-regular" color="subtle">
-                  Complete protection for you and your vehicle
-                </Text>
+            {/* Protect You & Loved Ones */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Protect You & Loved Ones</EverestTitle>
 
-                {coverageDescriptions.map((coverage, index) => (
-                  <Card key={index} padding="medium">
-                    <Layout display="flex-column" gap="small">
-                      <Layout display="flex" flexJustify="space-between" flexAlign="center">
-                        <div>
-                          <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                            {coverage.name}
-                          </Text>
-                          <Text variant="body-small" color="subtle">
-                            {coverage.description}
-                          </Text>
-                        </div>
-                        <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                          {coverage.value}
-                        </Text>
-                      </Layout>
-                    </Layout>
-                  </Card>
-                ))}
-              </Layout>
+                <div className="review-items">
+                  <div className="review-row">
+                    <EverestText variant="label">Bodily Injury Liability</EverestText>
+                    <EverestText variant="body">{coverages.bodilyInjuryLimit || '$100,000 / $300,000'}</EverestText>
+                  </div>
+                  <div className="review-row">
+                    <EverestText variant="label">Medical Payments</EverestText>
+                    <EverestText variant="body">{coverages.medicalPaymentsLimit || '$5,000 per person'}</EverestText>
+                  </div>
+                  {coverages.uninsuredMotoristBodilyInjury && (
+                    <div className="review-row">
+                      <EverestText variant="label">Uninsured Motorist Bodily Injury</EverestText>
+                      <EverestText variant="body">{coverages.uninsuredMotoristBodilyInjury}</EverestText>
+                    </div>
+                  )}
+                  {coverages.underinsuredMotoristBodilyInjury && (
+                    <div className="review-row">
+                      <EverestText variant="label">Underinsured Motorist Bodily Injury</EverestText>
+                      <EverestText variant="body">{coverages.underinsuredMotoristBodilyInjury}</EverestText>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </EverestCard>
 
+            {/* Protect Your Assets */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Protect Your Assets</EverestTitle>
 
-              {/* Discounts Section */}
-              {discounts.length > 0 && (
-                <Layout display="flex-column" gap="medium">
-                  <Title variant="title-3">Your Discounts</Title>
+                <div className="review-items">
+                  <div className="review-row">
+                    <EverestText variant="label">Property Damage Liability</EverestText>
+                    <EverestText variant="body">
+                      {coverages.propertyDamageLimit?.startsWith('$')
+                        ? coverages.propertyDamageLimit
+                        : `$${coverages.propertyDamageLimit || '50,000'}`}
+                    </EverestText>
+                  </div>
+                </div>
+              </div>
+            </EverestCard>
 
-                  <Card padding="medium">
-                    <Layout display="flex-column" gap="small">
-                      {discounts.map((discount: { name: string; amount: number }) => (
-                        <Layout key={discount.name} display="flex" flexJustify="space-between">
-                          <Text variant="body-regular">{discount.name}</Text>
-                          <Text variant="body-regular" style={{ fontWeight: 600, color: '#10b981' }}>
-                            ${Math.abs(discount.amount)}
-                          </Text>
-                        </Layout>
-                      ))}
-                    </Layout>
-                  </Card>
-                </Layout>
-              )}
+            {/* Protect Your Vehicles */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Protect Your Vehicles</EverestTitle>
 
-              {/* Navigation Buttons */}
-              <Layout display="flex" gap="medium" flexJustify="space-between">
-                <Button
-                  type="button"
-                  size="large"
-                  onClick={handleMakeChanges}
-                >
-                  Make Changes
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="large"
-                  onClick={handleContinue}
-                >
-                  Looks Good! Continue
-                </Button>
-              </Layout>
-            </Layout>
+                <div className="review-items">
+                  {vehicles.map((vehicle, index) => {
+                    const vehicleCoverage = vehicleCoverages[index] || {};
+                    return (
+                      <div key={vehicle.id} className="review-vehicle-coverage">
+                        <EverestText variant="body" style={{ fontWeight: 600, marginBottom: '12px' }}>
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </EverestText>
+
+                        {vehicleCoverage.comprehensiveDeductible && (
+                          <div className="review-row">
+                            <EverestText variant="label">Comprehensive</EverestText>
+                            <EverestText variant="body">${vehicleCoverage.comprehensiveDeductible} deductible</EverestText>
+                          </div>
+                        )}
+
+                        {vehicleCoverage.collisionDeductible && (
+                          <div className="review-row">
+                            <EverestText variant="label">Collision</EverestText>
+                            <EverestText variant="body">${vehicleCoverage.collisionDeductible} deductible</EverestText>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </EverestCard>
+
+            {/* Add-Ons */}
+            <EverestCard>
+              <div className="review-section">
+                <EverestTitle variant="h3">Add-Ons & Included Features</EverestTitle>
+
+                <div className="review-items">
+                  {/* Roadside Assistance (always included) */}
+                  <div className="review-row">
+                    <EverestText variant="label">Roadside Assistance</EverestText>
+                    <EverestText variant="body">Included (All Vehicles)</EverestText>
+                  </div>
+
+                  {/* Per-vehicle add-ons */}
+                  {vehicles.map((vehicle, index) => {
+                    const addOns = vehicleAddOns.find((addon: any) => addon.vehicle_index === index);
+                    if (!addOns) return null;
+
+                    const hasAddOns = addOns.rental_reimbursement ||
+                      addOns.additional_equipment_amount ||
+                      addOns.original_parts_replacement;
+
+                    if (!hasAddOns) return null;
+
+                    return (
+                      <div key={vehicle.id} className="review-vehicle-addons">
+                        <EverestText variant="body" style={{ fontWeight: 600, marginBottom: '8px' }}>
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </EverestText>
+
+                        {addOns.rental_reimbursement && (
+                          <div className="review-row">
+                            <EverestText variant="label">Rental Reimbursement</EverestText>
+                            <EverestText variant="body">Included</EverestText>
+                          </div>
+                        )}
+
+                        {addOns.additional_equipment_amount && (
+                          <div className="review-row">
+                            <EverestText variant="label">Additional Equipment</EverestText>
+                            <EverestText variant="body">${addOns.additional_equipment_amount.toLocaleString()} limit</EverestText>
+                          </div>
+                        )}
+
+                        {addOns.original_parts_replacement && (
+                          <div className="review-row">
+                            <EverestText variant="label">Original Parts Replacement</EverestText>
+                            <EverestText variant="body">Included</EverestText>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </EverestCard>
+
+            {/* Navigation Buttons */}
+            <div className="review-actions">
+              <EverestButton
+                type="button"
+                variant="secondary"
+                size="large"
+                onClick={handleMakeChanges}
+              >
+                Make Changes
+              </EverestButton>
+              <EverestButton
+                type="button"
+                variant="primary"
+                size="large"
+                onClick={handleContinue}
+              >
+                Looks Good! Continue
+              </EverestButton>
+            </div>
           </div>
 
           {/* Price Sidebar */}
-          <div style={{ width: '320px' }}>
-            <PriceSidebar quote={quote} isLoading={false} />
+          <div className="review-sidebar">
+            <EverestPriceSidebar quote={quote} />
           </div>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
-  );
-};
-
-/**
- * Review Component Wrapper with QuoteProvider
- *
- * Wraps ReviewContent with QuoteProvider to provide quote context.
- * This enables PriceSidebar and other components to access quote data.
- */
-const Review: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-  const { data: quote } = useQuoteByNumber(quoteNumber) as { data: any };
-
-  if (!quote || !quote.quoteId) {
-    return <ReviewContent />;
-  }
-
-  return (
-    <QuoteProvider quoteId={quote.quoteId}>
-      <ReviewContent />
-    </QuoteProvider>
+        </div>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 

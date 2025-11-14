@@ -93,11 +93,12 @@
   - Subtitle "We're making sure everything is just right"
   - Steps: Vehicle valuation, Driver records check, Finalizing premium calculation
   - Auto-navigates to Review screen when complete
-- [ ] 4.9 Redesign `Review.tsx` (Screen 9)
+- [x] 4.9 Redesign `Review.tsx` (Screen 9)
   - Two-column layout with PriceSidebar
-  - Review sections in cards: Drivers, Protect Assets, Protect Vehicles, Protect People, Add-Ons
-  - Label-value rows with border separators
-  - Make Changes + Looks Good buttons
+  - Review sections in cards: Drivers, Vehicles, Protect You & Loved Ones, Protect Assets, Protect Vehicles, Add-Ons
+  - Label-value rows with subtle border separators
+  - Per-vehicle coverage and add-ons in highlighted sections
+  - Make Changes + Looks Good! Continue buttons
 
 ## 5. Screen Redesigns (Screens 10-16: Signing & Payment)
 
