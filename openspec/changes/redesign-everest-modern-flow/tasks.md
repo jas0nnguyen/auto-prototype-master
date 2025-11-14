@@ -87,10 +87,12 @@
   - Original Parts Replacement toggles per vehicle
   - "Always On" section (Roadside Assistance disabled toggle)
   - Back + Continue buttons
-- [ ] 4.8 Redesign `LoadingValidation.tsx` (Screen 8)
-  - Loading animation similar to screen 4
+- [x] 4.8 Redesign `LoadingValidation.tsx` (Screen 8)
+  - Loading animation with EverestLoadingAnimation
   - Headline "Almost there! Verifying your information..."
-  - Steps: Vehicle valuation (complete), Driver records (complete), Premium calculation (active)
+  - Subtitle "We're making sure everything is just right"
+  - Steps: Vehicle valuation, Driver records check, Finalizing premium calculation
+  - Auto-navigates to Review screen when complete
 - [ ] 4.9 Redesign `Review.tsx` (Screen 9)
   - Two-column layout with PriceSidebar
   - Review sections in cards: Drivers, Protect Assets, Protect Vehicles, Protect People, Add-Ons

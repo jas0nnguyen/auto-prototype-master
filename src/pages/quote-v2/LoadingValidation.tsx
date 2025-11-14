@@ -1,21 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Layout, Container, Text } from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { LoadingAnimation, LoadingStep } from './components/LoadingAnimation';
-import { ScreenProgress } from './components/ScreenProgress';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestLoadingAnimation } from '../../components/everest/specialized/EverestLoadingAnimation';
 import { useQuoteByNumber } from '../../hooks/useQuote';
+import './LoadingValidation.css';
 
 /**
- * LoadingValidation Screen (Screen 08 of 19) - T098
+ * LoadingValidation Screen (Screen 08 of 16) - Everest Design
  *
  * Displays loading animation while finalizing the quote:
  * 1. Vehicle valuation (~2s) - simulates external lookup
  * 2. Driver records check (~2s) - simulates MVR lookup
- * 3. Finalizing premium calculation (~2s) - actual API recalculation
+ * 3. Finalizing premium calculation (~1s) - final recalculation
  *
- * This orchestrates final validation steps before Review screen
+ * Design:
+ * - Centered layout with EverestLoadingAnimation
+ * - Headline "Almost there! Verifying your information..."
+ * - Step indicators with animations
+ * - Auto-navigates to Review screen when complete
  */
+
+interface LoadingStep {
+  label: string;
+  status: 'pending' | 'loading' | 'completed';
+}
 
 const LoadingValidation: React.FC = () => {
   const navigate = useNavigate();
@@ -92,42 +103,44 @@ const LoadingValidation: React.FC = () => {
   // Loading state while fetching quote
   if (!quote && !error) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={8} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center" flexJustify="center">
-            <Text variant="body-regular" color="subtle">
-              Loading quote...
-            </Text>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="loading-validation-container">
+            <EverestText variant="body">Loading quote...</EverestText>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={8} totalScreens={19} />
+    <EverestLayout>
+      <EverestContainer>
+        <div className="loading-validation-container">
+          <div className="loading-validation-header">
+            <EverestTitle variant="h2">Almost there! Verifying your information...</EverestTitle>
+            <EverestText variant="subtitle">
+              We're making sure everything is just right
+            </EverestText>
+          </div>
 
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" flexAlign="center" flexJustify="center">
-          <LoadingAnimation steps={steps} />
+          <EverestLoadingAnimation steps={steps} />
 
           {error && (
-            <Layout display="flex-column" gap="small" flexAlign="center" style={{ marginTop: '32px' }}>
-              <Text variant="body-regular" color="error" align="center">
+            <div className="loading-validation-error">
+              <EverestText variant="body" style={{ color: '#ef4444', textAlign: 'center' }}>
                 {error}
-              </Text>
-              <Text variant="body-small" color="subtle" align="center">
-                <a href="/quote-v2/get-started" style={{ color: '#667eea', textDecoration: 'underline' }}>
+              </EverestText>
+              <EverestText variant="body" style={{ textAlign: 'center' }}>
+                <a href="/quote-v2/get-started" className="loading-validation-link">
                   Start over
                 </a>
-              </Text>
-            </Layout>
+              </EverestText>
+            </div>
           )}
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+        </div>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 
