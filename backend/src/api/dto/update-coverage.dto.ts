@@ -27,9 +27,19 @@ export class UpdateCoverageDto {
   @IsOptional()
   uninsuredMotorist?: boolean;
 
+  @ApiPropertyOptional({ example: '100000/300000', description: 'Uninsured Motorist Bodily Injury limit' })
+  @IsString()
+  @IsOptional()
+  coverage_uninsured_motorist_bodily_injury?: string;
+
   @ApiPropertyOptional({ example: true, description: 'Include underinsured motorist coverage' })
   @IsOptional()
   underinsuredMotorist?: boolean;
+
+  @ApiPropertyOptional({ example: '100000/300000', description: 'Underinsured Motorist Bodily Injury limit' })
+  @IsString()
+  @IsOptional()
+  coverage_underinsured_motorist_bodily_injury?: string;
 
   @ApiPropertyOptional({ example: 5000, description: 'Medical payments coverage limit' })
   @IsInt()

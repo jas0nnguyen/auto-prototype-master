@@ -60,7 +60,7 @@ export interface Policy {
  * Bind a quote to a policy with payment
  */
 export async function bindQuote(data: BindQuoteRequest): Promise<BindQuoteResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/policies/bind`, {
+  const response = await fetch(`${API_BASE_URL}/v1/policies/bind`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -81,7 +81,7 @@ export async function bindQuote(data: BindQuoteRequest): Promise<BindQuoteRespon
  * Activate a policy (transition from BOUND to IN_FORCE)
  */
 export async function activatePolicy(policyId: string): Promise<ActivatePolicyResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/policies/${policyId}/activate`, {
+  const response = await fetch(`${API_BASE_URL}/v1/policies/${policyId}/activate`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -101,7 +101,7 @@ export async function activatePolicy(policyId: string): Promise<ActivatePolicyRe
  * Get policy details by policy ID
  */
 export async function getPolicy(policyId: string): Promise<Policy> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/policies/${policyId}`, {
+  const response = await fetch(`${API_BASE_URL}/v1/policies/${policyId}`, {
     method: 'GET',
     headers: {
       'Content-Type': 'application/json',

@@ -1,14 +1,18 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Layout, Title, Text } from '@sureapp/canary-design-system';
 import './LoadingAnimation.css';
 
 /**
- * LoadingAnimation Component
+ * LoadingAnimation Component (T219)
  *
  * Displays animated loading progress with:
  * - Bouncing car icon
  * - Progress bar
  * - Step list with status indicators (spinner for active, checkmark for completed)
+ *
+ * Performance optimization (T219):
+ * - Uses will-change for GPU acceleration during animation
+ * - Removes will-change after completion to free GPU memory
  *
  * Used in LoadingPrefill (Screen 04) and LoadingValidation (Screen 08)
  */
@@ -26,12 +30,33 @@ export const LoadingAnimation: React.FC<LoadingAnimationProps> = ({ steps }) => 
   const completedCount = steps.filter(s => s.status === 'completed').length;
   const totalSteps = steps.length;
   const progressPercent = (completedCount / totalSteps) * 100;
+  const carIconRef = useRef<HTMLDivElement>(null);
+  const allCompleted = completedCount === totalSteps;
+
+  /**
+   * Performance Optimization (T219)
+   *
+   * Remove will-change after all animations complete to prevent
+   * unnecessary GPU memory usage.
+   */
+  useEffect(() => {
+    if (allCompleted && carIconRef.current) {
+      // Wait for final animation to complete before removing will-change
+      const timeout = setTimeout(() => {
+        if (carIconRef.current) {
+          carIconRef.current.style.willChange = 'auto';
+        }
+      }, 1000); // Wait 1s after completion
+
+      return () => clearTimeout(timeout);
+    }
+  }, [allCompleted]);
 
   return (
     <div className="loading-animation-container">
       <Layout display="flex-column" gap="large" flexAlign="center">
-        {/* Car Icon with Bounce Animation */}
-        <div className="loading-car-icon">
+        {/* Car Icon with Bounce Animation (T219: ref for will-change optimization) */}
+        <div ref={carIconRef} className="loading-car-icon">
           <svg
             width="120"
             height="120"

@@ -113,22 +113,38 @@ export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = f
           <Layout display="flex-column" gap="medium">
             <Title variant="title-3">Your Quote</Title>
 
+            {/* Monthly Price - Primary Display */}
             <Layout
               display="flex-column"
               gap="small"
               padding="medium"
               style={{
-                backgroundColor: '#f7fafc',
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                 borderRadius: '12px',
               }}
             >
-              <Text variant="body-small" color="subtle">
-                6-Month Premium
+              <Text variant="body-small" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                Monthly Payment
               </Text>
-              <Title variant="display-3">
-                ${sixMonthPremium.toFixed(2)}
+              <Title variant="display-2" style={{ color: '#ffffff' }}>
+                ${paymentAmount.toFixed(2)}
               </Title>
+              <Text variant="body-small" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                /month
+              </Text>
             </Layout>
+
+            {/* 6-Month Total */}
+            <Layout display="flex" flexJustify="space-between" flexAlign="center">
+              <Text variant="body-regular" color="subtle">
+                6-Month Total
+              </Text>
+              <Text variant="title-4" style={{ fontWeight: 700 }}>
+                ${sixMonthPremium.toFixed(2)}
+              </Text>
+            </Layout>
+
+            <div style={{ borderTop: '1px solid #e2e8f0', margin: '8px 0' }} />
 
             <Layout display="flex-column" gap="small">
               <Layout display="flex" flexJustify="space-between">
@@ -140,10 +156,10 @@ export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = f
 
               <Layout display="flex" flexJustify="space-between">
                 <Text variant="body-small" color="subtle">
-                  Then {remainingPayments} payments of
+                  Remaining {remainingPayments} payments
                 </Text>
                 <Text variant="body-small" color="subtle">
-                  ${paymentAmount.toFixed(2)}
+                  ${paymentAmount.toFixed(2)}/mo
                 </Text>
               </Layout>
             </Layout>
@@ -197,10 +213,13 @@ export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = f
         <div className="price-sidebar-mobile-bar">
           <div>
             <Text variant="body-small" color="subtle">
-              6-Month Premium
+              Monthly Payment
             </Text>
             <Text variant="title-4" style={{ fontWeight: 700 }}>
-              ${sixMonthPremium.toFixed(2)}
+              ${paymentAmount.toFixed(2)}/mo
+            </Text>
+            <Text variant="body-small" color="subtle" style={{ fontSize: '12px', marginTop: '2px' }}>
+              ${sixMonthPremium.toFixed(2)} 6-month total
             </Text>
           </div>
           <button
@@ -238,22 +257,38 @@ export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = f
                     </button>
                   </Layout>
 
+                  {/* Monthly Price - Primary Display */}
                   <Layout
                     display="flex-column"
                     gap="small"
                     padding="medium"
                     style={{
-                      backgroundColor: '#f7fafc',
+                      background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
                       borderRadius: '12px',
                     }}
                   >
-                    <Text variant="body-small" color="subtle">
-                      6-Month Premium
+                    <Text variant="body-small" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                      Monthly Payment
                     </Text>
-                    <Title variant="display-3">
-                      ${sixMonthPremium.toFixed(2)}
+                    <Title variant="display-2" style={{ color: '#ffffff' }}>
+                      ${paymentAmount.toFixed(2)}
                     </Title>
+                    <Text variant="body-small" style={{ color: 'rgba(255, 255, 255, 0.8)' }}>
+                      /month
+                    </Text>
                   </Layout>
+
+                  {/* 6-Month Total */}
+                  <Layout display="flex" flexJustify="space-between" flexAlign="center">
+                    <Text variant="body-regular" color="subtle">
+                      6-Month Total
+                    </Text>
+                    <Text variant="title-4" style={{ fontWeight: 700 }}>
+                      ${sixMonthPremium.toFixed(2)}
+                    </Text>
+                  </Layout>
+
+                  <div style={{ borderTop: '1px solid #e2e8f0', margin: '8px 0' }} />
 
                   <Layout display="flex-column" gap="small">
                     <Layout display="flex" flexJustify="space-between">
@@ -265,10 +300,10 @@ export const PriceSidebar: React.FC<PriceSidebarProps> = ({ quote, isLoading = f
 
                     <Layout display="flex" flexJustify="space-between">
                       <Text variant="body-small" color="subtle">
-                        Then {remainingPayments} payments of
+                        Remaining {remainingPayments} payments
                       </Text>
                       <Text variant="body-small" color="subtle">
-                        ${paymentAmount.toFixed(2)}
+                        ${paymentAmount.toFixed(2)}/mo
                       </Text>
                     </Layout>
                   </Layout>

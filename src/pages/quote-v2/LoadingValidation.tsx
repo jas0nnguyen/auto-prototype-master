@@ -4,7 +4,7 @@ import { Layout, Container, Text } from '@sureapp/canary-design-system';
 import { TechStartupLayout } from './components/shared/TechStartupLayout';
 import { LoadingAnimation, LoadingStep } from './components/LoadingAnimation';
 import { ScreenProgress } from './components/ScreenProgress';
-import { useRecalculateQuote, useQuoteByNumber } from '../../hooks/useQuote';
+import { useQuoteByNumber } from '../../hooks/useQuote';
 
 /**
  * LoadingValidation Screen (Screen 08 of 19) - T098
@@ -21,11 +21,8 @@ const LoadingValidation: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
-  // Get quote data to extract quoteId
+  // Get quote data to verify it exists
   const { data: quote } = useQuoteByNumber(quoteNumber);
-
-  // Recalculate quote mutation
-  const recalculateQuote = useRecalculateQuote();
 
   const [steps, setSteps] = useState<LoadingStep[]>([
     { label: 'Vehicle valuation', status: 'pending' },
@@ -36,10 +33,12 @@ const LoadingValidation: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // T098: LoadingValidation orchestration with actual recalculation
+    // T098: LoadingValidation orchestration
+    // Note: Premium calculation already happened in Coverage/AddOns screens
+    // This screen simulates final validation checks before Review
     const runValidation = async () => {
       try {
-        if (!quote?.quoteId) {
+        if (!quote) {
           throw new Error('Quote not found. Please start over.');
         }
 
@@ -61,14 +60,12 @@ const LoadingValidation: React.FC = () => {
           i === 1 ? { ...step, status: 'completed' as const } : step
         ));
 
-        // Step 3: Finalize premium calculation (actual API call)
+        // Step 3: Finalize premium calculation (mock - 1s delay)
+        // Premium was already calculated by the PUT /coverage endpoint
         setSteps(prev => prev.map((step, i) =>
           i === 2 ? { ...step, status: 'loading' as const } : step
         ));
-
-        // Recalculate premium with final adjustments
-        await recalculateQuote.mutateAsync(quote.quoteId);
-
+        await new Promise(resolve => setTimeout(resolve, 1000));
         setSteps(prev => prev.map((step, i) =>
           i === 2 ? { ...step, status: 'completed' as const } : step
         ));
@@ -90,7 +87,7 @@ const LoadingValidation: React.FC = () => {
     if (quote) {
       runValidation();
     }
-  }, [navigate, quote, quoteNumber, recalculateQuote]);
+  }, [navigate, quote, quoteNumber]);
 
   // Loading state while fetching quote
   if (!quote && !error) {

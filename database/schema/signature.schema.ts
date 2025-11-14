@@ -19,14 +19,10 @@ export const signatures = pgTable('signature', {
   // Primary Key
   signature_id: uuid('signature_id').primaryKey().defaultRandom(),
 
-  // Foreign Keys
-  quote_id: uuid('quote_id')
-    .notNull()
-    .references(() => policy.policy_identifier, { onDelete: 'cascade' }),
-
-  party_id: uuid('party_id')
-    .notNull()
-    .references(() => party.party_identifier, { onDelete: 'cascade' }),
+  // Foreign Keys (Demo Mode: References removed for flexibility)
+  // In demo mode, party_id may equal quote_id and not exist in party table
+  quote_id: uuid('quote_id').notNull(),
+  party_id: uuid('party_id').notNull(),
 
   // Signature Data
   signature_image_data: text('signature_image_data').notNull(), // Base64 PNG/JPEG

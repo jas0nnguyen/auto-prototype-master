@@ -472,7 +472,23 @@ export function useUpdateQuoteCoverage() {
     }) => quoteApi.updateQuoteCoverage(quoteNumber, coverageData),
 
     onSuccess: (updatedQuote: QuoteResponse, variables) => {
-      // Invalidate both byId and byNumber queries
+      console.log('[useUpdateQuoteCoverage] Mutation success, updating cache with:', updatedQuote);
+
+      // Directly update the cache with new quote data
+      if (updatedQuote.quoteId) {
+        queryClient.setQueryData(
+          quoteKeys.byId(updatedQuote.quoteId),
+          updatedQuote
+        );
+      }
+      if (variables.quoteNumber) {
+        queryClient.setQueryData(
+          quoteKeys.byNumber(variables.quoteNumber),
+          updatedQuote
+        );
+      }
+
+      // Also invalidate to ensure fresh data on next mount
       if (updatedQuote.quoteId) {
         queryClient.invalidateQueries({
           queryKey: quoteKeys.byId(updatedQuote.quoteId),

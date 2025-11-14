@@ -1,0 +1,7 @@
+Policy Declarations
+
+Policy Number: DZI2OHXLQ0
+Effective Date: 11/11/2025
+Expiration Date: 5/11/2026
+
+This is a mock document for demo purposes.

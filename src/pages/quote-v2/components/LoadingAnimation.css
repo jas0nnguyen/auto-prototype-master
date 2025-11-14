@@ -18,11 +18,12 @@
   justify-content: center;
 }
 
-/* Car Icon with Bounce Animation */
+/* Car Icon with Bounce Animation (T210) */
 .loading-car-icon {
-  color: #667eea;
+  color: var(--primary, #667eea);
   animation: carBounce 1s ease-in-out infinite;
   will-change: transform;
+  font-size: 48px;
 }
 
 @keyframes carBounce {

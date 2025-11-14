@@ -73,7 +73,7 @@ digraph FlowComparison {
 
       V2_6 [label="Screen 6: Coverage.tsx\n/quote-v2/coverage/:quoteNumber\n\n3 sections:\n1. Liability (BI/PD limits)\n2. Medical/PIP\n3. Comp/Collision deductibles\n\n💾 Writes to DB:\n  • Coverage tables (6 types)\n  • Premium recalculated\n  • PriceSidebar updates", fillcolor="#AB47BC", style=filled, fontcolor=white];
 
-      V2_7 [label="Screen 7: AddOns.tsx\n/quote-v2/add-ons/:quoteNumber\n\nOptional coverage:\n• Rental reimbursement\n• Roadside assistance\n\n💾 Writes to DB:\n  • Coverage tables (add-ons)\n  • Premium recalculated\n  • PriceSidebar updates", fillcolor="#AB47BC", style=filled, fontcolor=white];
+      V2_7 [label="Screen 7: AddOns.tsx\n/quote-v2/add-ons/:quoteNumber\n\nPer-vehicle add-ons:\n• Rental reimbursement (toggle)\n• Additional equipment ($1k/$5k)\n• Original parts replacement (toggle)\n• Roadside assistance (always on)\n\n💾 Writes to DB:\n  • vehicle_add_ons array\n  • Premium recalculated per vehicle\n  • PriceSidebar real-time updates\n  • 300ms debouncing", fillcolor="#AB47BC", style=filled, fontcolor=white];
 
       V2_8 [label="Screen 8: LoadingValidation.tsx\n/quote-v2/loading-validation/:quoteNumber\n\n✓ Final validation\n🎬 Animated loading screen\n\n💾 Reads from DB:\n  • Full quote validation", fillcolor="#AB47BC", style=filled, fontcolor=white];
 
@@ -85,9 +85,13 @@ digraph FlowComparison {
       style=filled;
       color="#CE93D8";
 
-      V2_Layout [label="TechStartupLayout.tsx\n+ TechStartupLayout.css\n\n• Provides QuoteContext\n• Purple gradient background\n• Card-based layout\n• Wraps all v2 screens", fillcolor="#8E24AA", style=filled, fontcolor=white];
+      V2_Layout [label="TechStartupLayout.tsx\n+ TechStartupLayout.css\n\n🎨 Phase 5 Enhancements:\n• CSS Custom Properties\n  - Colors: --primary, --secondary, --accent\n  - Spacing: --spacing-screen, --spacing-card\n  - Border Radius: --radius-card, --radius-button\n• Purple gradient: 135deg (667eea → 764ba2 → f093fb)\n• Inter font with system fallbacks\n• Card styles with hover effects\n• Modal overlays with blur\n• Focus indicators (a11y)\n• Responsive breakpoints (mobile/tablet)\n\n• Provides QuoteContext\n• Wraps all v2 screens", fillcolor="#8E24AA", style=filled, fontcolor=white];
 
-      V2_Sidebar [label="PriceSidebar.tsx\n\n📊 Sticky price display:\n• 6-month total\n• Monthly payment\n• Real-time updates via\n  useRecalculateQuote()", fillcolor="#8E24AA", style=filled, fontcolor=white];
+      V2_Button [label="TechStartupButton.tsx\n+ TechStartupButton.css\n\n🎨 Custom Button Component:\n• Gradient background (135deg)\n• Hover lift effect (translateY)\n• Active press state\n• Focus ring for accessibility\n• Box shadow depth", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Sidebar [label="PriceSidebar.tsx\n+ PriceSidebar.css\n\n🎨 Phase 5 Fixes:\n• min-width: 300px (prevent narrow shape)\n• max-width: 400px\n• Removed duplicate styling\n  (Canary Card handles background/padding/shadow)\n\n📊 Sticky price display:\n• 6-month total\n• Monthly payment\n• Real-time updates via useRecalculateQuote()\n\n📱 Mobile responsive:\n• Fixed bottom bar (<1024px)\n• Modal with slide-up animation\n• Backdrop blur", fillcolor="#8E24AA", style=filled, fontcolor=white];
+
+      V2_Loading [label="LoadingAnimation.tsx\n+ LoadingAnimation.css\n\n🎨 Performance Optimized:\n• Bouncing car icon (will-change: transform)\n• Progress bar with gradient fill\n• Step list: pending/loading/completed states\n• Spinner rotation (GPU accelerated)\n• Checkmark appearance animation\n\n♿ Accessibility:\n• prefers-reduced-motion support\n• will-change cleanup after completion", fillcolor="#8E24AA", style=filled, fontcolor=white];
 
       V2_Context [label="QuoteContext.tsx\n(contexts/)\n\n• Provides quote data\n• recalculatePremium()\n• Consumed by all screens", fillcolor="#6A1B9A", style=filled, fontcolor=white];
     }
@@ -190,6 +194,9 @@ digraph FlowComparison {
   V2_Layout -> V2_1 [label="Wraps", color="#6A1B9A", style=dotted];
   V2_Layout -> V2_5 [label="Wraps", color="#6A1B9A", style=dotted];
   V2_Layout -> V2_6 [label="Wraps", color="#6A1B9A", style=dotted];
+  V2_Button -> V2_1 [label="Used in all screens", color="#6A1B9A", style=dotted];
+  V2_Loading -> V2_4 [label="Used in LoadingPrefill", color="#6A1B9A", style=dotted];
+  V2_Loading -> V2_8 [label="Used in LoadingValidation", color="#6A1B9A", style=dotted];
 
   // ============================================================================
   // CONNECTIONS - Shared Infrastructure
@@ -229,6 +236,10 @@ digraph FlowComparison {
       color="#FFF59D";
 
       DocGen [label="Document Service\nbackend/src/services/document-service/\n\nGenerates PDF documents:\n• Policy Declarations Page\n• Coverage Summary\n• Terms & Conditions\n• ID Cards (per vehicle)\n\n💾 Writes to DB:\n  • Document table\n  • Links to Policy\n\nGET /api/v1/documents/:id", fillcolor="#FFB300", style=filled];
+
+      BlobStorage [label="Vercel Blob Storage\n@vercel/blob\n\n☁️ Cloud document storage:\n• Upload PDFs to blob storage\n• Generate public download URLs\n• Track file size & metadata\n• Retry logic (2 attempts)\n\nPath Pattern:\npolicies/{policyNumber}/documents/\n  {docType}-v{version}.pdf\n\nExample:\npolicies/DZQV87Z4FH/documents/\n  declarations-v1.pdf", fillcolor="#0070F3", style=filled, fontcolor=white];
+
+      DocWorkflow [label="Document Generation Workflow\n\n1. Fetch policy data from DB\n2. Create document record (status=GENERATING)\n3. Render HTML template (Handlebars)\n4. Generate PDF (Playwright)\n5. Upload PDF to Vercel Blob ☁️\n6. Update document record:\n   • status=READY\n   • storage_url (blob URL)\n   • file_size_bytes\n7. User downloads via redirect to blob URL", fillcolor="#FFC107", style=filled];
     }
 
     subgraph cluster_portal {
@@ -262,7 +273,11 @@ digraph FlowComparison {
   Binding -> DocGen [label="Triggers on\npolicy creation", color="#F57F17", penwidth=1.5];
   Binding -> Portal_Entry [label="Policy created\nUser can access portal", color="#F57F17", penwidth=1.5];
 
-  DocGen -> DB [label="Write documents", color="#F57F17", style=dashed];
+  DocGen -> DocWorkflow [label="Orchestrates\ngeneration", color="#F57F17"];
+  DocWorkflow -> DB [label="Write document\nmetadata", color="#F57F17", style=dashed];
+  DocWorkflow -> BlobStorage [label="Upload PDF\n(step 5)", color="#0070F3", penwidth=1.5];
+  BlobStorage -> DocWorkflow [label="Return URL\n& size", color="#0070F3", style=dashed];
+  DocWorkflow -> DB [label="Update storage_url\n(step 6)", color="#F57F17", style=dashed];
 
   Portal_Entry -> Portal_Dashboard [label="Navigate to\n/portal/:policyNumber/dashboard", color="#FF6F00", penwidth=1.5];
   Portal_Dashboard -> Portal_Policy [label="Navigate", color="#FF6F00"];
@@ -274,7 +289,10 @@ digraph FlowComparison {
   Portal_Claims -> DB [label="Read claims data", color="#FF6F00", style=dotted];
   Portal_Dashboard -> DB [label="Read dashboard data", color="#FF6F00", style=dotted];
 
-  Portal_Policy -> DocGen [label="Download\nPDF documents", color="#FF6F00", style=dashed];
+  Portal_Policy -> DocGen [label="Request document\nGET /documents/:id", color="#FF6F00", style=dashed];
+  DocGen -> DB [label="Fetch storage_url", color="#FF6F00", style=dotted];
+  DocGen -> BlobStorage [label="Redirect to\nblob URL", color="#0070F3", style=dashed];
+  BlobStorage -> Portal_Policy [label="Stream PDF\nto browser", color="#0070F3", penwidth=1.5, style=dashed];
 
   // ============================================================================
   // LEGEND

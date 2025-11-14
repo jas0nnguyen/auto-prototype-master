@@ -187,6 +187,14 @@ class UpdateCoverageDTO {
   coverage_medical_payments_limit?: number;
 
   @IsOptional()
+  @IsString()
+  coverage_uninsured_motorist_bodily_injury?: string;
+
+  @IsOptional()
+  @IsString()
+  coverage_underinsured_motorist_bodily_injury?: string;
+
+  @IsOptional()
   @IsBoolean()
   coverage_collision?: boolean;
 
@@ -223,6 +231,12 @@ class UpdateCoverageDTO {
   @ValidateNested({ each: true })
   @Type(() => VehicleCoverageDTO)
   vehicle_coverages?: VehicleCoverageDTO[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VehicleAddOnsDTO)
+  vehicle_add_ons?: VehicleAddOnsDTO[];
 }
 
 /**
@@ -237,6 +251,26 @@ class VehicleCoverageDTO {
 
   @IsNumber()
   comprehensive_deductible: number;
+}
+
+/**
+ * DTO for per-vehicle add-ons (nested in UpdateCoverageDTO)
+ */
+class VehicleAddOnsDTO {
+  @IsNumber()
+  vehicle_index: number;
+
+  @IsOptional()
+  @IsBoolean()
+  rental_reimbursement?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  additional_equipment_amount?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  original_parts_replacement?: boolean;
 }
 
 /**
@@ -348,6 +382,9 @@ class CreateQuoteDTO {
   coverage_start_date?: string;  // NEW
   coverage_bodily_injury_limit?: string;  // NEW (renamed from coverage_bodily_injury)
   coverage_property_damage_limit?: string;  // NEW (renamed from coverage_property_damage)
+  coverage_medical_payments_limit?: number;  // NEW
+  coverage_uninsured_motorist_bodily_injury?: string;  // NEW - UMBI limit
+  coverage_underinsured_motorist_bodily_injury?: string;  // NEW - UIMBI limit
   coverage_has_collision?: boolean;  // NEW
   coverage_collision_deductible?: number;
   coverage_has_comprehensive?: boolean;  // NEW
@@ -421,6 +458,21 @@ export class QuotesController {
   @ApiResponse({ status: 500, description: 'Internal server error' })
   async createQuote(@Body() dto: CreateQuoteDTO): Promise<QuoteResult> {
     try {
+      // DEBUG: Log received DTO to verify coverage fields
+      this.logger.log('[QuotesController] Received DTO with coverage fields:');
+      this.logger.log(JSON.stringify({
+        coverage_bodily_injury_limit: dto.coverage_bodily_injury_limit,
+        coverage_property_damage_limit: dto.coverage_property_damage_limit,
+        coverage_medical_payments_limit: dto.coverage_medical_payments_limit,
+        coverage_uninsured_motorist_bodily_injury: dto.coverage_uninsured_motorist_bodily_injury,
+        coverage_underinsured_motorist_bodily_injury: dto.coverage_underinsured_motorist_bodily_injury,
+        coverage_has_collision: dto.coverage_has_collision,
+        coverage_collision_deductible: dto.coverage_collision_deductible,
+        coverage_has_comprehensive: dto.coverage_has_comprehensive,
+        coverage_comprehensive_deductible: dto.coverage_comprehensive_deductible,
+        coverage_has_roadside: dto.coverage_has_roadside,
+      }, null, 2));
+
       // Determine if using new multi-driver/vehicle format or legacy single format
       const useMultiFormat = dto.drivers && dto.drivers.length > 0;
 
@@ -546,10 +598,21 @@ export class QuotesController {
             bodyType: v.body_type,
             primaryDriverId: v.primary_driver_id,
           })),
-        coverages: {
+        // Only include coverages if at least one coverage field is provided
+        coverages: (dto.coverage_start_date || dto.coverage_bodily_injury_limit || dto.coverage_bodily_injury ||
+                     dto.coverage_property_damage_limit || dto.coverage_property_damage ||
+                     dto.coverage_medical_payments_limit || dto.coverage_uninsured_motorist_bodily_injury ||
+                     dto.coverage_underinsured_motorist_bodily_injury ||
+                     dto.coverage_has_collision !== undefined || dto.coverage_collision_deductible ||
+                     dto.coverage_has_comprehensive !== undefined || dto.coverage_comprehensive_deductible ||
+                     dto.coverage_has_uninsured !== undefined || dto.coverage_has_roadside !== undefined ||
+                     dto.coverage_has_rental !== undefined || dto.coverage_rental_limit) ? {
           startDate: dto.coverage_start_date,
           bodilyInjuryLimit: dto.coverage_bodily_injury_limit || dto.coverage_bodily_injury,
           propertyDamageLimit: dto.coverage_property_damage_limit || dto.coverage_property_damage,
+          medicalPaymentsLimit: dto.coverage_medical_payments_limit,
+          uninsuredMotoristBodilyInjury: dto.coverage_uninsured_motorist_bodily_injury,
+          underinsuredMotoristBodilyInjury: dto.coverage_underinsured_motorist_bodily_injury,
           collision: dto.coverage_has_collision ?? !!dto.coverage_collision_deductible,
           collisionDeductible: dto.coverage_collision_deductible,
           comprehensive: dto.coverage_has_comprehensive ?? !!dto.coverage_comprehensive_deductible,
@@ -558,7 +621,7 @@ export class QuotesController {
           roadsideAssistance: dto.coverage_has_roadside ?? dto.include_roadside_assistance,
           rentalReimbursement: dto.coverage_has_rental ?? dto.include_rental_reimbursement,
           rentalLimit: dto.coverage_rental_limit,
-        },
+        } : undefined,
       };
 
       const result = await this.quoteService.createQuote(input);
@@ -916,6 +979,8 @@ export class QuotesController {
         bodilyInjuryLimit: dto.coverage_bodily_injury_limit,
         propertyDamageLimit: dto.coverage_property_damage_limit,
         medicalPaymentsLimit: dto.coverage_medical_payments_limit,
+        uninsuredMotoristBodilyInjury: dto.coverage_uninsured_motorist_bodily_injury,
+        underinsuredMotoristBodilyInjury: dto.coverage_underinsured_motorist_bodily_injury,
         collision: dto.coverage_collision,
         collisionDeductible: dto.coverage_collision_deductible,
         comprehensive: dto.coverage_comprehensive,
@@ -925,6 +990,7 @@ export class QuotesController {
         rentalReimbursement: dto.coverage_rental_reimbursement,
         rentalLimit: dto.coverage_rental_limit,
         vehicleCoverages: dto.vehicle_coverages,
+        vehicleAddOns: dto.vehicle_add_ons,
       };
 
       const result = await this.quoteService.updateQuoteCoverage(
