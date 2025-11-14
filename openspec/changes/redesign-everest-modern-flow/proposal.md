@@ -36,7 +36,7 @@ This redesign creates a distinct brand experience while preserving all existing 
 - Add background imagery container with car silhouette
 - Update form layouts to match mockup grid patterns (2-column with proper spacing)
 
-**Screen-by-Screen Updates (19 screens):**
+**Screen-by-Screen Updates (16 screens):**
 1. **Get Started**: Hero headline "Reach new heights with better coverage", 2-column form grid
 2. **Effective Date**: Centered single-field layout with large title
 3. **Email Collection**: Email + optional phone, centered layout
@@ -47,15 +47,14 @@ This redesign creates a distinct brand experience while preserving all existing 
 8. **Loading Validation**: Similar to Loading Prefill with different steps
 9. **Review**: Comprehensive review cards organized by section, price sidebar
 10. **Sign**: Signature pad with expanded canvas, date field
-11. **Account Check/Login**: Welcome back screen with password field
-12. **Create Account**: Email + password fields for new account
+11. **Account Check/Login**: Welcome back screen with password field (cosmetic UI only)
+12. **Create Account**: Email + password fields for new account (cosmetic UI only)
 13. **Checkout**: Customer toggle + payment plan selection
 14. **Payment**: Card details form with billing zip
 15. **Processing**: Payment processing animation
-16. **Success**: Checkmark icon, policy number, next steps
-17. **Portal Dashboard**: Navigation tabs, policy card, quick actions grid
-18. **Portal Documents**: Document list with download buttons
-19. **Portal Settings**: Profile form, saved payments, notification preferences
+16. **Success**: Checkmark icon, policy number, next steps linking to existing portal
+
+**Note:** Portal screens (17-19 from mockup) are excluded from this redesign. Success screen links to existing `/portal/{policyNumber}` with current Canary design.
 
 **Preservation of Functionality:**
 - All existing data flows remain unchanged (API calls, quote mutations, navigation)

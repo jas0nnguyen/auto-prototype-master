@@ -133,62 +133,47 @@
   - "What's Next?" card with email, ID cards, portal access rows
   - Download ID Cards + Go to Portal buttons
 
-## 6. Portal Redesigns (Screens 17-19)
+## 6. Responsive Layout Implementation
 
-- [ ] 6.1 Add Portal Dashboard (Screen 17 - enhance existing or create new)
-  - Portal navigation tabs (Dashboard, Policies, Documents, Claims, Payments)
-  - Active Policy card with coverage period, premium, next payment, vehicles
-  - Quick actions grid (6 cards): Download ID, Make Payment, File Claim, Update Policy, Contact Support, View Coverage
-- [ ] 6.2 Add Portal Documents (Screen 18 - enhance existing)
-  - Navigation tabs with Documents active
-  - Policy documents list: Declaration, ID Cards, Coverage Summary, Payment Schedule
-  - Vehicle-specific documents section
-  - Download buttons for each document
-- [ ] 6.3 Add Portal Settings (Screen 19 - new)
-  - Navigation tabs
-  - Profile Information form: First name, last name, email, phone, DOB
-  - Saved Payment Methods list with Remove buttons
-  - Notification Preferences toggles (Email, SMS)
-
-## 7. Responsive Layout Implementation
-
-- [ ] 7.1 Implement mobile breakpoint styles (≤768px)
+- [ ] 6.1 Implement mobile breakpoint styles (≤768px)
   - Stack 2-column grids to single column
   - Move PriceSidebar below main content
   - Reduce container padding to 20px
   - Stack payment option cards vertically
-- [ ] 7.2 Implement tablet breakpoint styles (768px - 1400px)
+- [ ] 6.2 Implement tablet breakpoint styles (768px - 1400px)
   - Adjust container padding to 40px
   - Maintain 2-column grids where practical
   - Scale font sizes slightly smaller
-- [ ] 7.3 Implement desktop styles (>1400px)
+- [ ] 6.3 Implement desktop styles (>1400px)
   - Cap container max-width at 1400px
   - Center content horizontally
   - Full 2-column layouts with sticky sidebar
 
-## 8. Data Flow & Integration
+## 7. Data Flow & Integration
 
-- [ ] 8.1 Update all screen components to use Everest components instead of Canary
-- [ ] 8.2 Preserve existing QuoteContext and TanStack Query hooks (no changes to data layer)
-- [ ] 8.3 Ensure PriceSidebar recalculates on coverage/add-on changes
-- [ ] 8.4 Verify modal editing (EditVehicleModal, EditDriverModal) works with new styling
-- [ ] 8.5 Test navigation between all 19 screens with RouteGuard intact
+- [ ] 7.1 Update all screen components to use Everest components instead of Canary
+- [ ] 7.2 Preserve existing QuoteContext and TanStack Query hooks (no changes to data layer)
+- [ ] 7.3 Ensure PriceSidebar recalculates on coverage/add-on changes
+- [ ] 7.4 Verify modal editing (EditVehicleModal, EditDriverModal) works with new styling
+- [ ] 7.5 Test navigation between all 16 screens with RouteGuard intact
+- [ ] 7.6 Ensure Success screen links to existing `/portal/{policyNumber}` route
 
-## 9. Testing & Quality Assurance
+## 8. Testing & Quality Assurance
 
-- [ ] 9.1 Update E2E tests for new component selectors and layouts
-- [ ] 9.2 Add visual regression tests for all 19 screens (desktop, tablet, mobile)
-- [ ] 9.3 Test keyboard navigation on all interactive elements
-- [ ] 9.4 Verify ARIA labels and accessibility attributes on custom components
-- [ ] 9.5 Test backdrop-filter fallbacks for older browsers (provide solid background if unsupported)
-- [ ] 9.6 Optimize car silhouette image (WebP format, ~50KB target)
-- [ ] 9.7 Test sticky header/sidebar behavior on all screen sizes
-- [ ] 9.8 Verify form validation works with new input components
+- [ ] 8.1 Update E2E tests for new component selectors and layouts
+- [ ] 8.2 Add visual regression tests for all 16 screens (desktop, tablet, mobile)
+- [ ] 8.3 Test keyboard navigation on all interactive elements
+- [ ] 8.4 Verify ARIA labels and accessibility attributes on custom components
+- [ ] 8.5 Test backdrop-filter fallbacks for older browsers (provide solid background if unsupported)
+- [ ] 8.6 Copy and optimize car silhouette image from mockups/ to public/images/
+- [ ] 8.7 Test sticky header/sidebar behavior on all screen sizes
+- [ ] 8.8 Verify form validation works with new input components
+- [ ] 8.9 Test Lighthouse scores meet targets (Performance >90, Accessibility 100)
 
-## 10. Documentation & Cleanup
+## 9. Documentation & Cleanup
 
-- [ ] 10.1 Document Everest component library in `src/components/everest/README.md`
-- [ ] 10.2 Add component prop interfaces and usage examples
-- [ ] 10.3 Update CLAUDE.md to reference Everest component library
-- [ ] 10.4 Create migration guide for future screens using Everest components
-- [ ] 10.5 Clean up any unused Canary imports in `/quote-v2` pages
+- [ ] 9.1 Document Everest component library in `src/components/everest/README.md`
+- [ ] 9.2 Add component prop interfaces and usage examples
+- [ ] 9.3 Update CLAUDE.md to reference Everest component library
+- [ ] 9.4 Create migration guide for future screens using Everest components
+- [ ] 9.5 Clean up any unused Canary imports in `/quote-v2` pages

@@ -308,27 +308,33 @@ If critical issues arise:
 3. Users redirect to `/quote/*` (old flow) temporarily
 4. Fix issues in separate branch and redeploy
 
-## Open Questions
+## Resolved Questions
 
 1. **Branding approval:** Has "Everest Insurance" branding been approved by legal/marketing?
-   - **Resolution needed:** Confirm with stakeholders before implementation
+   - **✅ RESOLVED:** Yes, "Everest Insurance" branding approved for implementation
 
 2. **Car silhouette image source:** Where should we source the car silhouette image?
-   - **Options:** Commission designer, use stock image (Unsplash/Pexels), create SVG internally
-   - **Resolution needed:** Provide image asset or approve stock image selection
+   - **✅ RESOLVED:** Use existing `mockups/car-silhouette.png` asset
+   - **Action:** Copy to `public/images/car-silhouette.png` during implementation
 
 3. **Account creation flow:** Screens 11-12 show account login/creation. Should this be functional or cosmetic?
-   - **Current demo mode:** No real authentication, users access portal via URL
-   - **Resolution needed:** Clarify if this is purely UI mockup or requires new backend logic
+   - **✅ RESOLVED:** Keep as cosmetic UI only, matching current demo mode
+   - **Implementation:** Display login/account screens but maintain URL-based portal access
+   - **Backend:** No authentication logic changes required
 
 4. **Portal vs Quote-v2 integration:** Are portal screens 17-19 part of `/quote-v2` flow or separate `/portal-v2`?
-   - **Routing question:** Should Success screen link to `/portal-v2/dashboard` or `/portal/{policyNumber}`?
-   - **Resolution needed:** Define routing strategy for post-purchase portal access
+   - **✅ RESOLVED:** Success screen links to existing `/portal/{policyNumber}`
+   - **Scope:** Portal screens 17-19 are REMOVED from this redesign
+   - **Rationale:** Focus on quote flow only; portal keeps existing Canary design
+   - **Action:** Remove tasks 6.1-6.3 from tasks.md
 
 5. **Performance budgets:** What are acceptable Lighthouse scores and bundle size limits?
-   - **Targets:** Performance >90, Accessibility 100, Best Practices >90, SEO >90
-   - **Bundle size:** <300KB gzipped for `/quote-v2` route
-   - **Resolution needed:** Approve targets or adjust based on business requirements
+   - **✅ RESOLVED:** Approved targets:
+     - Performance >90
+     - Accessibility 100
+     - Best Practices >90
+     - SEO >90
+     - Bundle size: <300KB gzipped for `/quote-v2` route
 
 ## Success Metrics
 
