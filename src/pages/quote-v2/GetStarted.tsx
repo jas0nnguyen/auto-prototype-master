@@ -1,26 +1,29 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Select,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestTextInput } from '../../components/everest/core/EverestTextInput';
+import { EverestSelect } from '../../components/everest/core/EverestSelect';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import './GetStarted.css';
 
 /**
- * GetStarted Screen (Screen 01 of 19)
+ * GetStarted Screen (Screen 01 of 16) - Everest Design
  *
  * Collects basic information about the primary driver/policyholder:
  * - Name (first, last)
  * - Address (line 1, line 2 optional, city, state, zip)
  * - Date of birth
  *
- * This is the entry point for the tech-startup quote flow (/quote-v2/*)
+ * Design:
+ * - Hero headline: "Reach new heights with better coverage"
+ * - Subtitle with value proposition
+ * - 2-column form grid (responsive to 1 column on mobile)
+ * - Everest blue background with car silhouette
+ * - Frosted glass card design
  */
 
 interface GetStartedFormData {
@@ -145,9 +148,7 @@ const GetStarted: React.FC = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      // T086: Store form data in sessionStorage for progressive quote flow
-      // Quote-v2 uses progressive data collection - we'll create the actual quote
-      // after collecting all required data (drivers, vehicles, coverage)
+      // Store form data in sessionStorage for progressive quote flow
       sessionStorage.setItem('quote-v2-get-started', JSON.stringify(formData));
 
       // Initialize quote data structure in sessionStorage
@@ -168,162 +169,109 @@ const GetStarted: React.FC = () => {
   };
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={1} totalScreens={19} />
+    <EverestLayout>
+      <EverestContainer>
+        <EverestCard>
+          {/* Hero Section */}
+          <div className="get-started-hero">
+            <EverestTitle variant="hero">
+              Reach new heights with better coverage
+            </EverestTitle>
+            <EverestText variant="subtitle">
+              Get a personalized auto insurance quote in minutes. No hidden fees, just straightforward protection.
+            </EverestText>
+          </div>
 
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" flexAlign="center">
-          <Title variant="display-2" align="center">
-            Let's Get Started
-          </Title>
+          {/* Form */}
+          <form onSubmit={handleSubmit} className="get-started-form">
+            {/* Name Row */}
+            <div className="get-started-form-row">
+              <EverestTextInput
+                label="First Name"
+                value={formData.first_name}
+                onChange={(e) => handleInputChange('first_name', e.target.value)}
+                error={errors.first_name}
+                required
+                placeholder="John"
+              />
+              <EverestTextInput
+                label="Last Name"
+                value={formData.last_name}
+                onChange={(e) => handleInputChange('last_name', e.target.value)}
+                error={errors.last_name}
+                required
+                placeholder="Smith"
+              />
+            </div>
 
-          <Text variant="body-large" align="center" color="subtle">
-            Tell us a bit about yourself to begin your quote
-          </Text>
+            {/* Address Row */}
+            <EverestTextInput
+              label="Street Address"
+              value={formData.line_1_address}
+              onChange={(e) => handleInputChange('line_1_address', e.target.value)}
+              error={errors.line_1_address}
+              required
+              placeholder="123 Main St"
+            />
 
-          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '600px' }}>
-            <Layout display="flex-column" gap="medium">
-              {/* Name Section */}
-              <Layout display="flex-column" gap="small">
-                <Title variant="title-4">Your Name</Title>
+            <EverestTextInput
+              label="Apartment, Suite, etc. (Optional)"
+              value={formData.line_2_address}
+              onChange={(e) => handleInputChange('line_2_address', e.target.value)}
+              placeholder="Apt 4B"
+            />
 
-                <Layout display="flex" gap="medium">
-                  <div style={{ flex: 1 }}>
-                    <TextInput
-                      type="text"
-                      label="First Name"
-                      value={formData.first_name}
-                      onChange={(e) => handleInputChange('first_name', e.target.value)}
-                      error={!!errors.first_name}
-                      required
-                    />
-                    {errors.first_name && (
-                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                        {errors.first_name}
-                      </Text>
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <TextInput
-                      type="text"
-                      label="Last Name"
-                      value={formData.last_name}
-                      onChange={(e) => handleInputChange('last_name', e.target.value)}
-                      error={!!errors.last_name}
-                      required
-                    />
-                    {errors.last_name && (
-                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                        {errors.last_name}
-                      </Text>
-                    )}
-                  </div>
-                </Layout>
-              </Layout>
+            {/* City, State, ZIP Row */}
+            <div className="get-started-form-row get-started-form-row-3col">
+              <EverestTextInput
+                label="City"
+                value={formData.municipality_name}
+                onChange={(e) => handleInputChange('municipality_name', e.target.value)}
+                error={errors.municipality_name}
+                required
+                placeholder="San Francisco"
+              />
+              <EverestSelect
+                label="State"
+                value={formData.state_code}
+                onChange={(value) => handleInputChange('state_code', value)}
+                options={US_STATES}
+                error={errors.state_code}
+                required
+                placeholder="Select state"
+              />
+              <EverestTextInput
+                label="ZIP Code"
+                value={formData.postal_code}
+                onChange={(e) => handleInputChange('postal_code', e.target.value)}
+                error={errors.postal_code}
+                required
+                placeholder="94102"
+                maxLength={5}
+              />
+            </div>
 
-              {/* Address Section */}
-              <Layout display="flex-column" gap="small">
-                <Title variant="title-4">Your Address</Title>
+            {/* Date of Birth */}
+            <EverestTextInput
+              label="Date of Birth"
+              type="date"
+              value={formData.birth_date}
+              onChange={(e) => handleInputChange('birth_date', e.target.value)}
+              error={errors.birth_date}
+              required
+              max={new Date().toISOString().split('T')[0]}
+            />
 
-                <TextInput
-                  type="text"
-                  label="Street Address"
-                  value={formData.line_1_address}
-                  onChange={(e) => handleInputChange('line_1_address', e.target.value)}
-                  error={!!errors.line_1_address}
-                  required
-                />
-                {errors.line_1_address && (
-                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                    {errors.line_1_address}
-                  </Text>
-                )}
-
-                <TextInput
-                  type="text"
-                  label="Apartment, Suite, etc. (Optional)"
-                  value={formData.line_2_address}
-                  onChange={(e) => handleInputChange('line_2_address', e.target.value)}
-                />
-
-                <Layout display="flex" gap="medium">
-                  <div style={{ flex: 2 }}>
-                    <TextInput
-                      type="text"
-                      label="City"
-                      value={formData.municipality_name}
-                      onChange={(e) => handleInputChange('municipality_name', e.target.value)}
-                      error={!!errors.municipality_name}
-                      required
-                    />
-                    {errors.municipality_name && (
-                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                        {errors.municipality_name}
-                      </Text>
-                    )}
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <Select
-                      id="state"
-                      label="State"
-                      size="small"
-                      placeholder="Select state"
-                      value={formData.state_code}
-                      onChange={(value) => handleInputChange('state_code', value)}
-                      options={US_STATES}
-                      error={!!errors.state_code}
-                      required
-                    />
-                  </div>
-                  <div style={{ flex: 1 }}>
-                    <TextInput
-                      type="text"
-                      label="ZIP Code"
-                      value={formData.postal_code}
-                      onChange={(e) => handleInputChange('postal_code', e.target.value)}
-                      error={!!errors.postal_code}
-                      maxLength={5}
-                      required
-                    />
-                    {errors.postal_code && (
-                      <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                        {errors.postal_code}
-                      </Text>
-                    )}
-                  </div>
-                </Layout>
-              </Layout>
-
-              {/* Date of Birth */}
-              <Layout display="flex-column" gap="small">
-                <Title variant="title-4">Your Date of Birth</Title>
-                <TextInput
-                  type="date"
-                  label="Date of Birth"
-                  value={formData.birth_date}
-                  onChange={(e) => handleInputChange('birth_date', e.target.value)}
-                  error={!!errors.birth_date}
-                  max={new Date().toISOString().split('T')[0]}
-                  required
-                />
-                {errors.birth_date && (
-                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                    {errors.birth_date}
-                  </Text>
-                )}
-              </Layout>
-
-              {/* Submit Button */}
-              <Layout display="flex" flexJustify="flex-end" padding={{ top: 'medium' }}>
-                <Button type="submit" variant="primary" size="large">
-                  Continue
-                </Button>
-              </Layout>
-            </Layout>
+            {/* Submit Button */}
+            <div className="get-started-form-actions">
+              <EverestButton type="submit" variant="primary" size="large" fullWidth>
+                Get My Quote →
+              </EverestButton>
+            </div>
           </form>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+        </EverestCard>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 

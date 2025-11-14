@@ -1,0 +1,59 @@
+/* GetStarted Screen Styles */
+
+/* Hero section */
+.get-started-hero {
+  text-align: center;
+  margin-bottom: 48px;
+}
+
+.get-started-hero .everest-title {
+  margin-bottom: 16px;
+}
+
+/* Form layout */
+.get-started-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Form row (2-column grid) */
+.get-started-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+/* 3-column grid for city, state, zip */
+.get-started-form-row-3col {
+  grid-template-columns: 2fr 1fr 1fr;
+}
+
+/* Form actions */
+.get-started-form-actions {
+  margin-top: 16px;
+  display: flex;
+  justify-content: flex-end;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .get-started-hero {
+    margin-bottom: 32px;
+  }
+
+  /* Stack all columns on mobile */
+  .get-started-form-row,
+  .get-started-form-row-3col {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+
+  .get-started-form {
+    gap: 20px;
+  }
+
+  .get-started-form-actions {
+    justify-content: stretch;
+  }
+}
