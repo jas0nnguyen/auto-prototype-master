@@ -61,18 +61,18 @@
   - Headline "How can we reach you?"
   - Email input (required) + Phone input (optional)
   - Back + Continue buttons
-- [ ] 4.4 Redesign `LoadingPrefill.tsx` (Screen 4)
+- [x] 4.4 Redesign `LoadingPrefill.tsx` (Screen 4)
   - Loading animation with car icon
   - Headline "Climbing the mountain of data..."
   - Progress bar
   - Step indicators: Verifying history (complete), Retrieving vehicles (active), Calculating premium (pending)
-- [ ] 4.5 Redesign `Summary.tsx` (Screen 5)
+- [x] 4.5 Redesign `Summary.tsx` (Screen 5)
   - Two-column layout with PriceSidebar
   - Vehicle cards grid (2 columns) with edit links
   - "Add Another Vehicle" button (dashed border)
   - Driver cards grid (2 columns) with badges (Named Insured, Household Member)
   - "Add Another Driver" button
-  - Start Over + Next buttons
+  - Back + Continue to Coverage buttons
 - [ ] 4.6 Redesign `Coverage.tsx` (Screen 6)
   - Two-column layout with PriceSidebar
   - Coverage sections: Protect Assets, Protect Vehicles, Protect People

@@ -1,17 +1,13 @@
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  Card,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { PriceSidebar } from './components/PriceSidebar';
-import { ScreenProgress } from './components/ScreenProgress';
-import { QuoteProvider } from './contexts/QuoteContext';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestBadge } from '../../components/everest/core/EverestBadge';
+import { EverestPriceSidebar } from '../../components/everest/specialized/EverestPriceSidebar';
 import {
   useQuoteByNumber,
   useUpdateQuoteVehicles,
@@ -20,24 +16,27 @@ import {
 } from '../../hooks/useQuote';
 import { EditVehicleModal } from './components/modals/EditVehicleModal';
 import { EditDriverModal } from './components/modals/EditDriverModal';
+import './Summary.css';
 
 /**
- * Summary Screen (Screen 05 of 19) - T090-T091
+ * Summary Screen (Screen 05 of 16) - Everest Design
  *
  * Displays prefilled vehicle and driver information from the quote API.
- * Two-column layout: main content + PriceSidebar
+ * Two-column layout: main content + EverestPriceSidebar
+ *
+ * Design:
+ * - Two-column layout with PriceSidebar
+ * - Vehicle cards grid (2 columns) with edit links
+ * - "Add Another Vehicle" button (dashed border)
+ * - Driver cards grid (2 columns) with badges (Named Insured, Household Member)
+ * - "Add Another Driver" button
+ * - Back + Continue to Coverage buttons
  *
  * Features:
- * - Vehicle cards with edit buttons
- * - Driver cards with edit buttons
- * - "Add Another Vehicle/Driver" buttons
+ * - Vehicle cards with edit/remove buttons
+ * - Driver cards with edit/remove buttons
  * - Modal editing (EditVehicleModal, EditDriverModal)
- *
- * Data Flow:
- * 1. Get quoteNumber from URL params
- * 2. Fetch quote data using useQuoteByNumber hook
- * 3. Display vehicles and drivers from quote
- * 4. Handle loading and error states
+ * - Real-time price updates via PriceSidebar
  */
 
 interface Vehicle {
@@ -62,7 +61,7 @@ interface Driver {
   relationshipType?: string;
 }
 
-const SummaryContent: React.FC = () => {
+const Summary: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
 
@@ -283,12 +282,10 @@ const SummaryContent: React.FC = () => {
   };
 
   const handleBack = () => {
-    navigate('/quote-v2/loading-prefill');
+    navigate('/quote-v2/get-started');
   };
 
   const handleAddVehicle = () => {
-    // TODO: Implement add vehicle functionality
-    // For now, open modal with empty vehicle
     const newVehicle: Vehicle = {
       id: `vehicle-new-${Date.now()}`,
       year: new Date().getFullYear(),
@@ -303,8 +300,6 @@ const SummaryContent: React.FC = () => {
   };
 
   const handleAddDriver = () => {
-    // TODO: Implement add driver functionality
-    // For now, open modal with empty driver
     const newDriver: Driver = {
       id: `driver-new-${Date.now()}`,
       firstName: '',
@@ -419,59 +414,55 @@ const SummaryContent: React.FC = () => {
   // Loading state
   if (isLoading) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={5} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center" flexJustify="center">
-            <Title variant="title-2">Loading your quote...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="summary-loading">
+            <EverestTitle variant="h2">Loading your quote...</EverestTitle>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Error state
   if (error) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={5} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2" color="error">Error Loading Quote</Title>
-            <Text variant="body-regular" color="subtle" align="center">
+      <EverestLayout>
+        <EverestContainer>
+          <div className="summary-error">
+            <EverestTitle variant="h2">Error Loading Quote</EverestTitle>
+            <EverestText variant="body">
               {error instanceof Error ? error.message : 'Failed to load quote data'}
-            </Text>
-            <Button variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
+            </EverestText>
+            <EverestButton variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
               Start Over
-            </Button>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+            </EverestButton>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Not found state
   if (!quote) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={5} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2">Quote Not Found</Title>
-            <Text variant="body-regular" color="subtle" align="center">
+      <EverestLayout>
+        <EverestContainer>
+          <div className="summary-error">
+            <EverestTitle variant="h2">Quote Not Found</EverestTitle>
+            <EverestText variant="body">
               We couldn't find quote number: {quoteNumber}
-            </Text>
-            <Button variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
+            </EverestText>
+            <EverestButton variant="primary" onClick={() => navigate('/quote-v2/get-started')}>
               Start Over
-            </Button>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+            </EverestButton>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   // Map API response to component format
-  // The API returns camelCase snapshot data without database IDs
   console.log('[Summary] Quote data:', quote);
 
   const vehicles: Vehicle[] = [];
@@ -480,7 +471,7 @@ const SummaryContent: React.FC = () => {
   if (quote.vehicles && quote.vehicles.length > 0) {
     quote.vehicles.forEach((v: any, index: number) => {
       vehicles.push({
-        id: `vehicle-${index}`, // Generate temporary ID since API doesn't return DB IDs
+        id: `vehicle-${index}`,
         year: v.year,
         make: v.make,
         model: v.model,
@@ -507,10 +498,10 @@ const SummaryContent: React.FC = () => {
 
   const drivers: Driver[] = [];
 
-  // Add primary driver (API uses camelCase)
+  // Add primary driver
   if (quote.driver) {
     drivers.push({
-      id: 'driver-0', // Generate temporary ID
+      id: 'driver-0',
       firstName: quote.driver.firstName,
       lastName: quote.driver.lastName,
       birthDate: quote.driver.birthDate || '',
@@ -521,11 +512,11 @@ const SummaryContent: React.FC = () => {
     });
   }
 
-  // Add additional drivers (API uses camelCase)
+  // Add additional drivers
   if (quote.additionalDrivers && quote.additionalDrivers.length > 0) {
     quote.additionalDrivers.forEach((driver: any, index: number) => {
       drivers.push({
-        id: `driver-${index + 1}`, // Generate temporary ID
+        id: `driver-${index + 1}`,
         firstName: driver.firstName,
         lastName: driver.lastName,
         birthDate: driver.birthDate || '',
@@ -541,173 +532,176 @@ const SummaryContent: React.FC = () => {
   console.log('[Summary] Mapped drivers:', drivers);
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={5} totalScreens={19} />
-
-      <Container padding="large">
-        <Layout display="flex" gap="large">
+    <EverestLayout>
+      <EverestContainer>
+        <div className="summary-layout">
           {/* Main Content */}
-          <div style={{ flex: 1 }}>
-            <Layout display="flex-column" gap="large">
-              <Title variant="display-2">Review Your Information</Title>
-
-              <Text variant="body-large" color="subtle">
+          <div className="summary-main">
+            <div className="summary-header">
+              <EverestTitle variant="h2">Review Your Information</EverestTitle>
+              <EverestText variant="subtitle">
                 We've prefilled your information. Please review and make any necessary changes.
-              </Text>
+              </EverestText>
+            </div>
 
-              {/* Vehicles Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Your Vehicles</Title>
+            {/* Vehicles Section */}
+            <div className="summary-section">
+              <EverestTitle variant="h3">Your Vehicles</EverestTitle>
 
+              <div className="summary-cards-grid">
                 {vehicles.length > 0 ? (
                   vehicles.map(vehicle => (
-                    <Card key={vehicle.id} padding="medium">
-                      <Layout display="flex" flexJustify="space-between" flexAlign="center">
-                        <Layout display="flex-column" gap="small">
-                          <Title variant="title-4">
+                    <EverestCard key={vehicle.id}>
+                      <div className="summary-card-content">
+                        <div className="summary-card-info">
+                          <EverestTitle variant="h4">
                             {vehicle.year} {vehicle.make} {vehicle.model}
-                          </Title>
-                          <Text variant="body-regular" color="subtle">
+                          </EverestTitle>
+                          <EverestText variant="body">
                             VIN: {vehicle.vin}
-                          </Text>
+                          </EverestText>
                           {vehicle.bodyType && (
-                            <Text variant="body-small" color="subtle">
+                            <EverestText variant="small">
                               Body Type: {vehicle.bodyType}
-                            </Text>
+                            </EverestText>
                           )}
-                        </Layout>
-                        <Layout display="flex" gap="small">
-                          <Button
+                        </div>
+                        <div className="summary-card-actions">
+                          <EverestButton
                             variant="secondary"
                             size="medium"
                             onClick={() => handleEditVehicle(vehicle)}
-                            style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
                           >
                             Edit
-                          </Button>
+                          </EverestButton>
                           {vehicles.length > 1 && (
-                            <Button
+                            <EverestButton
                               variant="secondary"
                               size="medium"
                               onClick={() => handleRemoveVehicle(vehicle.id)}
-                              style={{ backgroundColor: '#ef4444', color: 'white', border: 'none' }}
                               disabled={isSaving}
                             >
                               Remove
-                            </Button>
+                            </EverestButton>
                           )}
-                        </Layout>
-                      </Layout>
-                    </Card>
+                        </div>
+                      </div>
+                    </EverestCard>
                   ))
                 ) : (
-                  <Text variant="body-regular" color="subtle">
+                  <EverestText variant="body">
                     No vehicles found. Please add a vehicle.
-                  </Text>
+                  </EverestText>
                 )}
+              </div>
 
-                <Button
-                  variant="secondary"
-                  size="medium"
-                  onClick={handleAddVehicle}
-                  style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
-                >
-                  + Add Another Vehicle
-                </Button>
-              </Layout>
+              <EverestButton
+                variant="secondary"
+                size="medium"
+                onClick={handleAddVehicle}
+                className="summary-add-button"
+              >
+                + Add Another Vehicle
+              </EverestButton>
+            </div>
 
-              {/* Drivers Section */}
-              <Layout display="flex-column" gap="medium">
-                <Title variant="title-3">Your Drivers</Title>
+            {/* Drivers Section */}
+            <div className="summary-section">
+              <EverestTitle variant="h3">Your Drivers</EverestTitle>
 
+              <div className="summary-cards-grid">
                 {drivers.length > 0 ? (
                   drivers.map((driver, index) => (
-                    <Card key={driver.id} padding="medium">
-                      <Layout display="flex" flexJustify="space-between" flexAlign="center">
-                        <Layout display="flex-column" gap="small">
-                          <Title variant="title-4">
-                            {driver.firstName} {driver.lastName}
-                            {index === 0 && ' (Primary)'}
-                          </Title>
-                          <Text variant="body-regular" color="subtle">
+                    <EverestCard key={driver.id}>
+                      <div className="summary-card-content">
+                        <div className="summary-card-info">
+                          <div className="summary-driver-header">
+                            <EverestTitle variant="h4">
+                              {driver.firstName} {driver.lastName}
+                            </EverestTitle>
+                            {index === 0 ? (
+                              <EverestBadge variant="success">Named Insured</EverestBadge>
+                            ) : (
+                              <EverestBadge variant="info">Household Member</EverestBadge>
+                            )}
+                          </div>
+                          <EverestText variant="body">
                             Date of Birth: {new Date(driver.birthDate).toLocaleDateString()}
-                          </Text>
+                          </EverestText>
                           {driver.licenseNumber && (
-                            <Text variant="body-small" color="subtle">
+                            <EverestText variant="small">
                               License: {driver.licenseNumber}
-                            </Text>
+                            </EverestText>
                           )}
-                        </Layout>
-                        <Layout display="flex" gap="small">
-                          <Button
+                        </div>
+                        <div className="summary-card-actions">
+                          <EverestButton
                             variant="secondary"
                             size="medium"
                             onClick={() => handleEditDriver(driver)}
-                            style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
                           >
                             Edit
-                          </Button>
+                          </EverestButton>
                           {index !== 0 && (
-                            <Button
+                            <EverestButton
                               variant="secondary"
                               size="medium"
                               onClick={() => handleRemoveDriver(driver.id)}
-                              style={{ backgroundColor: '#ef4444', color: 'white', border: 'none' }}
                               disabled={isSaving}
                             >
                               Remove
-                            </Button>
+                            </EverestButton>
                           )}
-                        </Layout>
-                      </Layout>
-                    </Card>
+                        </div>
+                      </div>
+                    </EverestCard>
                   ))
                 ) : (
-                  <Text variant="body-regular" color="subtle">
+                  <EverestText variant="body">
                     No drivers found.
-                  </Text>
+                  </EverestText>
                 )}
+              </div>
 
-                <Button
-                  variant="secondary"
-                  size="medium"
-                  onClick={handleAddDriver}
-                  style={{ backgroundColor: '#667eea', color: 'white', border: 'none' }}
-                >
-                  + Add Another Driver
-                </Button>
-              </Layout>
+              <EverestButton
+                variant="secondary"
+                size="medium"
+                onClick={handleAddDriver}
+                className="summary-add-button"
+              >
+                + Add Another Driver
+              </EverestButton>
+            </div>
 
-              {/* Navigation Buttons */}
-              <Layout display="flex" gap="medium" flexJustify="space-between" padding={{ top: 'medium' }}>
-                <Button
-                  type="button"
-                  variant="secondary"
-                  size="large"
-                  onClick={handleBack}
-                >
-                  Back
-                </Button>
-                <Button
-                  type="button"
-                  variant="primary"
-                  size="large"
-                  onClick={handleContinue}
-                >
-                  Continue to Coverage
-                </Button>
-              </Layout>
-            </Layout>
+            {/* Navigation Buttons */}
+            <div className="summary-actions">
+              <EverestButton
+                type="button"
+                variant="secondary"
+                size="large"
+                onClick={handleBack}
+              >
+                Back
+              </EverestButton>
+              <EverestButton
+                type="button"
+                variant="primary"
+                size="large"
+                onClick={handleContinue}
+              >
+                Continue to Coverage
+              </EverestButton>
+            </div>
           </div>
 
           {/* Price Sidebar */}
-          <div style={{ width: '320px' }}>
-            <PriceSidebar quote={quote} />
+          <div className="summary-sidebar">
+            <EverestPriceSidebar quote={quote} />
           </div>
-        </Layout>
-      </Container>
+        </div>
+      </EverestContainer>
 
-      {/* Modals - T090-T091 */}
+      {/* Modals */}
       {isVehicleModalOpen && selectedVehicle && (
         <EditVehicleModal
           vehicle={selectedVehicle}
@@ -726,22 +720,8 @@ const SummaryContent: React.FC = () => {
           onSave={handleSaveDriver}
         />
       )}
-    </TechStartupLayout>
+    </EverestLayout>
   );
-};
-
-/**
- * Summary Component Wrapper with QuoteProvider
- *
- * Wraps SummaryContent with QuoteProvider to provide quote context.
- * This enables PriceSidebar and other components to access quote data.
- *
- * NOTE: We don't use QuoteProvider here because it expects a quote UUID,
- * but we only have the quote number. Instead, SummaryContent fetches
- * the quote directly using useQuoteByNumber and passes it to PriceSidebar.
- */
-const Summary: React.FC = () => {
-  return <SummaryContent />;
 };
 
 export default Summary;

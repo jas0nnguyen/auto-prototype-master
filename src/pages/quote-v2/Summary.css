@@ -1,0 +1,158 @@
+/* Summary Screen Styles - Everest Design */
+
+/* Two-column layout */
+.summary-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Main content column */
+.summary-main {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Header section */
+.summary-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Section spacing */
+.summary-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Cards grid (2 columns) */
+.summary-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* Card content layout */
+.summary-card-content {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.summary-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Driver header with badge */
+.summary-driver-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Card actions */
+.summary-card-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+}
+
+.summary-card-actions button {
+  flex: 1;
+}
+
+/* Add buttons (dashed border style) */
+.summary-add-button {
+  border: 2px dashed #3b82f6 !important;
+  background: transparent !important;
+  color: #3b82f6 !important;
+}
+
+.summary-add-button:hover {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: #2563eb !important;
+  color: #2563eb !important;
+}
+
+/* Navigation actions */
+.summary-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar (sticky positioning) */
+.summary-sidebar {
+  position: sticky;
+  top: 120px;
+}
+
+/* Loading and error states */
+.summary-loading,
+.summary-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  min-height: 400px;
+  padding: 60px 20px;
+}
+
+/* Tablet breakpoint (768px - 1200px) */
+@media (max-width: 1200px) {
+  .summary-layout {
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+  }
+
+  .summary-cards-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Mobile breakpoint (≤768px) */
+@media (max-width: 768px) {
+  .summary-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Move sidebar below main content on mobile */
+  .summary-sidebar {
+    position: static;
+    order: 2;
+  }
+
+  .summary-main {
+    order: 1;
+    gap: 32px;
+  }
+
+  .summary-cards-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .summary-card-actions {
+    flex-direction: column;
+  }
+
+  .summary-actions {
+    flex-direction: column;
+  }
+
+  .summary-actions button {
+    width: 100%;
+  }
+}
