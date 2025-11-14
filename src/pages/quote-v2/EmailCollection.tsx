@@ -1,22 +1,27 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestTextInput } from '../../components/everest/core/EverestTextInput';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import './EmailCollection.css';
 
 /**
- * EmailCollection Screen (Screen 03 of 19)
+ * EmailCollection Screen (Screen 03 of 16) - Everest Design
  *
  * Collects contact information:
  * - Email (required) - will be used for user account creation later
  * - Mobile phone (optional)
+ *
+ * Design:
+ * - Centered layout (max-width 600px)
+ * - Headline: "How can we reach you?"
+ * - Email input (required)
+ * - Phone input (optional)
+ * - Back + Continue buttons
  *
  * These will be saved as Communication entities (type: EMAIL, MOBILE)
  */
@@ -81,7 +86,7 @@ const EmailCollection: React.FC = () => {
     e.preventDefault();
 
     if (validateForm()) {
-      // T088: Store email data in unified quote-v2-data structure
+      // Store email data in unified quote-v2-data structure
       const quoteData = JSON.parse(sessionStorage.getItem('quote-v2-data') || '{}');
       quoteData.email = {
         email: formData.email,
@@ -102,77 +107,62 @@ const EmailCollection: React.FC = () => {
   };
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={3} totalScreens={19} />
+    <EverestLayout>
+      <EverestContainer>
+        <EverestCard>
+          <div className="email-collection-content">
+            <EverestTitle variant="h2">
+              How can we reach you?
+            </EverestTitle>
+            <EverestText variant="subtitle">
+              We'll use this to send your quote and policy documents
+            </EverestText>
 
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" flexAlign="center">
-          <Title variant="display-2" align="center">
-            How can we reach you?
-          </Title>
-
-          <Text variant="body-large" align="center" color="subtle">
-            We'll use this to send your quote and policy documents
-          </Text>
-
-          <form onSubmit={handleSubmit} style={{ width: '100%', maxWidth: '500px' }}>
-            <Layout display="flex-column" gap="medium">
-              <div>
-                <TextInput
+            <form onSubmit={handleSubmit} className="email-collection-form">
+              <div className="email-collection-inputs">
+                <EverestTextInput
                   type="email"
                   label="Email Address"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  error={!!errors.email}
+                  error={errors.email}
                   placeholder="you@example.com"
                   required
                 />
-                {errors.email && (
-                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                    {errors.email}
-                  </Text>
-                )}
-              </div>
 
-              <div>
-                <TextInput
+                <EverestTextInput
                   type="tel"
                   label="Mobile Phone (Optional)"
                   value={formData.mobile_phone}
                   onChange={(e) => handlePhoneChange(e.target.value)}
-                  error={!!errors.mobile_phone}
+                  error={errors.mobile_phone}
                   placeholder="(555) 123-4567"
                   maxLength={14}
                 />
-                {errors.mobile_phone && (
-                  <Text variant="body-small" color="error" style={{ marginTop: '4px' }}>
-                    {errors.mobile_phone}
-                  </Text>
-                )}
+
+                <EverestText variant="small" className="email-collection-disclaimer">
+                  By providing your email, you agree to receive quote details and policy information.
+                </EverestText>
               </div>
 
-              <Text variant="body-small" color="subtle">
-                By providing your email, you agree to receive quote details and policy information.
-              </Text>
-
-              <Layout display="flex" gap="medium" flexJustify="space-between" padding={{ top: 'medium' }}>
-                <Button
+              <div className="email-collection-actions">
+                <EverestButton
                   type="button"
                   variant="secondary"
                   size="large"
                   onClick={handleBack}
                 >
                   Back
-                </Button>
-                <Button type="submit" variant="primary" size="large">
+                </EverestButton>
+                <EverestButton type="submit" variant="primary" size="large">
                   Continue
-                </Button>
-              </Layout>
-            </Layout>
-          </form>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+                </EverestButton>
+              </div>
+            </form>
+          </div>
+        </EverestCard>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 

@@ -1,0 +1,73 @@
+/* EmailCollection Screen Styles */
+
+/* Centered content container */
+.email-collection-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.email-collection-content .everest-title {
+  margin-bottom: 16px;
+}
+
+.email-collection-content .everest-text {
+  margin-bottom: 48px;
+}
+
+/* Form layout */
+.email-collection-form {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Inputs section */
+.email-collection-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* Disclaimer text */
+.email-collection-disclaimer {
+  color: #718096;
+  text-align: left;
+}
+
+/* Action buttons */
+.email-collection-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .email-collection-content .everest-text {
+    margin-bottom: 32px;
+  }
+
+  .email-collection-form {
+    gap: 24px;
+  }
+
+  .email-collection-inputs {
+    gap: 20px;
+  }
+
+  .email-collection-actions {
+    flex-direction: column;
+  }
+
+  .email-collection-actions button {
+    width: 100%;
+  }
+}
