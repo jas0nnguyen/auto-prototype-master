@@ -80,11 +80,12 @@
   - EverestSlider for deductibles and medical payments
   - Per-vehicle comprehensive and collision deductible sliders
   - Back + Continue buttons
-- [ ] 4.7 Redesign `AddOns.tsx` (Screen 7)
+- [x] 4.7 Redesign `AddOns.tsx` (Screen 7)
   - Two-column layout with PriceSidebar
   - Rental Reimbursement toggles per vehicle
-  - Custom Equipment Protection toggles
-  - "Always Included" section (Roadside Assistance disabled toggle)
+  - Additional Equipment Coverage toggles with amount selector ($1,000/$5,000)
+  - Original Parts Replacement toggles per vehicle
+  - "Always On" section (Roadside Assistance disabled toggle)
   - Back + Continue buttons
 - [ ] 4.8 Redesign `LoadingValidation.tsx` (Screen 8)
   - Loading animation similar to screen 4

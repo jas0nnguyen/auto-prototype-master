@@ -1,0 +1,186 @@
+/* AddOns Screen Styles - Everest Design */
+
+/* Two-column layout */
+.addons-layout {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: 40px;
+  align-items: start;
+}
+
+/* Main content column */
+.addons-main {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header section */
+.addons-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+/* Add-on section within cards */
+.addons-section {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Vehicles list */
+.addons-vehicles {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Vehicle item (for sections with nested amount selectors) */
+.addons-vehicle-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background: rgba(59, 130, 246, 0.05);
+  border-radius: 16px;
+  border: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Vehicle row (name + toggle) */
+.addons-vehicle-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+/* Vehicle info (badge + name) */
+.addons-vehicle-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+/* Disabled vehicle row (Always On section) */
+.addons-vehicle-row-disabled {
+  opacity: 0.7;
+}
+
+/* Amount selector section */
+.addons-amount-selector {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding-left: 36px;
+}
+
+/* Amount buttons */
+.addons-amount-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.addons-amount-buttons button {
+  flex: 1;
+}
+
+/* Always On section */
+.addons-always-on {
+  margin-top: 8px;
+}
+
+.addons-always-on-item {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Navigation actions */
+.addons-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar (sticky positioning) */
+.addons-sidebar {
+  position: sticky;
+  top: 120px;
+}
+
+/* Loading and error states */
+.addons-loading,
+.addons-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 24px;
+  text-align: center;
+  min-height: 400px;
+  padding: 60px 20px;
+}
+
+/* Tablet breakpoint (768px - 1200px) */
+@media (max-width: 1200px) {
+  .addons-layout {
+    grid-template-columns: 1fr 320px;
+    gap: 32px;
+  }
+
+  .addons-main {
+    gap: 28px;
+  }
+
+  .addons-section {
+    gap: 20px;
+  }
+}
+
+/* Mobile breakpoint (≤768px) */
+@media (max-width: 768px) {
+  .addons-layout {
+    grid-template-columns: 1fr;
+    gap: 32px;
+  }
+
+  /* Move sidebar below main content on mobile */
+  .addons-sidebar {
+    position: static;
+    order: 2;
+  }
+
+  .addons-main {
+    order: 1;
+    gap: 24px;
+  }
+
+  .addons-section {
+    gap: 20px;
+  }
+
+  .addons-vehicle-item {
+    padding: 16px;
+  }
+
+  .addons-amount-selector {
+    padding-left: 0;
+  }
+
+  .addons-amount-buttons {
+    flex-direction: column;
+  }
+
+  .addons-actions {
+    flex-direction: column;
+  }
+
+  .addons-actions button {
+    width: 100%;
+  }
+}
