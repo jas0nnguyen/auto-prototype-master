@@ -18,9 +18,10 @@ import { MOCK_VIN_DATABASE } from '../../../database/seeds/mock-vin-data';
  * After completion, navigates to Summary with quote number in URL
  *
  * Mock Data Randomization:
- * - Vehicle: Randomly selected from 18 vehicle options in MOCK_VIN_DATABASE
- * - Additional Drivers: 30% chance of 1 additional driver, 10% chance of 2 drivers
- * - Annual Mileage: Random between 8,000-20,000 miles
+ * - Vehicles: 70% chance of 1 vehicle, 25% chance of 2 vehicles, 5% chance of 3 vehicles
+ *   Randomly selected from 18 vehicle options in MOCK_VIN_DATABASE
+ * - Additional Drivers: 60% chance of 0, 30% chance of 1 additional driver, 10% chance of 2 drivers
+ * - Annual Mileage: Random between 8,000-20,000 miles per vehicle
  */
 
 /**
@@ -103,6 +104,65 @@ function generateMockAdditionalDrivers(primaryDriver: { first_name: string; last
   return additionalDrivers;
 }
 
+/**
+ * Generate mock additional vehicles (1-3 vehicles total)
+ * - 70% chance: 1 vehicle only
+ * - 25% chance: 2 vehicles
+ * - 5% chance: 3 vehicles
+ */
+function generateMockVehicles() {
+  const random = Math.random();
+
+  // Determine number of vehicles
+  let vehicleCount = 1; // Default: 1 vehicle
+  if (random > 0.95) {
+    vehicleCount = 3; // 5% chance
+  } else if (random > 0.70) {
+    vehicleCount = 2; // 25% chance
+  }
+
+  const vehicles = [];
+  const usedVINs = new Set<string>();
+
+  // Map body_style to body_type (backend expects specific values)
+  const bodyTypeMapping: { [key: string]: string } = {
+    'Sedan': 'Sedan',
+    'SUV': 'SUV',
+    'Crew Cab Pickup': 'Pickup',
+    'SuperCrew Pickup': 'Pickup',
+    'Hatchback': 'Hatchback',
+    'Wagon': 'Wagon',
+  };
+
+  for (let i = 0; i < vehicleCount; i++) {
+    // Pick random vehicle (avoid duplicates)
+    let randomVehicle;
+    let attempts = 0;
+    do {
+      randomVehicle = MOCK_VIN_DATABASE[Math.floor(Math.random() * MOCK_VIN_DATABASE.length)];
+      attempts++;
+    } while (usedVINs.has(randomVehicle.vin) && attempts < 20);
+
+    usedVINs.add(randomVehicle.vin);
+
+    // Randomize annual mileage (8,000 - 20,000 miles)
+    const randomMileage = Math.floor(Math.random() * (20000 - 8000 + 1)) + 8000;
+
+    vehicles.push({
+      year: randomVehicle.year,
+      make: randomVehicle.make,
+      model: randomVehicle.model,
+      vin: randomVehicle.vin,
+      annual_mileage: randomMileage,
+      body_type: bodyTypeMapping[randomVehicle.body_style] || 'Sedan',
+      trim: randomVehicle.trim,
+      body_style: randomVehicle.body_style,
+    });
+  }
+
+  return vehicles;
+}
+
 const LoadingPrefill: React.FC = () => {
   const navigate = useNavigate();
   const createQuote = useCreateQuote();
@@ -142,31 +202,9 @@ const LoadingPrefill: React.FC = () => {
         ));
         await new Promise(resolve => setTimeout(resolve, 2000));
 
-        // Mock vehicle data (in production, this would come from VIN decoder API)
-        // Randomly select a vehicle from the mock VIN database
-        const randomVehicle = MOCK_VIN_DATABASE[Math.floor(Math.random() * MOCK_VIN_DATABASE.length)];
-
-        // Randomize annual mileage (8,000 - 20,000 miles)
-        const randomMileage = Math.floor(Math.random() * (20000 - 8000 + 1)) + 8000;
-
-        // Map body_style to body_type (backend expects specific values)
-        const bodyTypeMapping: { [key: string]: string } = {
-          'Sedan': 'Sedan',
-          'SUV': 'SUV',
-          'Crew Cab Pickup': 'Pickup',
-          'SuperCrew Pickup': 'Pickup',
-          'Hatchback': 'Hatchback',
-          'Wagon': 'Wagon',
-        };
-
-        const mockVehicle = {
-          year: randomVehicle.year,
-          make: randomVehicle.make,
-          model: randomVehicle.model,
-          vin: randomVehicle.vin,
-          annual_mileage: randomMileage,
-          body_type: bodyTypeMapping[randomVehicle.body_style] || 'Sedan',
-        };
+        // Generate mock vehicles (1-3 vehicles)
+        const mockVehicles = generateMockVehicles();
+        const primaryVehicle = mockVehicles[0]; // First vehicle for quote creation
 
         // Generate mock additional drivers (optional)
         const additionalDrivers = generateMockAdditionalDrivers({
@@ -175,19 +213,28 @@ const LoadingPrefill: React.FC = () => {
           birth_date: quoteData.getStarted.birth_date,
         });
 
-        console.log('[LoadingPrefill] Randomly selected vehicle:', {
-          make: mockVehicle.make,
-          model: mockVehicle.model,
-          year: mockVehicle.year,
-          trim: randomVehicle.trim,
-          body_style: randomVehicle.body_style,
-          vin: mockVehicle.vin,
-          mileage: mockVehicle.annual_mileage,
-        });
+        console.log('[LoadingPrefill] Randomly generated vehicles:', mockVehicles.map(v => ({
+          make: v.make,
+          model: v.model,
+          year: v.year,
+          trim: v.trim,
+          body_style: v.body_style,
+          vin: v.vin,
+          mileage: v.annual_mileage,
+        })));
 
         if (additionalDrivers.length > 0) {
           console.log('[LoadingPrefill] Generated additional drivers:', additionalDrivers);
-          // Store for later use in Summary screen
+        }
+
+        // Store additional vehicles for later use in Summary screen
+        if (mockVehicles.length > 1) {
+          sessionStorage.setItem('quote-v2-additionalVehicles', JSON.stringify(mockVehicles.slice(1)));
+          console.log('[LoadingPrefill] Stored additional vehicles:', mockVehicles.length - 1);
+        }
+
+        // Store additional drivers for later use in Summary screen
+        if (additionalDrivers.length > 0) {
           sessionStorage.setItem('quote-v2-additionalDrivers', JSON.stringify(additionalDrivers));
         }
 
@@ -221,12 +268,12 @@ const LoadingPrefill: React.FC = () => {
           address_zip: quoteData.getStarted.postal_code,
 
           // Vehicle (from mock service) - fixed to use legacy format
-          vehicle_year: mockVehicle.year,
-          vehicle_make: mockVehicle.make,
-          vehicle_model: mockVehicle.model,
-          vehicle_vin: mockVehicle.vin,
-          vehicle_annual_mileage: mockVehicle.annual_mileage,
-          vehicle_body_type: mockVehicle.body_type,
+          vehicle_year: primaryVehicle.year,
+          vehicle_make: primaryVehicle.make,
+          vehicle_model: primaryVehicle.model,
+          vehicle_vin: primaryVehicle.vin,
+          vehicle_annual_mileage: primaryVehicle.annual_mileage,
+          vehicle_body_type: primaryVehicle.body_type,
 
           // Coverage start date (from EffectiveDate)
           coverage_start_date: quoteData.effectiveDate,
