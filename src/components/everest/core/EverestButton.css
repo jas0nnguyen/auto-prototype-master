@@ -1,0 +1,78 @@
+/* Base button styles */
+.everest-button {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+/* Size variants */
+.everest-button-small {
+  padding: 12px 24px;
+  font-size: 14px;
+}
+
+.everest-button-medium {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+.everest-button-large {
+  padding: 18px 40px;
+  font-size: 18px;
+}
+
+/* Primary variant - blue background */
+.everest-button-primary {
+  background: #2563eb;
+  color: white;
+  box-shadow: 0 10px 30px rgba(37, 99, 235, 0.3);
+}
+
+.everest-button-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 15px 40px rgba(59, 130, 246, 0.4);
+}
+
+.everest-button-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary variant - white background, blue border */
+.everest-button-secondary {
+  background: white;
+  color: #3b82f6;
+  border: 2px solid #3b82f6;
+}
+
+.everest-button-secondary:hover:not(:disabled) {
+  background: #f7fafc;
+  transform: translateY(-1px);
+}
+
+.everest-button-secondary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Disabled state */
+.everest-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Full width */
+.everest-button-full-width {
+  width: 100%;
+}
+
+/* Focus state for accessibility */
+.everest-button:focus-visible {
+  outline: 2px solid #3b82f6;
+  outline-offset: 4px;
+}

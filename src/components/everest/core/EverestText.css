@@ -1,0 +1,55 @@
+/* Base text styles */
+.everest-text {
+  margin: 0;
+  color: #1a202c;
+}
+
+/* Subtitle variant - 18px, gray, line-height 1.7 */
+.everest-text-subtitle {
+  font-size: 18px;
+  color: #718096;
+  margin-bottom: 40px;
+  line-height: 1.7;
+}
+
+/* Body variant - 16px, standard */
+.everest-text-body {
+  font-size: 16px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+/* Label variant - 14px, weight 600 */
+.everest-text-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Small variant - 14px */
+.everest-text-small {
+  font-size: 14px;
+  color: #718096;
+  line-height: 1.5;
+}
+
+/* Caption variant - 13px */
+.everest-text-caption {
+  font-size: 13px;
+  color: #718096;
+  line-height: 1.4;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-text-subtitle {
+    font-size: 16px;
+    margin-bottom: 32px;
+  }
+
+  .everest-text-body {
+    font-size: 15px;
+  }
+}

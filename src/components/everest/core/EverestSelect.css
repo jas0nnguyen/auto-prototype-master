@@ -1,0 +1,73 @@
+/* Select group wrapper */
+.everest-select-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+/* Select label */
+.everest-select-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.everest-select-required {
+  color: #f56565;
+}
+
+/* Select field */
+.everest-select {
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1a202c;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%232d3748' d='M6 8L0 2l1.5-1.5L6 5 10.5.5 12 2z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  padding-right: 48px;
+}
+
+/* Focus state */
+.everest-select:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Error state */
+.everest-select-error {
+  border-color: #f56565;
+}
+
+.everest-select-error:focus {
+  border-color: #f56565;
+  box-shadow: 0 0 0 4px rgba(245, 101, 101, 0.1);
+}
+
+/* Error message */
+.everest-select-error-message {
+  font-size: 13px;
+  color: #c53030;
+  margin-top: 6px;
+  display: block;
+}
+
+/* Disabled state */
+.everest-select:disabled {
+  background-color: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}
+
+/* Placeholder option styling */
+.everest-select option[value=""] {
+  color: #cbd5e0;
+}

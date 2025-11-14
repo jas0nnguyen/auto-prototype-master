@@ -1,0 +1,66 @@
+/* Input group wrapper */
+.everest-input-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 24px;
+}
+
+/* Input label */
+.everest-input-label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 8px;
+}
+
+.everest-input-required {
+  color: #f56565;
+}
+
+/* Input field */
+.everest-input {
+  padding: 14px 18px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  font-family: 'Inter', sans-serif;
+  transition: all 0.2s ease;
+  background: white;
+  color: #1a202c;
+}
+
+.everest-input::placeholder {
+  color: #cbd5e0;
+}
+
+/* Focus state */
+.everest-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+/* Error state */
+.everest-input-error {
+  border-color: #f56565;
+}
+
+.everest-input-error:focus {
+  border-color: #f56565;
+  box-shadow: 0 0 0 4px rgba(245, 101, 101, 0.1);
+}
+
+/* Error message */
+.everest-input-error-message {
+  font-size: 13px;
+  color: #c53030;
+  margin-top: 6px;
+  display: block;
+}
+
+/* Disabled state */
+.everest-input:disabled {
+  background: #f7fafc;
+  color: #a0aec0;
+  cursor: not-allowed;
+}

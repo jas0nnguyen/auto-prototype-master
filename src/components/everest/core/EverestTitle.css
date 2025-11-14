@@ -1,0 +1,56 @@
+/* Base title styles */
+.everest-title {
+  color: #1a202c;
+  margin: 0;
+  margin-bottom: 16px;
+}
+
+/* Hero variant - 52px, weight 800 */
+.everest-title-hero {
+  font-size: 52px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-bottom: 16px;
+}
+
+/* H2 variant - 36px, weight 700 */
+.everest-title-h2 {
+  font-size: 36px;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+/* H3 variant - 24px, weight 700 */
+.everest-title-h3 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #2d3748;
+  margin-bottom: 16px;
+}
+
+/* H4 variant - 18px, weight 600 */
+.everest-title-h4 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #2d3748;
+  margin-bottom: 12px;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .everest-title-hero {
+    font-size: 40px;
+  }
+
+  .everest-title-h2 {
+    font-size: 28px;
+  }
+
+  .everest-title-h3 {
+    font-size: 20px;
+  }
+
+  .everest-title-h4 {
+    font-size: 16px;
+  }
+}

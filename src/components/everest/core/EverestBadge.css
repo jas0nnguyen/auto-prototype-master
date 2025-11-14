@@ -1,0 +1,23 @@
+/* Base badge styles */
+.everest-badge {
+  display: inline-block;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  line-height: 1;
+}
+
+/* Success variant - green */
+.everest-badge-success {
+  background: #c6f6d5;
+  color: #22543d;
+}
+
+/* Info variant - blue */
+.everest-badge-info {
+  background: #dbeafe;
+  color: #1e40af;
+}
