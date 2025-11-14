@@ -37,6 +37,24 @@
   gap: 20px;
 }
 
+/* Override EverestCard styling for Summary page to match mockup */
+.summary-cards-grid .everest-card {
+  background: #f7fafc !important;
+  border: 2px solid #e2e8f0 !important;
+  border-radius: 16px !important;
+  padding: 28px !important;
+  margin-bottom: 0 !important;
+  backdrop-filter: none !important;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.summary-cards-grid .everest-card:hover {
+  border-color: #3b82f6 !important;
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.15) !important;
+  transform: translateY(-4px);
+}
+
 /* Card content layout */
 .summary-card-content {
   display: flex;
@@ -47,45 +65,79 @@
 .summary-card-header {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-/* Card icon (small circle) */
+/* Card icon (48px blue rounded square) */
 .summary-card-icon {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  background: #3b82f6;
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  background: #2563eb;
+  box-shadow: 0 6px 20px rgba(37, 99, 235, 0.3);
   flex-shrink: 0;
+}
+
+/* Card title */
+.summary-card-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Card subtitle (vehicle/driver name) */
+.summary-card-subtitle {
+  font-size: 18px;
+  color: #1a202c;
+  margin-bottom: 12px;
+  font-weight: 600;
+}
+
+/* Card detail (VIN, license, etc.) */
+.summary-card-detail {
+  font-size: 14px;
+  color: #718096;
+  margin-bottom: 16px;
 }
 
 /* Card link */
 .summary-card-link {
-  display: inline-block;
-  margin-top: 16px;
   color: #3b82f6;
   text-decoration: none;
   font-size: 14px;
-  font-weight: 500;
-  transition: color 0.2s ease;
+  font-weight: 700;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: gap 0.3s ease;
 }
 
 .summary-card-link:hover {
-  color: #2563eb;
-  text-decoration: underline;
+  gap: 10px;
 }
 
-/* Add buttons (dashed border style) */
+/* Add buttons (dashed border style matching mockup) */
 .summary-add-button {
-  border: 2px dashed #3b82f6 !important;
-  background: transparent !important;
+  background: white !important;
+  border: 3px dashed #cbd5e0 !important;
   color: #3b82f6 !important;
+  width: 100%;
+  padding: 32px !important;
+  border-radius: 16px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  cursor: pointer;
+  transition: all 0.3s ease;
 }
 
 .summary-add-button:hover {
-  background: rgba(59, 130, 246, 0.1) !important;
-  border-color: #2563eb !important;
-  color: #2563eb !important;
+  border-color: #3b82f6 !important;
+  border-style: solid !important;
+  background: #f7fafc !important;
+  transform: translateY(-2px);
 }
 
 /* Navigation actions */

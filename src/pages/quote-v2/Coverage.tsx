@@ -269,15 +269,16 @@ const Coverage: React.FC = () => {
   return (
     <EverestLayout>
       <EverestContainer>
-        <div className="coverage-layout">
-          {/* Main Content */}
-          <div className="coverage-main">
-            <div className="coverage-header">
-              <EverestTitle variant="h2">Customize Your Coverage</EverestTitle>
-              <EverestText variant="subtitle">
-                Select the coverage levels that work best for you
-              </EverestText>
-            </div>
+        <EverestCard>
+          <div className="coverage-layout">
+            {/* Main Content */}
+            <div className="coverage-main">
+              <div className="coverage-header">
+                <EverestTitle variant="h2">Customize Your Coverage</EverestTitle>
+                <EverestText variant="subtitle">
+                  Select the coverage levels that work best for you
+                </EverestText>
+              </div>
 
             {/* Section 1: Protect You & Loved Ones */}
             <EverestCard>
@@ -478,9 +479,21 @@ const Coverage: React.FC = () => {
 
           {/* Price Sidebar */}
           <div className="coverage-sidebar">
-            <EverestPriceSidebar quote={quote} />
+            <EverestPriceSidebar
+              monthlyPrice={quote?.premium?.monthly ? `$${Math.round(quote.premium.monthly)}` : '$147'}
+              sixMonthPrice={quote?.premium?.sixMonth ? `$${Math.round(quote.premium.sixMonth)}` : '$882'}
+              coverageDetails={[
+                { label: 'Bodily Injury', value: biLiability },
+                { label: 'Property Damage', value: pdLiability },
+                { label: 'Medical Payments', value: `$${medicalPayments.toLocaleString()}` },
+                { label: 'Comprehensive', value: 'Included' },
+                { label: 'Collision', value: 'Included' },
+              ]}
+              isSticky={true}
+            />
           </div>
         </div>
+        </EverestCard>
       </EverestContainer>
     </EverestLayout>
   );

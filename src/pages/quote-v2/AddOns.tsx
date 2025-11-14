@@ -225,15 +225,16 @@ const AddOns: React.FC = () => {
   return (
     <EverestLayout>
       <EverestContainer>
-        <div className="addons-layout">
-          {/* Main Content */}
-          <div className="addons-main">
-            <div className="addons-header">
-              <EverestTitle variant="h2">Add Ons</EverestTitle>
-              <EverestText variant="subtitle">
-                Customize your policy with optional coverages
-              </EverestText>
-            </div>
+        <EverestCard>
+          <div className="addons-layout">
+            {/* Main Content */}
+            <div className="addons-main">
+              <div className="addons-header">
+                <EverestTitle variant="h2">Add Ons</EverestTitle>
+                <EverestText variant="subtitle">
+                  Customize your policy with optional coverages
+                </EverestText>
+              </div>
 
             {/* Rental Reimbursement */}
             <EverestCard>
@@ -400,9 +401,20 @@ const AddOns: React.FC = () => {
 
           {/* Price Sidebar */}
           <div className="addons-sidebar">
-            <EverestPriceSidebar quote={quote} />
+            <EverestPriceSidebar
+              monthlyPrice={quote?.premium?.monthly ? `$${Math.round(quote.premium.monthly)}` : '$147'}
+              sixMonthPrice={quote?.premium?.sixMonth ? `$${Math.round(quote.premium.sixMonth)}` : '$882'}
+              coverageDetails={[
+                { label: 'Bodily Injury', value: quote?.coverages?.bodilyInjuryLimit || '100/300' },
+                { label: 'Property Damage', value: quote?.coverages?.propertyDamageLimit || '$50,000' },
+                { label: 'Comprehensive', value: quote?.coverages?.hasComprehensive ? 'Included' : 'Not included' },
+                { label: 'Collision', value: quote?.coverages?.hasCollision ? 'Included' : 'Not included' },
+              ]}
+              isSticky={true}
+            />
           </div>
         </div>
+        </EverestCard>
       </EverestContainer>
     </EverestLayout>
   );

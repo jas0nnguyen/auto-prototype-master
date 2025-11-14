@@ -257,7 +257,7 @@ const LoadingPrefill: React.FC = () => {
   }, []);
 
   return (
-    <EverestLayout noBackgroundImage>
+    <EverestLayout>
       <div className="loading-prefill-container">
         <EverestLoadingAnimation
           message={currentStep}

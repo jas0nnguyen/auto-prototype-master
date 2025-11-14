@@ -1,7 +1,6 @@
 /* Frosted glass card design */
 .everest-card {
   background: rgba(255, 255, 255, 0.96);
-  backdrop-filter: blur(20px);
   border-radius: 24px;
   padding: 60px;
   margin-bottom: 60px;
@@ -9,10 +8,18 @@
   transition: all 0.3s ease;
 }
 
+/* Backdrop filter directly on card - sticky positioning will need to be handled differently */
+.everest-card {
+  backdrop-filter: blur(20px);
+}
+
 /* Fallback for browsers without backdrop-filter support */
 @supports not (backdrop-filter: blur(20px)) {
   .everest-card {
     background: rgba(255, 255, 255, 1);
+  }
+  .everest-card::before {
+    display: none;
   }
 }
 

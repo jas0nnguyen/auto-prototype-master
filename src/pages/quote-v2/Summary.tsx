@@ -534,15 +534,16 @@ const Summary: React.FC = () => {
   return (
     <EverestLayout>
       <EverestContainer>
-        <div className="summary-layout">
-          {/* Main Content */}
-          <div className="summary-main">
-            {/* Vehicles Section */}
-            <div className="summary-section">
-              <EverestTitle variant="h2">Your Vehicles</EverestTitle>
-              <EverestText variant="subtitle">
-                We found these vehicles from your current policy. Feel free to add more or edit our suggestions.
-              </EverestText>
+        <EverestCard>
+          <div className="summary-layout">
+            {/* Main Content */}
+            <div className="summary-main">
+              {/* Vehicles Section */}
+              <div className="summary-section">
+                <EverestTitle variant="h2">Your Vehicles</EverestTitle>
+                <EverestText variant="body" style={{ color: '#718096', marginTop: '8px', marginBottom: '24px' }}>
+                  We found these vehicles from your current policy. Feel free to add more or edit our suggestions.
+                </EverestText>
 
               <div className="summary-cards-grid">
                 {vehicles.length > 0 ? (
@@ -551,29 +552,44 @@ const Summary: React.FC = () => {
                       <div className="summary-card-content">
                         <div className="summary-card-header">
                           <div className="summary-card-icon"></div>
-                          <EverestText variant="label">Vehicle {index + 1}</EverestText>
+                          <span className="summary-card-title">Vehicle {index + 1}</span>
                         </div>
-                        <EverestTitle variant="h4" style={{ marginTop: '12px' }}>
+                        <div className="summary-card-subtitle">
                           {vehicle.year} {vehicle.make} {vehicle.model}
-                        </EverestTitle>
-                        <EverestText variant="body" style={{ marginTop: '8px' }}>
+                        </div>
+                        <div className="summary-card-detail">
                           VIN: {vehicle.vin}
-                        </EverestText>
+                        </div>
                         {vehicle.bodyType && (
-                          <EverestText variant="body" style={{ marginTop: '4px' }}>
+                          <div className="summary-card-detail">
                             Body Type: {vehicle.bodyType}
-                          </EverestText>
+                          </div>
                         )}
-                        <a
-                          href="#"
-                          className="summary-card-link"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEditVehicle(vehicle);
-                          }}
-                        >
-                          Edit vehicle details →
-                        </a>
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                          <a
+                            href="#"
+                            className="summary-card-link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleEditVehicle(vehicle);
+                            }}
+                          >
+                            Edit vehicle details →
+                          </a>
+                          {vehicles.length > 1 && (
+                            <a
+                              href="#"
+                              className="summary-card-link"
+                              style={{ color: '#ef4444' }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleRemoveVehicle(vehicle.id);
+                              }}
+                            >
+                              Remove
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </EverestCard>
                   ))
@@ -597,7 +613,7 @@ const Summary: React.FC = () => {
             {/* Drivers Section */}
             <div className="summary-section">
               <EverestTitle variant="h2">Your Drivers</EverestTitle>
-              <EverestText variant="subtitle">
+              <EverestText variant="body" style={{ color: '#718096', marginTop: '8px', marginBottom: '24px' }}>
                 Review driver information and add anyone else who will be driving your vehicles.
               </EverestText>
 
@@ -608,33 +624,48 @@ const Summary: React.FC = () => {
                       <div className="summary-card-content">
                         <div className="summary-card-header">
                           <div className="summary-card-icon"></div>
-                          <EverestText variant="label">{index === 0 ? 'Primary Insured' : 'Additional Driver'}</EverestText>
+                          <span className="summary-card-title">{index === 0 ? 'Primary Insured' : 'Additional Driver'}</span>
                         </div>
-                        <EverestTitle variant="h4" style={{ marginTop: '12px' }}>
+                        <div className="summary-card-subtitle">
                           {driver.firstName} {driver.lastName}
-                        </EverestTitle>
+                        </div>
                         {driver.licenseNumber && (
-                          <EverestText variant="body" style={{ marginTop: '8px' }}>
+                          <div className="summary-card-detail">
                             License: {driver.licenseNumber}
-                          </EverestText>
+                          </div>
                         )}
-                        <div style={{ marginTop: '8px' }}>
+                        <div style={{ marginTop: '8px', marginBottom: '12px' }}>
                           {index === 0 ? (
                             <EverestBadge variant="success">Named Insured</EverestBadge>
                           ) : (
                             <EverestBadge variant="info">Household Member</EverestBadge>
                           )}
                         </div>
-                        <a
-                          href="#"
-                          className="summary-card-link"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            handleEditDriver(driver);
-                          }}
-                        >
-                          Edit driver info →
-                        </a>
+                        <div style={{ display: 'flex', gap: '16px', marginTop: '12px' }}>
+                          <a
+                            href="#"
+                            className="summary-card-link"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              handleEditDriver(driver);
+                            }}
+                          >
+                            Edit driver info →
+                          </a>
+                          {index !== 0 && (
+                            <a
+                              href="#"
+                              className="summary-card-link"
+                              style={{ color: '#ef4444' }}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleRemoveDriver(driver.id);
+                              }}
+                            >
+                              Remove
+                            </a>
+                          )}
+                        </div>
                       </div>
                     </EverestCard>
                   ))
@@ -678,9 +709,20 @@ const Summary: React.FC = () => {
 
           {/* Price Sidebar */}
           <div className="summary-sidebar">
-            <EverestPriceSidebar quote={quote} />
+            <EverestPriceSidebar
+              monthlyPrice={quote?.premium?.monthly ? `$${Math.round(quote.premium.monthly)}` : '$147'}
+              sixMonthPrice={quote?.premium?.sixMonth ? `$${Math.round(quote.premium.sixMonth)}` : '$882'}
+              coverageDetails={[
+                { label: 'Bodily Injury', value: quote?.coverages?.bodilyInjuryLimit || '100/300' },
+                { label: 'Property Damage', value: quote?.coverages?.propertyDamageLimit || '$50,000' },
+                { label: 'Comprehensive', value: quote?.coverages?.hasComprehensive ? 'Included' : 'Not included' },
+                { label: 'Collision', value: quote?.coverages?.hasCollision ? 'Included' : 'Not included' },
+              ]}
+              isSticky={true}
+            />
           </div>
         </div>
+        </EverestCard>
       </EverestContainer>
 
       {/* Modals */}

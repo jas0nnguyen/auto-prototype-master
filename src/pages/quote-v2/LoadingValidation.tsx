@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { EverestLayout } from '../../components/everest/layout/EverestLayout';
-import { EverestContainer } from '../../components/everest/layout/EverestContainer';
-import { EverestTitle } from '../../components/everest/core/EverestTitle';
-import { EverestText } from '../../components/everest/core/EverestText';
 import { EverestLoadingAnimation } from '../../components/everest/specialized/EverestLoadingAnimation';
+import { EverestText } from '../../components/everest/core/EverestText';
 import { useQuoteByNumber } from '../../hooks/useQuote';
 import './LoadingValidation.css';
 
@@ -17,16 +15,11 @@ import './LoadingValidation.css';
  * 3. Finalizing premium calculation (~1s) - final recalculation
  *
  * Design:
- * - Centered layout with EverestLoadingAnimation
- * - Headline "Almost there! Verifying your information..."
- * - Step indicators with animations
+ * - Full-page loading animation with car icon
+ * - Cycling status messages with progress bar
+ * - No card wrapper (full screen experience)
  * - Auto-navigates to Review screen when complete
  */
-
-interface LoadingStep {
-  label: string;
-  status: 'pending' | 'loading' | 'completed';
-}
 
 const LoadingValidation: React.FC = () => {
   const navigate = useNavigate();
@@ -35,12 +28,8 @@ const LoadingValidation: React.FC = () => {
   // Get quote data to verify it exists
   const { data: quote } = useQuoteByNumber(quoteNumber);
 
-  const [steps, setSteps] = useState<LoadingStep[]>([
-    { label: 'Vehicle valuation', status: 'pending' },
-    { label: 'Driver records check', status: 'pending' },
-    { label: 'Finalizing premium calculation', status: 'pending' },
-  ]);
-
+  const [progress, setProgress] = useState(0);
+  const [currentStep, setCurrentStep] = useState('Vehicle valuation...');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -53,33 +42,26 @@ const LoadingValidation: React.FC = () => {
           throw new Error('Quote not found. Please start over.');
         }
 
-        // Step 1: Vehicle valuation (mock - 2s delay)
-        setSteps(prev => prev.map((step, i) =>
-          i === 0 ? { ...step, status: 'loading' as const } : step
-        ));
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setSteps(prev => prev.map((step, i) =>
-          i === 0 ? { ...step, status: 'completed' as const } : step
-        ));
-
-        // Step 2: Driver records check / MVR lookup (mock - 2s delay)
-        setSteps(prev => prev.map((step, i) =>
-          i === 1 ? { ...step, status: 'loading' as const } : step
-        ));
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        setSteps(prev => prev.map((step, i) =>
-          i === 1 ? { ...step, status: 'completed' as const } : step
-        ));
-
-        // Step 3: Finalize premium calculation (mock - 1s delay)
-        // Premium was already calculated by the PUT /coverage endpoint
-        setSteps(prev => prev.map((step, i) =>
-          i === 2 ? { ...step, status: 'loading' as const } : step
-        ));
+        // Step 1: Vehicle valuation (0-33%)
+        setCurrentStep('Vehicle valuation...');
+        setProgress(10);
         await new Promise(resolve => setTimeout(resolve, 1000));
-        setSteps(prev => prev.map((step, i) =>
-          i === 2 ? { ...step, status: 'completed' as const } : step
-        ));
+        setProgress(33);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Step 2: Driver records check (33-66%)
+        setCurrentStep('Driver records check...');
+        setProgress(40);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setProgress(66);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+
+        // Step 3: Finalizing premium calculation (66-100%)
+        setCurrentStep('Finalizing premium calculation...');
+        setProgress(75);
+        await new Promise(resolve => setTimeout(resolve, 500));
+        setProgress(100);
+        await new Promise(resolve => setTimeout(resolve, 500));
 
         // Navigate to review screen after all steps complete
         setTimeout(() => {
@@ -89,9 +71,7 @@ const LoadingValidation: React.FC = () => {
       } catch (err) {
         console.error('[LoadingValidation] Error:', err);
         setError(err instanceof Error ? err.message : 'Failed to finalize quote. Please try again.');
-        setSteps(prev => prev.map(step =>
-          step.status === 'loading' ? { ...step, status: 'pending' as const } : step
-        ));
+        setProgress(0);
       }
     };
 
@@ -100,46 +80,28 @@ const LoadingValidation: React.FC = () => {
     }
   }, [navigate, quote, quoteNumber]);
 
-  // Loading state while fetching quote
-  if (!quote && !error) {
-    return (
-      <EverestLayout>
-        <EverestContainer>
-          <div className="loading-validation-container">
-            <EverestText variant="body">Loading quote...</EverestText>
-          </div>
-        </EverestContainer>
-      </EverestLayout>
-    );
-  }
-
   return (
-    <EverestLayout>
-      <EverestContainer>
-        <div className="loading-validation-container">
-          <div className="loading-validation-header">
-            <EverestTitle variant="h2">Almost there! Verifying your information...</EverestTitle>
-            <EverestText variant="subtitle">
-              We're making sure everything is just right
+    <EverestLayout noBackgroundImage>
+      <div className="loading-validation-container">
+        <EverestLoadingAnimation
+          message={currentStep}
+          progress={progress}
+          overlay
+        />
+
+        {error && (
+          <div className="loading-validation-error">
+            <EverestText variant="body" className="loading-validation-error-message">
+              {error}
+            </EverestText>
+            <EverestText variant="small">
+              <a href="/quote-v2/get-started" className="loading-validation-retry-link">
+                Start over
+              </a>
             </EverestText>
           </div>
-
-          <EverestLoadingAnimation steps={steps} />
-
-          {error && (
-            <div className="loading-validation-error">
-              <EverestText variant="body" style={{ color: '#ef4444', textAlign: 'center' }}>
-                {error}
-              </EverestText>
-              <EverestText variant="body" style={{ textAlign: 'center' }}>
-                <a href="/quote-v2/get-started" className="loading-validation-link">
-                  Start over
-                </a>
-              </EverestText>
-            </div>
-          )}
-        </div>
-      </EverestContainer>
+        )}
+      </div>
     </EverestLayout>
   );
 };

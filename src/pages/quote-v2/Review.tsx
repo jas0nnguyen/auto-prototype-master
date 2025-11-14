@@ -136,15 +136,16 @@ const Review: React.FC = () => {
   return (
     <EverestLayout>
       <EverestContainer>
-        <div className="review-layout">
-          {/* Main Content */}
-          <div className="review-main">
-            <div className="review-header">
-              <EverestTitle variant="h2">Review Your Quote</EverestTitle>
-              <EverestText variant="subtitle">
-                Everything looks good? Review your coverage details below.
-              </EverestText>
-            </div>
+        <EverestCard>
+          <div className="review-layout">
+            {/* Main Content */}
+            <div className="review-main">
+              <div className="review-header">
+                <EverestTitle variant="h2">Review Your Quote</EverestTitle>
+                <EverestText variant="subtitle">
+                  Everything looks good? Review your coverage details below.
+                </EverestText>
+              </div>
 
             {/* Drivers Section */}
             <EverestCard>
@@ -359,9 +360,21 @@ const Review: React.FC = () => {
 
           {/* Price Sidebar */}
           <div className="review-sidebar">
-            <EverestPriceSidebar quote={quote} />
+            <EverestPriceSidebar
+              monthlyPrice={quote?.premium?.monthly ? `$${Math.round(quote.premium.monthly)}` : '$147'}
+              sixMonthPrice={quote?.premium?.sixMonth ? `$${Math.round(quote.premium.sixMonth)}` : '$882'}
+              coverageDetails={[
+                { label: 'Bodily Injury', value: coverages.bodilyInjuryLimit || '100/300' },
+                { label: 'Property Damage', value: coverages.propertyDamageLimit || '$50,000' },
+                { label: 'Medical Payments', value: coverages.medicalPaymentsLimit ? `$${coverages.medicalPaymentsLimit.toLocaleString()}` : 'N/A' },
+                { label: 'Comprehensive', value: coverages.hasComprehensive ? 'Included' : 'Not included' },
+                { label: 'Collision', value: coverages.hasCollision ? 'Included' : 'Not included' },
+              ]}
+              isSticky={true}
+            />
           </div>
         </div>
+        </EverestCard>
       </EverestContainer>
     </EverestLayout>
   );

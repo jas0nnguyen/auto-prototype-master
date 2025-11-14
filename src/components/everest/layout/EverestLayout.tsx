@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import './EverestLayout.css';
 
 /**
@@ -30,8 +30,20 @@ export const EverestLayout: React.FC<EverestLayoutProps> = ({
   header,
   noBackgroundImage = false,
 }) => {
+  const pageRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    // Fix overflow to enable sticky positioning on price sidebar
+    // The .everest-page div gets overflow:auto from somewhere, which breaks sticky positioning
+    // This forces overflow:visible so sticky elements work relative to the viewport
+    if (pageRef.current) {
+      pageRef.current.style.overflow = 'visible hidden';
+      pageRef.current.style.overflowY = 'visible';
+    }
+  }, []);
+
   return (
-    <div className="everest-page">
+    <div className="everest-page" ref={pageRef}>
       {/* Background imagery - car silhouette */}
       {!noBackgroundImage && (
         <div className="everest-background-imagery">
