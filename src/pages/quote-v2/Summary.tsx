@@ -537,54 +537,43 @@ const Summary: React.FC = () => {
         <div className="summary-layout">
           {/* Main Content */}
           <div className="summary-main">
-            <div className="summary-header">
-              <EverestTitle variant="h2">Review Your Information</EverestTitle>
-              <EverestText variant="subtitle">
-                We've prefilled your information. Please review and make any necessary changes.
-              </EverestText>
-            </div>
-
             {/* Vehicles Section */}
             <div className="summary-section">
-              <EverestTitle variant="h3">Your Vehicles</EverestTitle>
+              <EverestTitle variant="h2">Your Vehicles</EverestTitle>
+              <EverestText variant="subtitle">
+                We found these vehicles from your current policy. Feel free to add more or edit our suggestions.
+              </EverestText>
 
               <div className="summary-cards-grid">
                 {vehicles.length > 0 ? (
-                  vehicles.map(vehicle => (
+                  vehicles.map((vehicle, index) => (
                     <EverestCard key={vehicle.id}>
                       <div className="summary-card-content">
-                        <div className="summary-card-info">
-                          <EverestTitle variant="h4">
-                            {vehicle.year} {vehicle.make} {vehicle.model}
-                          </EverestTitle>
-                          <EverestText variant="body">
-                            VIN: {vehicle.vin}
+                        <div className="summary-card-header">
+                          <div className="summary-card-icon"></div>
+                          <EverestText variant="label">Vehicle {index + 1}</EverestText>
+                        </div>
+                        <EverestTitle variant="h4" style={{ marginTop: '12px' }}>
+                          {vehicle.year} {vehicle.make} {vehicle.model}
+                        </EverestTitle>
+                        <EverestText variant="body" style={{ marginTop: '8px' }}>
+                          VIN: {vehicle.vin}
+                        </EverestText>
+                        {vehicle.bodyType && (
+                          <EverestText variant="body" style={{ marginTop: '4px' }}>
+                            Body Type: {vehicle.bodyType}
                           </EverestText>
-                          {vehicle.bodyType && (
-                            <EverestText variant="small">
-                              Body Type: {vehicle.bodyType}
-                            </EverestText>
-                          )}
-                        </div>
-                        <div className="summary-card-actions">
-                          <EverestButton
-                            variant="secondary"
-                            size="medium"
-                            onClick={() => handleEditVehicle(vehicle)}
-                          >
-                            Edit
-                          </EverestButton>
-                          {vehicles.length > 1 && (
-                            <EverestButton
-                              variant="secondary"
-                              size="medium"
-                              onClick={() => handleRemoveVehicle(vehicle.id)}
-                              disabled={isSaving}
-                            >
-                              Remove
-                            </EverestButton>
-                          )}
-                        </div>
+                        )}
+                        <a
+                          href="#"
+                          className="summary-card-link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEditVehicle(vehicle);
+                          }}
+                        >
+                          Edit vehicle details →
+                        </a>
                       </div>
                     </EverestCard>
                   ))
@@ -607,52 +596,45 @@ const Summary: React.FC = () => {
 
             {/* Drivers Section */}
             <div className="summary-section">
-              <EverestTitle variant="h3">Your Drivers</EverestTitle>
+              <EverestTitle variant="h2">Your Drivers</EverestTitle>
+              <EverestText variant="subtitle">
+                Review driver information and add anyone else who will be driving your vehicles.
+              </EverestText>
 
               <div className="summary-cards-grid">
                 {drivers.length > 0 ? (
                   drivers.map((driver, index) => (
                     <EverestCard key={driver.id}>
                       <div className="summary-card-content">
-                        <div className="summary-card-info">
-                          <div className="summary-driver-header">
-                            <EverestTitle variant="h4">
-                              {driver.firstName} {driver.lastName}
-                            </EverestTitle>
-                            {index === 0 ? (
-                              <EverestBadge variant="success">Named Insured</EverestBadge>
-                            ) : (
-                              <EverestBadge variant="info">Household Member</EverestBadge>
-                            )}
-                          </div>
-                          <EverestText variant="body">
-                            Date of Birth: {new Date(driver.birthDate).toLocaleDateString()}
+                        <div className="summary-card-header">
+                          <div className="summary-card-icon"></div>
+                          <EverestText variant="label">{index === 0 ? 'Primary Insured' : 'Additional Driver'}</EverestText>
+                        </div>
+                        <EverestTitle variant="h4" style={{ marginTop: '12px' }}>
+                          {driver.firstName} {driver.lastName}
+                        </EverestTitle>
+                        {driver.licenseNumber && (
+                          <EverestText variant="body" style={{ marginTop: '8px' }}>
+                            License: {driver.licenseNumber}
                           </EverestText>
-                          {driver.licenseNumber && (
-                            <EverestText variant="small">
-                              License: {driver.licenseNumber}
-                            </EverestText>
+                        )}
+                        <div style={{ marginTop: '8px' }}>
+                          {index === 0 ? (
+                            <EverestBadge variant="success">Named Insured</EverestBadge>
+                          ) : (
+                            <EverestBadge variant="info">Household Member</EverestBadge>
                           )}
                         </div>
-                        <div className="summary-card-actions">
-                          <EverestButton
-                            variant="secondary"
-                            size="medium"
-                            onClick={() => handleEditDriver(driver)}
-                          >
-                            Edit
-                          </EverestButton>
-                          {index !== 0 && (
-                            <EverestButton
-                              variant="secondary"
-                              size="medium"
-                              onClick={() => handleRemoveDriver(driver.id)}
-                              disabled={isSaving}
-                            >
-                              Remove
-                            </EverestButton>
-                          )}
-                        </div>
+                        <a
+                          href="#"
+                          className="summary-card-link"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            handleEditDriver(driver);
+                          }}
+                        >
+                          Edit driver info →
+                        </a>
                       </div>
                     </EverestCard>
                   ))
@@ -681,7 +663,7 @@ const Summary: React.FC = () => {
                 size="large"
                 onClick={handleBack}
               >
-                Back
+                Start Over
               </EverestButton>
               <EverestButton
                 type="button"
@@ -689,7 +671,7 @@ const Summary: React.FC = () => {
                 size="large"
                 onClick={handleContinue}
               >
-                Continue to Coverage
+                Next: Select Coverage →
               </EverestButton>
             </div>
           </div>
