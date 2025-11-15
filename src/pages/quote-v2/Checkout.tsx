@@ -1,42 +1,38 @@
 /**
- * Checkout Screen (Screen 11 of 19) - T135
+ * Checkout Screen (Screen 13 of 16) - Everest Design
  *
  * Payment method selection and account verification screen.
  *
  * Features:
- * - Check email via POST /api/v1/user-accounts/check-email
- * - Existing user shows email + "Verified" badge
- * - New user triggers AccountCreationModal
- * - Payment method selection (Credit Card only per spec clarification)
- * - "Enter Payment Details" button (disabled until account verified)
+ * - Personalized headline with user's first name
+ * - Toggle customer status question (Yes/No)
+ * - Payment plan selection (Pay in Full vs Pay Monthly)
+ * - Account verification with badges
+ * - Continue to payment screen
  *
  * Flow:
- * 1. On mount, check if email exists in database
- * 2. If existing user: show verified badge, enable continue button
- * 3. If new user: show AccountCreationModal, cannot proceed until account created
- * 4. User selects payment method (credit card)
- * 5. Navigate to Payment screen
+ * 1. Check if email exists in database
+ * 2. Show verified badge or prompt account creation
+ * 3. User selects payment plan
+ * 4. Navigate to Payment screen
  */
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  Button,
-  Badge
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
-import { QuoteProvider } from './contexts/QuoteContext';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestBadge } from '../../components/everest/core/EverestBadge';
 import { useQuoteByNumber } from '../../hooks/useQuote';
 import { checkEmail } from '../../services/user-account-api';
 import { AccountCreationModal } from './components/modals/AccountCreationModal';
 import { LoginModal } from './components/modals/LoginModal';
+import './Checkout.css';
 
-const CheckoutContent: React.FC = () => {
+const Checkout: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
   const { data: quote, isLoading } = useQuoteByNumber(quoteNumber) as {
@@ -49,11 +45,12 @@ const CheckoutContent: React.FC = () => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [email, setEmail] = useState<string>('');
   const [isCheckingEmail, setIsCheckingEmail] = useState(false);
+  const [isToggleCustomer, setIsToggleCustomer] = useState<boolean | null>(null);
+  const [paymentPlan, setPaymentPlan] = useState<'full' | 'monthly'>('monthly');
 
-  // Check email on mount (T149)
+  // Check email on mount
   useEffect(() => {
     const checkUserEmail = async () => {
-      // Get email from driver data (not quote_snapshot which doesn't exist in this structure)
       const driverEmail = quote?.driver?.email;
 
       if (!driverEmail) return;
@@ -68,11 +65,9 @@ const CheckoutContent: React.FC = () => {
           setUserExists(true);
         } else {
           setUserExists(false);
-          // Don't auto-open modal anymore - let user choose create or login
         }
       } catch (error) {
         console.error('Failed to check email:', error);
-        // On error, assume new user
         setUserExists(false);
       } finally {
         setIsCheckingEmail(false);
@@ -83,13 +78,11 @@ const CheckoutContent: React.FC = () => {
   }, [quote]);
 
   const handleAccountCreated = () => {
-    // Account created successfully (T152)
     setUserExists(true);
     setShowAccountModal(false);
   };
 
   const handleLoginSuccess = () => {
-    // Login successful
     setUserExists(true);
     setShowLoginModal(false);
   };
@@ -100,131 +93,181 @@ const CheckoutContent: React.FC = () => {
       return;
     }
 
+    if (isToggleCustomer === null) {
+      alert('Please indicate if you are already a Toggle customer');
+      return;
+    }
+
     navigate(`/quote-v2/payment/${quoteNumber}`);
   };
 
+  // Calculate payment amounts (mock - in production this comes from quote)
+  const monthlyAmount = quote?.monthly_premium || 468;
+  const fullAmount = monthlyAmount * 6; // 6-month policy
+
   if (isLoading || isCheckingEmail) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={11} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2">Loading...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="checkout-loading">
+            <EverestText variant="body">Loading...</EverestText>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
+  // Get user's first name from quote
+  const firstName = quote?.driver?.first_name || 'there';
+
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={11} totalScreens={19} />
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Title variant="display-2">Checkout</Title>
-          <Text variant="body-regular" color="subtle">
-            Review your account and select your payment method.
-          </Text>
+    <EverestLayout>
+      <EverestContainer>
+        <EverestCard>
+          <div className="checkout-container">
+            {/* Header */}
+            <div className="checkout-header">
+              <EverestTitle variant="h2">{firstName}, let's checkout</EverestTitle>
+              <EverestText variant="subtitle">
+                Select your payment plan and confirm your account details.
+              </EverestText>
+            </div>
 
-          {/* Account Status */}
-          <Layout
-            display="flex-column"
-            gap="medium"
-            padding="large"
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-            }}
-          >
-            <Title variant="title-3">Your Account</Title>
+            {/* Account Status */}
+            <div className="checkout-section">
+              <EverestText variant="label" className="checkout-section-title">
+                Your Account
+              </EverestText>
 
-            {userExists ? (
-              <Layout display="flex" flexAlign="center" gap="medium">
-                <Text variant="body-regular">{email}</Text>
-                <Badge>Verified ✓</Badge>
-              </Layout>
-            ) : (
-              <Layout display="flex-column" gap="medium">
-                <Layout display="flex-column" gap="small">
-                  <Text variant="body-regular">{email}</Text>
-                  <Text variant="body-small" color="subtle">
-                    Create your account or log in to continue
-                  </Text>
-                </Layout>
-                <Layout display="flex" gap="medium">
-                  <Button variant="primary" onClick={() => setShowAccountModal(true)}>
-                    Create Account
-                  </Button>
-                  <Button onClick={() => setShowLoginModal(true)}>
-                    Log In
-                  </Button>
-                </Layout>
-              </Layout>
-            )}
-          </Layout>
+              {userExists ? (
+                <div className="checkout-account-verified">
+                  <EverestText variant="body">{email}</EverestText>
+                  <EverestBadge variant="success">Verified ✓</EverestBadge>
+                </div>
+              ) : (
+                <div className="checkout-account-unverified">
+                  <div className="checkout-account-info">
+                    <EverestText variant="body">{email}</EverestText>
+                    <EverestText variant="small">
+                      Create your account or log in to continue
+                    </EverestText>
+                  </div>
+                  <div className="checkout-account-actions">
+                    <EverestButton variant="primary" onClick={() => setShowAccountModal(true)}>
+                      Create Account
+                    </EverestButton>
+                    <EverestButton variant="secondary" onClick={() => setShowLoginModal(true)}>
+                      Log In
+                    </EverestButton>
+                  </div>
+                </div>
+              )}
+            </div>
 
-          {/* Payment Method Selection */}
-          <Layout
-            display="flex-column"
-            gap="medium"
-            padding="large"
-            style={{
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-            }}
-          >
-            <Title variant="title-3">Payment Method</Title>
+            {/* Toggle Customer Status */}
+            <div className="checkout-section">
+              <EverestText variant="label" className="checkout-section-title">
+                Already a Toggle customer?
+              </EverestText>
 
-            <Layout
-              display="flex"
-              flexAlign="center"
-              gap="medium"
-              padding="medium"
-              style={{
-                border: '2px solid #667eea',
-                borderRadius: '12px',
-                backgroundColor: '#f7fafc',
-              }}
-            >
-              <input
-                type="radio"
-                name="payment-method"
-                value="credit-card"
-                checked={true}
-                readOnly
-                style={{ width: '20px', height: '20px', accentColor: '#667eea' }}
-              />
-              <Layout display="flex-column" gap="none">
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  Credit or Debit Card
-                </Text>
-                <Text variant="body-small" color="subtle">
-                  Visa, Mastercard, American Express, Discover
-                </Text>
-              </Layout>
-            </Layout>
+              <div className="checkout-toggle-options">
+                <button
+                  className={`checkout-toggle-option ${isToggleCustomer === true ? 'active' : ''}`}
+                  onClick={() => setIsToggleCustomer(true)}
+                >
+                  <EverestText variant="body">Yes</EverestText>
+                </button>
+                <button
+                  className={`checkout-toggle-option ${isToggleCustomer === false ? 'active' : ''}`}
+                  onClick={() => setIsToggleCustomer(false)}
+                >
+                  <EverestText variant="body">No</EverestText>
+                </button>
+              </div>
+            </div>
 
-            <Text variant="body-small" color="subtle">
-              Bank account payment coming soon
-            </Text>
-          </Layout>
+            {/* Payment Plan Selection */}
+            <div className="checkout-section">
+              <EverestText variant="label" className="checkout-section-title">
+                Choose Your Payment Plan
+              </EverestText>
 
-          {/* Action Buttons */}
-          <Layout display="flex" gap="medium" flexJustify="space-between">
-            <Button variant="secondary" onClick={() => navigate(`/quote-v2/sign/${quoteNumber}`)}>
-              Back
-            </Button>
+              <div className="checkout-payment-plans">
+                {/* Pay Monthly Card */}
+                <button
+                  className={`checkout-payment-card ${paymentPlan === 'monthly' ? 'active' : ''}`}
+                  onClick={() => setPaymentPlan('monthly')}
+                >
+                  <div className="checkout-payment-header">
+                    <input
+                      type="radio"
+                      checked={paymentPlan === 'monthly'}
+                      readOnly
+                      className="checkout-payment-radio"
+                    />
+                    <EverestText variant="body" className="checkout-payment-title">
+                      Pay Monthly
+                    </EverestText>
+                  </div>
+                  <div className="checkout-payment-amount">
+                    ${monthlyAmount}
+                    <span className="checkout-payment-period">/month</span>
+                  </div>
+                  <EverestText variant="small" className="checkout-payment-description">
+                    6 monthly payments of ${monthlyAmount}
+                  </EverestText>
+                </button>
 
-            <Button variant="primary" onClick={handleContinue} disabled={!userExists}>
-              Enter Payment Details
-            </Button>
-          </Layout>
-        </Layout>
-      </Container>
+                {/* Pay in Full Card */}
+                <button
+                  className={`checkout-payment-card ${paymentPlan === 'full' ? 'active' : ''}`}
+                  onClick={() => setPaymentPlan('full')}
+                >
+                  <div className="checkout-payment-header">
+                    <input
+                      type="radio"
+                      checked={paymentPlan === 'full'}
+                      readOnly
+                      className="checkout-payment-radio"
+                    />
+                    <EverestText variant="body" className="checkout-payment-title">
+                      Pay in Full
+                    </EverestText>
+                  </div>
+                  <div className="checkout-payment-amount">
+                    ${fullAmount}
+                    <span className="checkout-payment-period">total</span>
+                  </div>
+                  <EverestText variant="small" className="checkout-payment-description">
+                    One-time payment for 6-month policy
+                  </EverestText>
+                </button>
+              </div>
+            </div>
 
-      {/* Account Creation Modal (T150, T151, T152) */}
+            {/* Action Buttons */}
+            <div className="checkout-actions">
+              <EverestButton
+                variant="secondary"
+                onClick={() => navigate(`/quote-v2/sign/${quoteNumber}`)}
+              >
+                Go Back
+              </EverestButton>
+
+              <EverestButton
+                variant="primary"
+                onClick={handleContinue}
+                disabled={!userExists || isToggleCustomer === null}
+              >
+                Pay ${paymentPlan === 'monthly' ? monthlyAmount : fullAmount}
+                {paymentPlan === 'monthly' ? '/mo' : ''}
+              </EverestButton>
+            </div>
+          </div>
+        </EverestCard>
+      </EverestContainer>
+
+      {/* Account Creation Modal */}
       {showAccountModal && (
         <AccountCreationModal
           isOpen={showAccountModal}
@@ -242,16 +285,8 @@ const CheckoutContent: React.FC = () => {
           onClose={() => setShowLoginModal(false)}
         />
       )}
-    </TechStartupLayout>
+    </EverestLayout>
   );
 };
 
-export const Checkout: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-
-  return (
-    <QuoteProvider quoteNumber={quoteNumber}>
-      <CheckoutContent />
-    </QuoteProvider>
-  );
-};
+export default Checkout;

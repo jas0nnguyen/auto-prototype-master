@@ -1,18 +1,17 @@
 /**
- * Sign Screen (Screen 10 of 19) - T134
+ * Sign Screen (Screen 10 of 16) - Everest Design
  *
  * Signature ceremony screen where users sign their insurance application.
  *
  * Features:
- * - Collapsed signature pad with "Click to sign" placeholder
+ * - Everest-styled signature pad with expanded canvas
  * - Signature date auto-populated to today
- * - SignatureCanvas component for drawing signature
- * - SignatureModal for expanded signature view
- * - "Review Terms" button (future enhancement)
- * - "Sign & Continue" button validates signature before proceeding
+ * - Blue signature stroke matching Everest brand
+ * - Clear and save functionality
+ * - Validation before proceeding
  *
  * Flow:
- * 1. User clicks collapsed pad or draws signature
+ * 1. User draws signature on canvas
  * 2. User can clear and redraw
  * 3. User clicks "Sign & Continue"
  * 4. Signature validated (not empty)
@@ -22,37 +21,36 @@
 
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
-import { SignatureCanvas } from './components/SignatureCanvas';
-import { QuoteProvider } from './contexts/QuoteContext';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestTextInput } from '../../components/everest/core/EverestTextInput';
+import { EverestSignaturePad } from '../../components/everest/specialized/EverestSignaturePad';
 import { useQuoteByNumber } from '../../hooks/useQuote';
 import { useCreateSignature } from '../../hooks/useSignature';
+import './Sign.css';
 
-const SignContent: React.FC = () => {
+const Sign: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
   const { data: quote, isLoading } = useQuoteByNumber(quoteNumber);
   const createSignatureMutation = useCreateSignature();
 
   const [signatureData, setSignatureData] = useState<string | null>(null);
-  const [showModal, setShowModal] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Auto-populate today's date
-  const today = new Date().toISOString().split('T')[0];
+  const today = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
 
-  const handleSaveSignature = (data: string) => {
-    setSignatureData(data);
-    setShowModal(false);
+  const handleSignatureChange = (dataUrl: string | null) => {
+    setSignatureData(dataUrl);
   };
 
   const handleContinue = async () => {
@@ -69,7 +67,7 @@ const SignContent: React.FC = () => {
     setIsSubmitting(true);
 
     try {
-      // Save signature to database via Signature API (T147)
+      // Save signature to database via Signature API
       // Note: For demo, we use policy_id as both quote_id and party_id
       // In production, get the primary insured party_id from the quote data
       await createSignatureMutation.mutateAsync({
@@ -91,148 +89,82 @@ const SignContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={10} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2">Loading...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="sign-loading">
+            <EverestText variant="body">Loading...</EverestText>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={10} totalScreens={19} />
-      <Container padding="large">
-        <Layout display="flex-column" gap="large" style={{ maxWidth: '800px', margin: '0 auto' }}>
-          <Title variant="display-2">Sign Your Application</Title>
-          <Text variant="body-regular" color="subtle">
-            By signing below, you agree to the terms and conditions of your insurance policy.
-          </Text>
+    <EverestLayout>
+      <EverestContainer>
+        <EverestCard>
+          <div className="sign-container">
+            {/* Header */}
+            <div className="sign-header">
+              <EverestTitle variant="h2">Almost done! We need your signature</EverestTitle>
+              <EverestText variant="subtitle">
+                By signing below, you agree to the terms and conditions of your insurance policy.
+              </EverestText>
+            </div>
 
-          {/* Signature Date */}
-          <Layout display="flex-column" gap="small">
-            <Text variant="body-regular" style={{ fontWeight: 600 }}>
-              Signature Date
-            </Text>
-            <TextInput
-              value={today}
-              readOnly
-              style={{ backgroundColor: '#f7fafc', cursor: 'not-allowed' }}
-            />
-          </Layout>
+            {/* Signature Date */}
+            <div className="sign-date-section">
+              <EverestText variant="label" className="sign-label">
+                Signature Date
+              </EverestText>
+              <EverestTextInput
+                value={today}
+                readOnly
+                className="sign-date-input"
+              />
+            </div>
 
-          {/* Signature Pad */}
-          <Layout display="flex-column" gap="small">
-            <Text variant="body-regular" style={{ fontWeight: 600 }}>
-              Your Signature
-            </Text>
+            {/* Signature Pad */}
+            <div className="sign-signature-section">
+              <EverestSignaturePad
+                onSignatureChange={handleSignatureChange}
+                label="Your Signature"
+                placeholder="Sign here"
+                width={800}
+                height={300}
+              />
+            </div>
 
-            {signatureData ? (
-              <div
-                style={{
-                  border: '1px solid #e2e8f0',
-                  borderRadius: '8px',
-                  padding: '16px',
-                  backgroundColor: 'white',
-                  textAlign: 'center',
-                }}
-                onClick={() => setShowModal(true)}
+            {/* Action Buttons */}
+            <div className="sign-actions">
+              <EverestButton
+                variant="secondary"
+                onClick={() => navigate(`/quote-v2/review/${quoteNumber}`)}
               >
-                <img
-                  src={signatureData}
-                  alt="Your signature"
-                  style={{ maxWidth: '100%', height: 'auto' }}
-                />
-                <Text variant="body-small" color="subtle" style={{ marginTop: '8px' }}>
-                  Click to edit signature
-                </Text>
-              </div>
-            ) : (
-              <div
-                style={{
-                  border: '2px dashed #e2e8f0',
-                  borderRadius: '8px',
-                  padding: '32px',
-                  backgroundColor: '#f7fafc',
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                }}
-                onClick={() => setShowModal(true)}
-              >
-                <Text variant="body-regular" color="subtle">
-                  Click to sign
-                </Text>
-              </div>
-            )}
-          </Layout>
+                Back
+              </EverestButton>
 
-          {/* Signature Modal */}
-          {showModal && (
-            <div
-              style={{
-                position: 'fixed',
-                inset: 0,
-                backgroundColor: 'rgba(0, 0, 0, 0.5)',
-                backdropFilter: 'blur(4px)',
-                zIndex: 1000,
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-              onClick={() => setShowModal(false)}
-            >
-              <div
-                style={{
-                  backgroundColor: 'white',
-                  borderRadius: '24px',
-                  padding: '40px',
-                  maxWidth: '900px',
-                  width: '90%',
-                }}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Title variant="title-3" style={{ marginBottom: '24px' }}>
-                  Sign Here
-                </Title>
-                <SignatureCanvas onSave={handleSaveSignature} width={800} height={300} />
+              <div className="sign-actions-right">
+                <EverestButton
+                  variant="secondary"
+                  onClick={() => alert('Terms and conditions...')}
+                >
+                  Review Terms
+                </EverestButton>
+                <EverestButton
+                  variant="primary"
+                  onClick={handleContinue}
+                  disabled={isSubmitting || !signatureData}
+                >
+                  {isSubmitting ? 'Saving...' : 'Sign & Continue'}
+                </EverestButton>
               </div>
             </div>
-          )}
-
-          {/* Action Buttons */}
-          <Layout display="flex" gap="medium" flexJustify="space-between">
-            <Button variant="secondary" onClick={() => navigate(`/quote-v2/review/${quoteNumber}`)}>
-              Back
-            </Button>
-
-            <Layout display="flex" gap="medium">
-              <Button variant="secondary" onClick={() => alert('Terms and conditions...')}>
-                Review Terms
-              </Button>
-              <Button
-                variant="primary"
-                onClick={handleContinue}
-                disabled={isSubmitting || !signatureData}
-              >
-                {isSubmitting ? 'Saving...' : 'Sign & Continue'}
-              </Button>
-            </Layout>
-          </Layout>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+          </div>
+        </EverestCard>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 
-export const Sign: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-
-  return (
-    <QuoteProvider quoteNumber={quoteNumber}>
-      <SignContent />
-    </QuoteProvider>
-  );
-};
+export default Sign;

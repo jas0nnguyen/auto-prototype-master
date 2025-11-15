@@ -1,0 +1,202 @@
+/* Checkout Screen Styles - Everest Design */
+
+.checkout-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
+/* Header */
+.checkout-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+/* Section */
+.checkout-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkout-section-title {
+  font-weight: 600;
+  font-size: 18px;
+}
+
+/* Account Status */
+.checkout-account-verified {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  background-color: rgba(59, 130, 246, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(59, 130, 246, 0.2);
+}
+
+.checkout-account-unverified {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  background-color: rgba(251, 191, 36, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(251, 191, 36, 0.2);
+}
+
+.checkout-account-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.checkout-account-actions {
+  display: flex;
+  gap: 12px;
+}
+
+/* Toggle Customer Options */
+.checkout-toggle-options {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.checkout-toggle-option {
+  padding: 20px;
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.checkout-toggle-option:hover {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.02);
+}
+
+.checkout-toggle-option.active {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Payment Plans */
+.checkout-payment-plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.checkout-payment-card {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 24px;
+  background-color: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: left;
+}
+
+.checkout-payment-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.1);
+}
+
+.checkout-payment-card.active {
+  border-color: #3b82f6;
+  background-color: rgba(59, 130, 246, 0.05);
+  box-shadow: 0 8px 24px rgba(59, 130, 246, 0.15);
+}
+
+.checkout-payment-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.checkout-payment-radio {
+  width: 20px;
+  height: 20px;
+  accent-color: #3b82f6;
+  cursor: pointer;
+}
+
+.checkout-payment-title {
+  font-weight: 600;
+}
+
+.checkout-payment-amount {
+  font-size: 36px;
+  font-weight: 700;
+  color: #1e40af;
+  line-height: 1;
+}
+
+.checkout-payment-period {
+  font-size: 18px;
+  font-weight: 400;
+  color: #64748b;
+  margin-left: 4px;
+}
+
+.checkout-payment-description {
+  color: #64748b;
+}
+
+/* Action Buttons */
+.checkout-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Loading state */
+.checkout-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .checkout-container {
+    gap: 32px;
+  }
+
+  .checkout-account-actions {
+    flex-direction: column;
+  }
+
+  .checkout-account-actions button {
+    width: 100%;
+  }
+
+  .checkout-toggle-options {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-payment-plans {
+    grid-template-columns: 1fr;
+  }
+
+  .checkout-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .checkout-actions button {
+    width: 100%;
+  }
+}

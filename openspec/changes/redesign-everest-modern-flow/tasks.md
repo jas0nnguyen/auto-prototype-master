@@ -102,7 +102,7 @@
 
 ## 5. Screen Redesigns (Screens 10-16: Signing & Payment)
 
-- [ ] 5.1 Redesign `Sign.tsx` (Screen 10)
+- [x] 5.1 Redesign `Sign.tsx` (Screen 10)
   - Headline "Almost done! We need your signature"
   - Signature pad (min-height 300px expanded)
   - Signature date field (readonly)
@@ -117,20 +117,20 @@
   - Headline "Create Your Account"
   - Email, password, confirm password fields
   - Back + Create Account buttons
-- [ ] 5.4 Redesign `Checkout.tsx` (Screen 13)
+- [x] 5.4 Redesign `Checkout.tsx` (Screen 13)
   - Headline "Mark, let's checkout" (use actual user name from quote)
   - Customer toggle: "Already a Toggle customer?" (Yes/No buttons)
   - Payment plan selection: Pay in Full vs Pay Monthly cards
   - Go Back + Pay button with amount
-- [ ] 5.5 Redesign `Payment.tsx` (Screen 14)
+- [x] 5.5 Redesign `Payment.tsx` (Screen 14)
   - Headline "Payment Information"
   - Card details form: Cardholder name, card number, expiration, CVV, billing zip
   - Back + Complete Purchase buttons
-- [ ] 5.6 Redesign `Processing.tsx` (Screen 15)
+- [x] 5.6 Redesign `Processing.tsx` (Screen 15)
   - Loading animation
   - Headline "Processing Your Payment..."
   - Steps: Payment authorized (complete), Binding policy (active), Generating documents (pending)
-- [ ] 5.7 Redesign `Success.tsx` (Screen 16)
+- [x] 5.7 Redesign `Success.tsx` (Screen 16)
   - Large checkmark icon (80px)
   - Headline "Congratulations!"
   - Subheadline "Your policy is now active" (blue color)
@@ -140,28 +140,28 @@
 
 ## 6. Responsive Layout Implementation
 
-- [ ] 6.1 Implement mobile breakpoint styles (≤768px)
+- [x] 6.1 Implement mobile breakpoint styles (≤768px)
   - Stack 2-column grids to single column
   - Move PriceSidebar below main content
   - Reduce container padding to 20px
   - Stack payment option cards vertically
-- [ ] 6.2 Implement tablet breakpoint styles (768px - 1400px)
+- [x] 6.2 Implement tablet breakpoint styles (768px - 1400px)
   - Adjust container padding to 40px
   - Maintain 2-column grids where practical
   - Scale font sizes slightly smaller
-- [ ] 6.3 Implement desktop styles (>1400px)
+- [x] 6.3 Implement desktop styles (>1400px)
   - Cap container max-width at 1400px
   - Center content horizontally
   - Full 2-column layouts with sticky sidebar
 
 ## 7. Data Flow & Integration
 
-- [ ] 7.1 Update all screen components to use Everest components instead of Canary
-- [ ] 7.2 Preserve existing QuoteContext and TanStack Query hooks (no changes to data layer)
-- [ ] 7.3 Ensure PriceSidebar recalculates on coverage/add-on changes
-- [ ] 7.4 Verify modal editing (EditVehicleModal, EditDriverModal) works with new styling
-- [ ] 7.5 Test navigation between all 16 screens with RouteGuard intact
-- [ ] 7.6 Ensure Success screen links to existing `/portal/{policyNumber}` route
+- [x] 7.1 Update all screen components to use Everest components instead of Canary
+- [x] 7.2 Preserve existing QuoteContext and TanStack Query hooks (no changes to data layer)
+- [x] 7.3 Ensure PriceSidebar recalculates on coverage/add-on changes
+- [x] 7.4 Verify modal editing (EditVehicleModal, EditDriverModal) works with new styling
+- [x] 7.5 Test navigation between all 16 screens with RouteGuard intact
+- [x] 7.6 Ensure Success screen links to existing `/portal/{policyNumber}` route
 
 ## 8. Testing & Quality Assurance
 

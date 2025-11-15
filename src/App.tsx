@@ -57,11 +57,11 @@ import LoadingValidation from './pages/quote-v2/LoadingValidation';
 import Review from './pages/quote-v2/Review';
 
 // Import quote-v2 Phase 4 pages (Feature 004 - User Story 2: Payment & Signing)
-import { Sign } from './pages/quote-v2/Sign';
-import { Checkout } from './pages/quote-v2/Checkout';
-import { Payment } from './pages/quote-v2/Payment';
-import { Processing } from './pages/quote-v2/Processing';
-import { Success } from './pages/quote-v2/Success';
+import Sign from './pages/quote-v2/Sign';
+import Checkout from './pages/quote-v2/Checkout';
+import Payment from './pages/quote-v2/Payment';
+import Processing from './pages/quote-v2/Processing';
+import Success from './pages/quote-v2/Success';
 
 /**
  * Create TanStack Query Client

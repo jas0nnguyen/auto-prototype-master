@@ -1,0 +1,159 @@
+/* Payment Screen Styles - Everest Design */
+
+.payment-layout {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 32px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.payment-form-card {
+  height: fit-content;
+}
+
+.payment-summary-card {
+  height: fit-content;
+  position: sticky;
+  top: 40px;
+}
+
+/* Payment Container */
+.payment-container {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+/* Header */
+.payment-header {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Payment Fields */
+.payment-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.payment-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.payment-field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.payment-label {
+  font-weight: 600;
+}
+
+.payment-error {
+  color: #dc2626;
+}
+
+/* Submit Error */
+.payment-submit-error {
+  padding: 16px;
+  background-color: rgba(220, 38, 38, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(220, 38, 38, 0.2);
+}
+
+/* Action Buttons */
+.payment-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+/* Payment Summary */
+.payment-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.payment-summary-items {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.payment-summary-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.payment-summary-amount {
+  font-weight: 600;
+}
+
+.payment-summary-divider {
+  border-top: 1px solid rgba(59, 130, 246, 0.2);
+  margin: 8px 0;
+}
+
+.payment-summary-total-label {
+  font-weight: 600;
+}
+
+.payment-summary-total {
+  font-weight: 700;
+  font-size: 20px;
+  color: #1e40af;
+}
+
+.payment-summary-note {
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Loading state */
+.payment-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Responsive design */
+@media (max-width: 1024px) {
+  .payment-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-summary-card {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .payment-container {
+    gap: 24px;
+  }
+
+  .payment-field-row {
+    grid-template-columns: 1fr;
+  }
+
+  .payment-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .payment-actions button {
+    width: 100%;
+  }
+}

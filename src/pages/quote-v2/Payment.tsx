@@ -1,9 +1,10 @@
 /**
- * Payment Screen (Screen 12 of 19) - T136
+ * Payment Screen (Screen 14 of 16) - Everest Design
  *
  * Secure payment form for collecting credit/debit card information.
  *
  * Features:
+ * - Everest-styled payment form
  * - Cardholder name
  * - Card number with automatic formatting (XXXX XXXX XXXX XXXX)
  * - Expiration date (MM/YY format)
@@ -17,24 +18,21 @@
  * 2. Form validates as user types (card number, expiration, CVV, ZIP)
  * 3. User clicks "Submit Payment"
  * 4. Validates all fields
- * 5. Calls POST /api/v1/payments
+ * 5. Stores payment data in sessionStorage
  * 6. Navigate to Processing screen
  */
 
 import React, { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Layout,
-  Container,
-  Title,
-  Text,
-  TextInput,
-  Button
-} from '@sureapp/canary-design-system';
-import { TechStartupLayout } from './components/shared/TechStartupLayout';
-import { ScreenProgress } from './components/ScreenProgress';
-import { QuoteProvider } from './contexts/QuoteContext';
+import { EverestLayout } from '../../components/everest/layout/EverestLayout';
+import { EverestContainer } from '../../components/everest/layout/EverestContainer';
+import { EverestCard } from '../../components/everest/core/EverestCard';
+import { EverestTitle } from '../../components/everest/core/EverestTitle';
+import { EverestText } from '../../components/everest/core/EverestText';
+import { EverestButton } from '../../components/everest/core/EverestButton';
+import { EverestTextInput } from '../../components/everest/core/EverestTextInput';
 import { useQuoteByNumber } from '../../hooks/useQuote';
+import './Payment.css';
 
 /**
  * Luhn algorithm for credit card validation
@@ -84,10 +82,13 @@ const validateExpiration = (value: string): boolean => {
   return expiry > now;
 };
 
-const PaymentContent: React.FC = () => {
+const Payment: React.FC = () => {
   const navigate = useNavigate();
   const { quoteNumber } = useParams<{ quoteNumber: string }>();
-  const { data: quote, isLoading } = useQuoteByNumber(quoteNumber);
+  const { data: quote, isLoading } = useQuoteByNumber(quoteNumber) as {
+    data: any;
+    isLoading: boolean;
+  };
 
   const [cardholderName, setCardholderName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -171,17 +172,19 @@ const PaymentContent: React.FC = () => {
 
     try {
       // Store payment data in sessionStorage for Processing screen
-      sessionStorage.setItem('paymentData', JSON.stringify({
-        paymentMethod: 'credit_card',
-        cardNumber: cardNumber.replace(/\s/g, ''), // Remove spaces
-        cardExpiry: expiration,
-        cardCvv: cvv,
-      }));
+      sessionStorage.setItem(
+        'paymentData',
+        JSON.stringify({
+          paymentMethod: 'credit_card',
+          cardNumber: cardNumber.replace(/\s/g, ''), // Remove spaces
+          cardExpiry: expiration,
+          cardCvv: cvv,
+        })
+      );
 
-      // T156: Mock payment processing for demo mode
+      // Mock payment processing for demo mode
       // In production, this would call POST /api/v1/payments
-      // For now, simulate a 1-2 second payment authorization delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      await new Promise((resolve) => setTimeout(resolve, 1500));
 
       // Payment successful - navigate to processing screen
       navigate(`/quote-v2/processing/${quoteNumber}`);
@@ -194,14 +197,13 @@ const PaymentContent: React.FC = () => {
 
   if (isLoading) {
     return (
-      <TechStartupLayout>
-        <ScreenProgress currentScreen={12} totalScreens={19} />
-        <Container padding="large">
-          <Layout display="flex-column" gap="large" flexAlign="center">
-            <Title variant="title-2">Loading...</Title>
-          </Layout>
-        </Container>
-      </TechStartupLayout>
+      <EverestLayout>
+        <EverestContainer>
+          <div className="payment-loading">
+            <EverestText variant="body">Loading...</EverestText>
+          </div>
+        </EverestContainer>
+      </EverestLayout>
     );
   }
 
@@ -211,216 +213,182 @@ const PaymentContent: React.FC = () => {
   const remainingPayments = (totalPremium * 5 / 6).toFixed(2);
 
   return (
-    <TechStartupLayout>
-      <ScreenProgress currentScreen={12} totalScreens={19} />
-      <Container padding="large">
-        <Layout display="flex" gap="large" style={{ maxWidth: '1200px', margin: '0 auto' }}>
+    <EverestLayout>
+      <EverestContainer>
+        <div className="payment-layout">
           {/* Payment Form */}
-          <Layout display="flex-column" gap="large" style={{ flex: 2 }}>
-            <Title variant="display-2">Payment Details</Title>
-            <Text variant="body-regular" color="subtle">
-              Enter your payment information to complete your purchase.
-            </Text>
+          <EverestCard className="payment-form-card">
+            <div className="payment-container">
+              {/* Header */}
+              <div className="payment-header">
+                <EverestTitle variant="h2">Payment Details</EverestTitle>
+                <EverestText variant="subtitle">
+                  Enter your payment information to complete your purchase.
+                </EverestText>
+              </div>
 
-            <Layout
-              display="flex-column"
-              gap="medium"
-              padding="large"
-              style={{
-                backgroundColor: 'white',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-              }}
-            >
-              {/* Cardholder Name */}
-              <Layout display="flex-column" gap="small">
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  Cardholder Name
-                </Text>
-                <TextInput
-                  value={cardholderName}
-                  onChange={(e) => setCardholderName(e.target.value)}
-                  placeholder="John Doe"
-                />
-                {errors.cardholderName && (
-                  <Text variant="body-small" color="error">
-                    {errors.cardholderName}
-                  </Text>
-                )}
-              </Layout>
+              {/* Payment Form Fields */}
+              <div className="payment-fields">
+                {/* Cardholder Name */}
+                <div className="payment-field">
+                  <EverestText variant="label" className="payment-label">
+                    Cardholder Name
+                  </EverestText>
+                  <EverestTextInput
+                    value={cardholderName}
+                    onChange={(e) => setCardholderName(e.target.value)}
+                    placeholder="John Doe"
+                  />
+                  {errors.cardholderName && (
+                    <EverestText variant="small" className="payment-error">
+                      {errors.cardholderName}
+                    </EverestText>
+                  )}
+                </div>
 
-              {/* Card Number */}
-              <Layout display="flex-column" gap="small">
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  Card Number
-                </Text>
-                <TextInput
-                  value={cardNumber}
-                  onChange={(e) => handleCardNumberChange(e.target.value)}
-                  placeholder="1234 5678 9012 3456"
-                  maxLength={19}
-                />
-                {errors.cardNumber && (
-                  <Text variant="body-small" color="error">
-                    {errors.cardNumber}
-                  </Text>
-                )}
-              </Layout>
+                {/* Card Number */}
+                <div className="payment-field">
+                  <EverestText variant="label" className="payment-label">
+                    Card Number
+                  </EverestText>
+                  <EverestTextInput
+                    value={cardNumber}
+                    onChange={(e) => handleCardNumberChange(e.target.value)}
+                    placeholder="1234 5678 9012 3456"
+                    maxLength={19}
+                  />
+                  {errors.cardNumber && (
+                    <EverestText variant="small" className="payment-error">
+                      {errors.cardNumber}
+                    </EverestText>
+                  )}
+                </div>
 
-              {/* Expiration & CVV */}
-              <Layout display="flex" gap="medium">
-                <Layout display="flex-column" gap="small" style={{ flex: 1 }}>
-                  <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                    Expiration Date
-                  </Text>
-                  <TextInput
-                    value={expiration}
-                    onChange={(e) => handleExpirationChange(e.target.value)}
-                    placeholder="MM/YY"
+                {/* Expiration & CVV */}
+                <div className="payment-field-row">
+                  <div className="payment-field">
+                    <EverestText variant="label" className="payment-label">
+                      Expiration Date
+                    </EverestText>
+                    <EverestTextInput
+                      value={expiration}
+                      onChange={(e) => handleExpirationChange(e.target.value)}
+                      placeholder="MM/YY"
+                      maxLength={5}
+                    />
+                    {errors.expiration && (
+                      <EverestText variant="small" className="payment-error">
+                        {errors.expiration}
+                      </EverestText>
+                    )}
+                  </div>
+
+                  <div className="payment-field">
+                    <EverestText variant="label" className="payment-label">
+                      CVV
+                    </EverestText>
+                    <EverestTextInput
+                      value={cvv}
+                      onChange={(e) => handleCvvChange(e.target.value)}
+                      placeholder="123"
+                      type="password"
+                      maxLength={4}
+                    />
+                    {errors.cvv && (
+                      <EverestText variant="small" className="payment-error">
+                        {errors.cvv}
+                      </EverestText>
+                    )}
+                  </div>
+                </div>
+
+                {/* Billing ZIP */}
+                <div className="payment-field">
+                  <EverestText variant="label" className="payment-label">
+                    Billing ZIP Code
+                  </EverestText>
+                  <EverestTextInput
+                    value={billingZip}
+                    onChange={(e) => handleBillingZipChange(e.target.value)}
+                    placeholder="12345"
                     maxLength={5}
                   />
-                  {errors.expiration && (
-                    <Text variant="body-small" color="error">
-                      {errors.expiration}
-                    </Text>
+                  {errors.billingZip && (
+                    <EverestText variant="small" className="payment-error">
+                      {errors.billingZip}
+                    </EverestText>
                   )}
-                </Layout>
+                </div>
+              </div>
 
-                <Layout display="flex-column" gap="small" style={{ flex: 1 }}>
-                  <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                    CVV
-                  </Text>
-                  <TextInput
-                    value={cvv}
-                    onChange={(e) => handleCvvChange(e.target.value)}
-                    placeholder="123"
-                    type="password"
-                    maxLength={4}
-                  />
-                  {errors.cvv && (
-                    <Text variant="body-small" color="error">
-                      {errors.cvv}
-                    </Text>
-                  )}
-                </Layout>
-              </Layout>
+              {/* Submit Error */}
+              {errors.submit && (
+                <div className="payment-submit-error">
+                  <EverestText variant="body" className="payment-error">
+                    {errors.submit}
+                  </EverestText>
+                </div>
+              )}
 
-              {/* Billing ZIP */}
-              <Layout display="flex-column" gap="small">
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  Billing ZIP Code
-                </Text>
-                <TextInput
-                  value={billingZip}
-                  onChange={(e) => handleBillingZipChange(e.target.value)}
-                  placeholder="12345"
-                  maxLength={5}
-                />
-                {errors.billingZip && (
-                  <Text variant="body-small" color="error">
-                    {errors.billingZip}
-                  </Text>
-                )}
-              </Layout>
-            </Layout>
+              {/* Action Buttons */}
+              <div className="payment-actions">
+                <EverestButton
+                  variant="secondary"
+                  onClick={() => navigate(`/quote-v2/checkout/${quoteNumber}`)}
+                  disabled={isSubmitting}
+                >
+                  Back
+                </EverestButton>
 
-            {/* Submit Error */}
-            {errors.submit && (
-              <Layout
-                padding="medium"
-                style={{
-                  backgroundColor: '#fee',
-                  borderRadius: '8px',
-                  border: '1px solid #fcc',
-                }}
-              >
-                <Text variant="body-regular" color="error">
-                  {errors.submit}
-                </Text>
-              </Layout>
-            )}
+                <EverestButton variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
+                  {isSubmitting ? 'Processing Payment...' : 'Submit Payment'}
+                </EverestButton>
+              </div>
+            </div>
+          </EverestCard>
 
-            {/* Action Buttons */}
-            <Layout display="flex" gap="medium" flexJustify="space-between">
-              <Button
-                variant="secondary"
-                onClick={() => navigate(`/quote-v2/checkout/${quoteNumber}`)}
-                disabled={isSubmitting}
-              >
-                Back
-              </Button>
+          {/* Payment Summary Sidebar */}
+          <EverestCard className="payment-summary-card">
+            <div className="payment-summary">
+              <EverestTitle variant="h3">Payment Summary</EverestTitle>
 
-              <Button variant="primary" onClick={handleSubmit} disabled={isSubmitting}>
-                {isSubmitting ? 'Processing Payment...' : 'Submit Payment'}
-              </Button>
-            </Layout>
-          </Layout>
+              <div className="payment-summary-items">
+                <div className="payment-summary-row">
+                  <EverestText variant="body">Today's Payment</EverestText>
+                  <EverestText variant="body" className="payment-summary-amount">
+                    ${todayPayment}
+                  </EverestText>
+                </div>
 
-          {/* Payment Summary */}
-          <Layout
-            display="flex-column"
-            gap="medium"
-            padding="large"
-            style={{
-              flex: 1,
-              backgroundColor: 'white',
-              borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              height: 'fit-content',
-              position: 'sticky',
-              top: '120px',
-            }}
-          >
-            <Title variant="title-3">Payment Summary</Title>
+                <div className="payment-summary-row">
+                  <EverestText variant="body">5 Remaining Payments</EverestText>
+                  <EverestText variant="body" className="payment-summary-amount">
+                    ${remainingPayments}
+                  </EverestText>
+                </div>
 
-            <Layout display="flex-column" gap="small">
-              <Layout display="flex" flexJustify="space-between">
-                <Text variant="body-regular" color="subtle">
-                  Today's Payment
-                </Text>
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  ${todayPayment}
-                </Text>
-              </Layout>
+                <div className="payment-summary-divider" />
 
-              <Layout display="flex" flexJustify="space-between">
-                <Text variant="body-regular" color="subtle">
-                  5 Remaining Payments
-                </Text>
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  ${remainingPayments}
-                </Text>
-              </Layout>
+                <div className="payment-summary-row">
+                  <EverestText variant="body" className="payment-summary-total-label">
+                    Total Cost
+                  </EverestText>
+                  <EverestText variant="body" className="payment-summary-total">
+                    ${totalPremium.toFixed(2)}
+                  </EverestText>
+                </div>
+              </div>
 
-              <div style={{ borderTop: '1px solid #e2e8f0', margin: '8px 0' }} />
-
-              <Layout display="flex" flexJustify="space-between">
-                <Text variant="body-regular" style={{ fontWeight: 600 }}>
-                  Total Cost
-                </Text>
-                <Text variant="body-regular" style={{ fontWeight: 700, fontSize: '18px' }}>
-                  ${totalPremium.toFixed(2)}
-                </Text>
-              </Layout>
-            </Layout>
-
-            <Text variant="body-small" color="subtle">
-              Your first payment will be charged today. Subsequent payments will be automatically
-              charged monthly.
-            </Text>
-          </Layout>
-        </Layout>
-      </Container>
-    </TechStartupLayout>
+              <EverestText variant="small" className="payment-summary-note">
+                Your first payment will be charged today. Subsequent payments will be automatically
+                charged monthly.
+              </EverestText>
+            </div>
+          </EverestCard>
+        </div>
+      </EverestContainer>
+    </EverestLayout>
   );
 };
 
-export const Payment: React.FC = () => {
-  const { quoteNumber } = useParams<{ quoteNumber: string }>();
-
-  return (
-    <QuoteProvider quoteNumber={quoteNumber}>
-      <PaymentContent />
-    </QuoteProvider>
-  );
-};
+export default Payment;

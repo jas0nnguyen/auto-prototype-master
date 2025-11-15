@@ -1,0 +1,84 @@
+/* Sign Screen Styles - Everest Design */
+
+.sign-container {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+/* Header section */
+.sign-header {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: center;
+}
+
+/* Date section */
+.sign-date-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sign-label {
+  font-weight: 600;
+}
+
+.sign-date-input {
+  background-color: #f7fafc;
+  cursor: not-allowed;
+}
+
+/* Signature section */
+.sign-signature-section {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Action buttons */
+.sign-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(59, 130, 246, 0.1);
+}
+
+.sign-actions-right {
+  display: flex;
+  gap: 12px;
+}
+
+/* Loading state */
+.sign-loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 400px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .sign-container {
+    gap: 32px;
+  }
+
+  .sign-actions {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .sign-actions-right {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .sign-actions button {
+    width: 100%;
+  }
+}
